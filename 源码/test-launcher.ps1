@@ -22,6 +22,10 @@ public static class MiniPdfWindowProbe {
     [StructLayout(LayoutKind.Sequential)] public struct Rect { public int left,top,right,bottom; }
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr window, out Rect rect);
     [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr window, int message, IntPtr w, IntPtr l);
+    [DllImport("user32.dll",EntryPoint="GetWindowLongPtrW")] public static extern IntPtr GetStyle(IntPtr window,int index);
+    [StructLayout(LayoutKind.Sequential)] public struct Point {public int x,y;}
+    [DllImport("user32.dll")]public static extern bool ClientToScreen(IntPtr window,ref Point point);
+    public static bool SingleTitleRow(IntPtr window){Rect bounds;GetWindowRect(window,out bounds);var point=new Point();ClientToScreen(window,ref point);return ((long)GetStyle(window,-16)&0xc00000)==0&&point.y-bounds.top<=2;}
     public static int Tabs(IntPtr parent) { int count=0; EnumChildWindows(parent,delegate(IntPtr child,IntPtr unused){var text=new StringBuilder(256);GetClassName(child,text,256);Rect rect;GetWindowRect(child,out rect);if(text.ToString().Contains("SysTabControl32")&&rect.bottom-rect.top<90)count=(int)SendMessage(child,0x1304,IntPtr.Zero,IntPtr.Zero);return true;},IntPtr.Zero);return count; }
 }
 '@
@@ -81,6 +85,12 @@ try {
     if (Test-Path -LiteralPath (Join-Path $testRoot 'pdfium.dll')) { throw '独立测试目录不应含有额外 DLL。' }
     $first = Start-CheckedWindow '' 'Mini PDF'
     $checks.Add('Single EXE starts normally without adjacent DLL or runtime installation')
+    if (-not [MiniPdfWindowProbe]::SingleTitleRow($first.Child.MainWindowHandle)) { throw '最终单 EXE 在非最大化窗口仍保留系统标题栏，出现双层窗口按钮。' }
+    $checks.Add('Actual single-EXE normal window has no native caption style or extra title-row reservation')
+    [void][MiniPdfWindowProbe]::SendMessage($first.Child.MainWindowHandle,0x112,[IntPtr]0xf030,[IntPtr]::Zero)
+    [void][MiniPdfWindowProbe]::SendMessage($first.Child.MainWindowHandle,0x112,[IntPtr]0xf120,[IntPtr]::Zero)
+    if (-not [MiniPdfWindowProbe]::SingleTitleRow($first.Child.MainWindowHandle)) { throw '最终 EXE 最大化再还原后出现双层标题栏。' }
+    $checks.Add('Actual single-EXE maximize and restore leave exactly one title row in normal window mode')
     $second = Start-CheckedWindow $spacedPdf '中文 测试文件 with spaces.pdf'
     $checks.Add('Chinese path containing spaces is passed correctly to the viewer')
     $first.Child.Refresh()

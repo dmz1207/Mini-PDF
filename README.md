@@ -6,17 +6,19 @@
 
 Mini PDF combines a compact reading interface with text, object, annotation, and page editing. It uses Windows controls and PDFium, with no Electron, WebView, or bundled browser runtime.
 
-The **v0.5.0 preview** is a single **2.81 MiB executable** for **Windows 10 / Windows 11 x64**. The application starts in English and includes an immediate English / Simplified Chinese language switch.
+The **v0.6.1 preview** is a single **2.82 MiB executable** for **Windows 10 / Windows 11 x64**. The application starts in English and includes an immediate English / Simplified Chinese language switch.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-## What's new in v0.5
+## What's new in v0.6.1
 
-- Document tabs appear above the reading toolbar, with a larger menu button at the left of the same row.
-- Drag tabs left or right to change their order. Hold a dragged tab near either end of an overflowing tab row to reach hidden tabs.
-- Each document keeps its own page, zoom, view, scroll position, editing tool, and undo history. Reordering tabs does not edit the PDF.
-- Larger toolbar text and icons improve readability while keeping the interface compact.
-- English is the default repository documentation; a complete [Chinese version](README.zh-CN.md) remains available.
+- The menu button, rounded document tabs, and minimize/maximize/close controls share the top title row, matching the compact layout of Sumatra PDF. There is no separate blank title row.
+- Flat white toolbars and rounded blue tabs replace the old raised tab and toolbar borders.
+- Fix duplicate title rows in ordinary windows: minimize, maximize and close appear once. Reading mode retains the normal system caption.
+- Hold the left mouse button on a tab and drag it to any position. The tab follows the pointer; you can cross multiple tabs and reverse direction without releasing.
+- Releasing finishes the move; Esc restores the previous order. Edge hovering reaches hidden tabs when many documents are open.
+- Window movement, resize borders, double-click maximize/restore, reading mode and true full screen remain available. Reading mode keeps a normal system title bar.
+- English remains the default interface and documentation; Simplified Chinese is the second language option. No extra runtime or UI framework is added.
 
 ## Getting started
 
@@ -38,9 +40,9 @@ The **Help** menu lists the English user guide first and the Chinese guide secon
 
 ## Reading and document tabs
 
-With one document open, the app uses one compact toolbar. With multiple documents, tabs and the menu share a row above it. Menus stay collapsed behind `☰`; press `F10` to open them. Editing tools, the sidebar, and the status bar are hidden until needed.
+With one or more documents, rounded tabs share the top title row with the menu and window controls. The reading toolbar sits directly below it. Menus stay collapsed behind `☰`; press `F10` to open them. Editing tools, the sidebar, and the status bar are hidden until needed.
 
-- Drag the text area of a tab to reorder it. Release to finish, or press `Esc` to stop dragging.
+- Hold the left mouse button on a tab's text area to reorder it continuously. Release to finish, or press `Esc` to restore the previous order.
 - Click a tab's `×`, middle-click the tab, or use `Ctrl+W` to close it. Unsaved changes trigger a save prompt.
 - Opening an already open file selects its existing tab. Opening another PDF from Explorer normally sends it to the existing window.
 - `Ctrl+Shift+N` opens an independent window. The command-line flag `--new-window` provides the same behavior.
@@ -113,7 +115,7 @@ Use `Ctrl+mouse wheel` to zoom, the mouse wheel to scroll, and middle-button dra
 
 ## Portable operation and cleanup
 
-The EXE is **2,951,168 bytes**, approximately **2.81 MiB**. Its resources use the Windows Compression API with LZMS and 8 MiB blocks. No additional decompression library is shipped.
+The EXE is **2,955,264 bytes**, approximately **2.82 MiB**. Its resources use the Windows Compression API with LZMS and 8 MiB blocks. No additional decompression library is shipped.
 
 On startup, the app extracts the engine, help text, and licenses to a hidden `.MiniPDF-runtime-*` folder beside the EXE. The application's `TEMP` and `TMP` point to that folder. Normal exit removes extracted files; the next launch cleans up stale runtime folders after an unexpected exit. Active instances keep their own files protected. Extra files created by the user inside a runtime folder are preserved.
 
@@ -153,6 +155,9 @@ Mini-PDF/
 └─ 源码/                     Source code
    ├─ *.cs                 Application, launcher, and regression tests
    ├─ build.ps1            Build and production-assembly tests
+   ├─ WindowFrame.cs       Compact title row, native window actions and frame geometry
+   ├─ FlatUi.cs            Flat menu and toolbar rendering
+   ├─ FrameTests.cs        Continuous drag and title/window regressions
    ├─ test-launcher.ps1     Portable EXE, file forwarding, and cleanup tests
    ├─ verify_pdf.py         Independent PDF fixtures and verification
    ├─ README.md             English source guide
@@ -164,9 +169,9 @@ Mini-PDF/
 
 ## Verification
 
-The current release passed **210 program regressions, 33 independent PDF checks, and 12 portable-launcher checks: 255 checks in total**, on Windows 10 x64.
+The current release passed **238 program regressions, 33 independent PDF checks, and 14 portable-launcher checks: 285 checks in total**, on Windows 10 x64.
 
-Coverage includes native windows and mouse messages, text dialogs, tab dragging in both directions, overflow scrolling, cancellation and capture loss, menu relocation, per-document state, unsaved-change prompts, layouts, exact zoom, scan/OCR layers, editing, passwords, save-failure protection, 200-page files, and print preview. Printing tests use a preview controller and do not send a physical print job.
+Coverage includes native windows and mouse messages, text dialogs, tab dragging in both directions, overflow scrolling, cancellation and capture loss, title geometry, window maximize/restore, per-document state, unsaved-change prompts, layouts, exact zoom, scan/OCR layers, editing, passwords, save-failure protection, 200-page files, and print preview. Printing tests use a preview controller and do not send a physical print job.
 
 Independent checks use ReportLab fixtures, pypdf parsing, and MuPDF rendering to verify saved text, image and annotation preservation, page trees, existing outlines and unmodified form fields, encryption, and unchanged scan pixels after OCR-layer edits. Compression is checked with a SHA-256 round trip. The final portable EXE is tested in an isolated folder without an adjacent DLL, including later file-open requests and cleanup after unexpected termination.
 

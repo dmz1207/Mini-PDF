@@ -1,0 +1,52 @@
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+
+namespace MiniPdf {
+    internal static partial class SelfTest {
+        [DllImport("user32.dll")]static extern bool PrintWindow(IntPtr window,IntPtr dc,uint flags);
+        static int FrameHit(MainWindow form,Point client){return (int)N.SendMessage(form.Handle,0x84,IntPtr.Zero,Position(form.PointToScreen(client)));}
+        static void FrameCapture(MainWindow form,string path){form.Refresh();Application.DoEvents();using(var bitmap=new Bitmap(form.Width,form.Height)){using(var graphics=Graphics.FromImage(bitmap)){IntPtr dc=graphics.GetHdc();try{Assert(PrintWindow(form.Handle,dc,2),"owned window renders to a bitmap without desktop capture");}finally{graphics.ReleaseHdc(dc);}}bitmap.Save(path,ImageFormat.Png);}}
+        static void TitleFrame(string directory){
+            using(var form=new MainWindow(null)){
+                form.Show();Application.DoEvents();Assert(form.TitleTabsForTest&&form.PointToScreen(Point.Empty).Y-form.Top<=2,"title tabs replace the original caption area without a blank row");
+                Assert(!form.NativeCaptionForTest,"normal restored window removes the OS caption style so native and custom button rows cannot coexist");
+                IntPtr calculation=Marshal.AllocHGlobal(16);try{Marshal.WriteInt32(calculation,0,0);Marshal.WriteInt32(calculation,4,0);Marshal.WriteInt32(calculation,8,900);Marshal.WriteInt32(calculation,12,700);N.SendMessage(form.Handle,0x83,IntPtr.Zero,calculation);Assert(Marshal.ReadInt32(calculation,4)==1,"WM_NCCALCSIZE with FALSE also removes the original title-height reservation");}finally{Marshal.FreeHGlobal(calculation);}
+                form.MaximizeBox=false;form.MaximizeBox=true;form.Text="Mini PDF style refresh";Application.DoEvents();Assert(!form.NativeCaptionForTest&&form.PointToScreen(Point.Empty).Y-form.Top<=2,"ordinary style and title updates cannot restore a second native caption");
+                Assert(form.HeaderHeightForTest<=Math.Max(36,form.Font.Height+12)&&form.DocumentTopForTest<=form.HeaderHeightForTest+38,"flat title strip and toolbar use only two compact rows");
+                int y=form.HeaderHeightForTest/2,width=form.ClientSize.Width,buttons=form.CaptionReserveForTest;
+                Assert(FrameHit(form,new Point(width-buttons/6,y))==20&&FrameHit(form,new Point(width-buttons/2,y))==9&&FrameHit(form,new Point(width-buttons*5/6,y))==8,"close, maximize and minimize regions report native caption hit codes");
+                Assert(FrameHit(form,new Point(width-buttons-15,y))==2,"empty title space moves the window through the native caption action");
+                Assert(FrameHit(form,new Point(width/2,1))==12,"top edge retains native resize hit testing");
+                var captionPoint=new Point(width-buttons/2,y);N.SendMessage(form.Handle,0xa1,new IntPtr(9),Position(form.PointToScreen(captionPoint)));N.SendMessage(form.Handle,0x202,IntPtr.Zero,Position(captionPoint));Application.DoEvents();Assert(form.WindowState==FormWindowState.Maximized&&!form.Capture&&!form.NativeCaptionForTest,"actual non-client left-button down and release maximize the single custom title row");
+                captionPoint=new Point(form.ClientSize.Width-form.CaptionReserveForTest/2,form.HeaderHeightForTest/2);N.SendMessage(form.Handle,0xa1,new IntPtr(9),Position(form.PointToScreen(captionPoint)));N.SendMessage(form.Handle,0x202,IntPtr.Zero,Position(captionPoint));Application.DoEvents();Assert(form.WindowState==FormWindowState.Normal&&!form.Capture&&!form.NativeCaptionForTest&&form.PointToScreen(Point.Empty).Y-form.Top<=2,"the same caption-button mouse action restores a normal window without two button rows");
+                form.LoadForTest(PdfDocument.FromBytes(File.ReadAllBytes(Path.Combine(directory,"baseline.pdf")),""));var first=form.Document;form.LoadForTest(PdfDocument.FromBytes(File.ReadAllBytes(Path.Combine(directory,"baseline.pdf")),""));var second=form.Document;form.LoadForTest(PdfDocument.FromBytes(File.ReadAllBytes(Path.Combine(directory,"baseline.pdf")),""));var third=form.Document;form.LoadForTest(PdfDocument.FromBytes(File.ReadAllBytes(Path.Combine(directory,"baseline.pdf")),""));var fourth=form.Document;
+                first.AddText("CONTINUOUS_DRAG_UNSAVED",40,420,12,"自动",Color.Black);form.SelectTabForTest(0);var tabs=form.DocumentTabsForTest;
+                Assert(form.TitleTabsForTest&&tabs.PointToScreen(Point.Empty).Y-form.Top<=10&&FrameHit(form,new Point(form.ClientSize.Width/2,form.HeaderHeightForTest+12))==1,"tabs start at the window top and the reading toolbar remains client content");
+                var start=tabs.GetTabRect(0);var point=new Point(start.Left+24,start.Top+start.Height/2);TabMouse(tabs,0x201,point,1);
+                bool uninterrupted=true;
+                for(int target=1;target<4;target++){var rect=tabs.GetTabRect(target);point=new Point(rect.Right-16,rect.Top+rect.Height/2);TabMouse(tabs,0x200,point,1);uninterrupted&=form.DraggingTabForTest&&tabs.Capture&&form.TabDocumentForTest(target)==first;}
+                for(int target=2;target>=0;target--){var rect=tabs.GetTabRect(target);point=new Point(rect.Left+16,rect.Top+rect.Height/2);TabMouse(tabs,0x200,point,1);uninterrupted&=form.DraggingTabForTest&&tabs.Capture&&form.TabDocumentForTest(target)==first;}
+                var end=tabs.GetTabRect(2);point=new Point(end.Right-16,end.Top+end.Height/2);TabMouse(tabs,0x200,point,1);TabMouse(tabs,0x202,point,0);
+                Assert(uninterrupted&&form.TabDocumentForTest(0)==second&&form.TabDocumentForTest(1)==third&&form.TabDocumentForTest(2)==first&&form.TabDocumentForTest(3)==fourth,"one held left button can cross every tab, reverse direction, and drop at an arbitrary position");
+                Assert(form.Document==first&&first.Dirty&&first.CanUndo&&!tabs.Capture&&!form.DraggingTabForTest,"continuous drag retains the active modified document and releases capture on drop");
+                start=tabs.GetTabRect(2);TabMouse(tabs,0x201,new Point(start.Left+24,start.Top+start.Height/2),1);var left=tabs.GetTabRect(0);TabMouse(tabs,0x200,new Point(left.Left+12,left.Top+left.Height/2),1);Command(form,Keys.Escape);
+                Assert(form.TabDocumentForTest(0)==second&&form.TabDocumentForTest(2)==first&&!tabs.Capture&&!form.DraggingTabForTest,"Escape restores the order from before the held drag");
+                FrameCapture(form,Path.Combine(directory,"flat-title-tabs-preview.png"));
+                var bounds=form.Bounds;form.ToggleReadingMode();Application.DoEvents();Assert(form.ReadingModeForTest&&form.NativeCaptionForTest&&!form.TitleTabsForTest&&form.PointToScreen(Point.Empty).Y-form.Top>=SystemInformation.CaptionHeight&&form.Bounds==bounds,"reading mode restores the normal system title and keeps window bounds");form.ToggleReadingMode();Application.DoEvents();Assert(form.TitleTabsForTest&&!form.NativeCaptionForTest&&form.PointToScreen(Point.Empty).Y-form.Top<=2&&form.Bounds==bounds,"leaving reading mode removes native caption spacing again");
+                N.SendMessage(form.Handle,0x112,new IntPtr(0xf030),IntPtr.Zero);Application.DoEvents();var area=Screen.FromControl(form).WorkingArea;var canvas=form.CanvasForTest;log.AppendLine("Maximized: bounds="+form.Bounds+" client="+form.PointToScreen(Point.Empty)+" canvas="+canvas.PointToScreen(new Point(canvas.ClientSize.Width,canvas.ClientSize.Height))+" work="+area);Assert(form.WindowState==FormWindowState.Maximized&&form.PointToScreen(Point.Empty).Y==area.Top&&canvas.PointToScreen(Point.Empty).X>=area.Left&&canvas.PointToScreen(new Point(canvas.ClientSize.Width,canvas.ClientSize.Height)).Y<=area.Bottom,"maximized title and document stay inside the monitor work area");
+                Assert(FrameHit(form,new Point(form.ClientSize.Width-form.CaptionReserveForTest/2,form.HeaderHeightForTest/2))==9,"maximized restore button keeps native maximize hit code");
+                N.SendMessage(form.Handle,0x112,new IntPtr(0xf120),IntPtr.Zero);Application.DoEvents();log.AppendLine("Restored: bounds="+form.Bounds+" expected="+bounds+" client="+form.PointToScreen(Point.Empty));Assert(form.WindowState==FormWindowState.Normal&&form.Bounds==bounds&&form.PointToScreen(Point.Empty).Y-form.Top<=2,"restore returns exact bounds with no spare title row");
+                N.SendMessage(form.Handle,0x112,new IntPtr(0xf020),IntPtr.Zero);Application.DoEvents();Assert(form.WindowState==FormWindowState.Minimized,"native minimize command minimizes the custom title window");N.SendMessage(form.Handle,0x112,new IntPtr(0xf120),IntPtr.Zero);Application.DoEvents();
+                form.ToggleFullScreenForTest();Application.DoEvents();Assert(!form.TitleTabsForTest&&form.FormBorderStyle==FormBorderStyle.None,"true full screen hides the integrated title row");form.ToggleFullScreenForTest();Application.DoEvents();Assert(form.TitleTabsForTest&&form.PointToScreen(Point.Empty).Y-form.Top<=2,"leaving full screen restores the integrated title without blank spacing");
+                for(int i=0;i<6;i++){form.ToggleReadingMode();form.ToggleReadingMode();form.ClientSize=new Size(i%2==0?740:1120,660);Application.DoEvents();}Assert(form.TitleTabsForTest&&form.PointToScreen(Point.Empty).Y-form.Top<=2&&form.Document==first&&first.Dirty,"repeated mode switches and narrow resizing retain title geometry and unsaved data");
+                var restoredBounds=form.Bounds;N.SendMessage(form.Handle,0xa3,new IntPtr(2),Position(form.PointToScreen(new Point(form.ClientSize.Width-form.CaptionReserveForTest-12,form.HeaderHeightForTest/2))));Application.DoEvents();Assert(form.WindowState==FormWindowState.Maximized,"double-clicking empty title space maximizes the window");N.SendMessage(form.Handle,0xa3,new IntPtr(2),IntPtr.Zero);Application.DoEvents();Assert(form.WindowState==FormWindowState.Normal&&form.Bounds==restoredBounds,"double-click restores the prior window bounds");
+                using(var timer=AnswerSavePrompt(2)){N.SendMessage(form.Handle,0x112,new IntPtr(0xf060),IntPtr.Zero);Application.DoEvents();}Assert(!form.IsDisposed&&first.Dirty,"native caption close preserves unsaved tabs when save prompt is canceled");
+                first.Undo();Assert(!first.Dirty&&!first.AllText().Contains("CONTINUOUS_DRAG_UNSAVED"),"undo history survives continuous dragging and all title frame transitions");form.Close();Application.DoEvents();
+            }
+        }
+    }
+}

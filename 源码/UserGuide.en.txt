@@ -1,4 +1,4 @@
-Mini PDF 0.5 - User Guide
+Mini PDF 0.6.1 - User Guide
 Windows 10 / Windows 11 x64
 
 START AND LANGUAGE
@@ -14,10 +14,13 @@ Help offers this English guide first and a complete Chinese guide second. F1 ope
 OPEN AND ORGANIZE DOCUMENTS
 Ctrl+O opens one or more PDFs. You can also drag files onto the window.
 Each file has a tab; only the selected PDF appears in the document area.
-Tabs stay above the reading toolbar. A larger menu button sits at the left of the tab row.
-Drag a tab's text area left or right to change its position.
+The menu, rounded document tabs, and minimize/maximize/close buttons share the top title row.
+The reading toolbar sits immediately below it. There is no separate blank title row.
+The interface uses flat colors, subtle hover states, and rounded blue tabs.
+Hold the left mouse button on a tab's text area and drag it to any position.
+The tab follows the pointer; you can cross several tabs and reverse direction before releasing.
 When tabs overflow, hold the dragged tab near either edge to reach hidden tabs.
-Release the mouse to finish, or press Esc to stop dragging.
+Release the mouse to finish, or press Esc to restore the order from before the drag.
 Reordering preserves page, exact zoom, view, scroll position, tools, unsaved changes and undo.
 Ctrl+Tab / Ctrl+Shift+Tab switch tabs. Ctrl+W or Ctrl+F4 closes the current tab.
 A tab's X or a middle click also closes it. Modified files prompt you to save.

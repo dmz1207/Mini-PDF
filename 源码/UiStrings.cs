@@ -4,6 +4,10 @@ using System.Collections.Generic;
 namespace MiniPdf {
     internal static partial class UiText {
         static Dictionary<string,string> CreateTranslations(){return new Dictionary<string,string>(StringComparer.Ordinal) {
+            {"最小化","Minimize"},
+            {"最大化","Maximize"},
+            {"还原","Restore"},
+            {"关闭窗口","Close window"},
             {"文件(&F)","&File"},
             {"编辑(&E)","&Edit"},
             {"视图(&V)","&View"},
@@ -77,7 +81,7 @@ namespace MiniPdf {
             {"开源许可","Open-source licenses"},
             {"关于","About"},
             {"关于Mini PDF","About Mini PDF"},
-            {"Mini PDF 0.5\n\nWindows 10 / 11 x64\nWindows 系统控件 + PDFium 158.0.8111\n源码采用 MIT 许可证；PDFium 及其依赖遵循随附许可证。\n\n离线运行，无广告、无遥测。","Mini PDF 0.5\n\nWindows 10 / 11 x64\nNative Windows controls + PDFium 158.0.8111\nApplication source: MIT. PDFium and its dependencies retain their included licenses.\n\nOffline, no advertising or telemetry."},
+            {"Mini PDF 0.6.1\n\nWindows 10 / 11 x64\nWindows 系统控件 + PDFium 158.0.8111\n源码采用 MIT 许可证；PDFium 及其依赖遵循随附许可证。\n\n离线运行，无广告、无遥测。","Mini PDF 0.6.1\n\nWindows 10 / 11 x64\nNative Windows controls + PDFium 158.0.8111\nApplication source: MIT. PDFium and its dependencies retain their included licenses.\n\nOffline, no advertising or telemetry."},
             {"菜单（F10）","Menu (F10)"},
             {"菜单","Menu"},
             {"侧栏","Sidebar"},

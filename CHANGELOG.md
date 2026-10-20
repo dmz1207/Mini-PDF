@@ -2,6 +2,19 @@
 
 [English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
 
+## v0.6.1 — 2026-10-20
+
+- Merge the menu, rounded blue tabs, and minimize/maximize/close controls into the top title row. Remove the old blank title strip and raised tab borders; use flat toolbars and menus.
+- Fix drag capture loss caused by removing native TabPages during a move. Keep slots alive while reordering documents and display a tab that follows the pointer.
+- Support one continuous left-button hold across multiple tabs, reversing direction and dropping at any position. Esc restores the previous order; edge hovering reaches hidden tabs.
+- Preserve each document's content, edits, selected page, exact zoom, scroll position and undo history.
+- Keep native window movement, resize and caption hit codes, double-click maximize/restore, reading mode with a normal caption, and true full screen.
+- Fix maximized work-area geometry and the extra caption height added on restore.
+- Remove the original system caption in normal mode so there cannot be two rows of window controls. Keep it only in reading mode; check both non-client sizing variants and the actual packaged EXE.
+- Update both embedded guides and English-first / Chinese-second documentation.
+- EXE: 2,955,264 bytes, approximately 2.82 MiB; only 4 KiB larger than v0.5, with no new runtime dependency.
+- Pass 238 program regressions, 33 independent PDF checks, and 14 portable-launcher checks: 285 in total on Windows 10 x64. Windows 11 has not been separately machine-tested.
+
 ## v0.5.0 — 2026-10-20
 
 - Place document tabs above the reading toolbar, with the menu button at the left of the same tab row.
