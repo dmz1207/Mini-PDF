@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -9,8 +9,8 @@ namespace MiniPdf {
     internal enum PageLayout { Single, Double, Book, Grid }
     internal sealed class PdfCanvas : ScrollableControl {
         readonly MainWindow owner;
-        readonly Dictionary<int,Bitmap> images=new Dictionary<int,Bitmap>();
-        readonly Queue<int> imageOrder=new Queue<int>();
+        readonly Dictionary<string,Bitmap> images=new Dictionary<string,Bitmap>();
+        readonly Queue<string> imageOrder=new Queue<string>();
         long cacheBytes;
         Rectangle[] pageRects=new Rectangle[0];
         public PageLayout LayoutMode=PageLayout.Single;
@@ -37,7 +37,14 @@ namespace MiniPdf {
         public Rectangle PageRectangle {get{return Doc==null||Doc.Index>=pageRects.Length?Rectangle.Empty:ScreenRect(pageRects[Doc.Index]);}}
         Rectangle ScreenRect(Rectangle rect){rect.Offset(AutoScrollPosition);return rect;}
         void ClearImages(){foreach(var image in images.Values)image.Dispose();images.Clear();imageOrder.Clear();cacheBytes=0;}
-        Bitmap ImageFor(int index){Bitmap image;if(images.TryGetValue(index,out image))return image;var r=pageRects[index];double rasterScale=Math.Min(1,Math.Sqrt(24000000.0/((double)r.Width*r.Height)));rasterScale=Math.Min(rasterScale,14000.0/Math.Max(r.Width,r.Height));int w=Math.Max(1,(int)(r.Width*rasterScale)),h=Math.Max(1,(int)(r.Height*rasterScale));image=Doc.Render(index,w,h,ViewRotation);images.Add(index,image);imageOrder.Enqueue(index);cacheBytes+=(long)w*h*4;while(images.Count>1&&(images.Count>48||cacheBytes>64L*1024*1024)){int oldest=imageOrder.Dequeue();var prior=images[oldest];cacheBytes-=(long)prior.Width*prior.Height*4;prior.Dispose();images.Remove(oldest);}return image;}
+        Bitmap CachedImage(string key,Func<Bitmap> render){Bitmap image;if(images.TryGetValue(key,out image))return image;image=render();images.Add(key,image);imageOrder.Enqueue(key);cacheBytes+=(long)image.Width*image.Height*4;while(images.Count>1&&(images.Count>48||cacheBytes>64L*1024*1024)){string oldest=imageOrder.Dequeue();var prior=images[oldest];cacheBytes-=(long)prior.Width*prior.Height*4;prior.Dispose();images.Remove(oldest);}return image;}
+        void DrawPageImage(Graphics graphics,int index,Rectangle page,Rectangle clip){
+            if((long)page.Width*page.Height<=24000000&&page.Width<=14000&&page.Height<=14000){var image=CachedImage("P"+index,delegate{return Doc.Render(index,page.Width,page.Height,ViewRotation);});graphics.DrawImageUnscaled(image,page.Location);return;}
+            // At high zoom, render native-resolution tiles only where the viewport is visible.
+            Rectangle visible=Rectangle.Intersect(page,Rectangle.Intersect(ClientRectangle,clip));if(visible.IsEmpty)return;const int tile=768;
+            int firstX=Math.Max(0,(visible.Left-page.Left)/tile*tile),firstY=Math.Max(0,(visible.Top-page.Top)/tile*tile);
+            for(int y=firstY;y<visible.Bottom-page.Top;y+=tile)for(int x=firstX;x<visible.Right-page.Left;x+=tile){var region=new Rectangle(x,y,Math.Min(tile,page.Width-x),Math.Min(tile,page.Height-y));string key="T"+index+":"+x+":"+y;var image=CachedImage(key,delegate{return Doc.RenderRegion(index,page.Width,page.Height,ViewRotation,region);});graphics.DrawImageUnscaled(image,page.X+x,page.Y+y);}
+        }
         void SyncPageSize(){if(Doc!=null&&Doc.Index<pageRects.Length){pixelWidth=pageRects[Doc.Index].Width;pixelHeight=pageRects[Doc.Index].Height;}}
         internal int HitPage(Point p){for(int i=0;i<pageRects.Length;i++)if(!pageRects[i].IsEmpty&&ScreenRect(pageRects[i]).Contains(p))return i;return -1;}
         internal Rectangle[] LayoutRectangles {get{return pageRects;}}
@@ -55,11 +62,11 @@ namespace MiniPdf {
                 float dpi;using(var g=CreateGraphics())dpi=g.DpiX;
                 var sizes=new SizeF[Doc.Count];float maxWidth=1,maxHeight=1;for(int i=0;i<sizes.Length;i++){sizes[i]=Doc.PageSize(i);if(ViewRotation%2!=0)sizes[i]=new SizeF(sizes[i].Height,sizes[i].Width);maxWidth=Math.Max(maxWidth,sizes[i].Width);maxHeight=Math.Max(maxHeight,sizes[i].Height);}
                 bool coverAlone=LayoutMode==PageLayout.Book&&!Continuous&&Doc.Index==0;
-                int fixedColumns=LayoutMode==PageLayout.Single||coverAlone?1:LayoutMode==PageLayout.Grid?3:2;const int gap=24,margin=24;int rowGap=LayoutMode==PageLayout.Grid?34:24;
-                if(Fit==1)Zoom=(float)((ClientSize.Width-64-gap*(fixedColumns-1))/(maxWidth*fixedColumns*dpi/72));
-                if(Fit==2)Zoom=(float)Math.Min((ClientSize.Width-64-gap*(fixedColumns-1))/(maxWidth*fixedColumns*dpi/72),(ClientSize.Height-48)/(maxHeight*dpi/72));
-                Zoom=Math.Max(0.04f,Math.Min(4,Zoom));double scale=Zoom*dpi/72;
-                int slotWidth=Math.Max(1,(int)Math.Round(maxWidth*scale));ColumnCount=LayoutMode==PageLayout.Grid?Math.Max(1,Math.Min(24,(ClientSize.Width-48+gap)/(slotWidth+gap))):fixedColumns;
+                int fixedColumns=LayoutMode==PageLayout.Single||coverAlone?1:LayoutMode==PageLayout.Grid?3:2;const int gap=8,margin=4;int rowGap=LayoutMode==PageLayout.Grid?24:8;
+                if(Fit==1)Zoom=(float)((ClientSize.Width-2*margin-SystemInformation.VerticalScrollBarWidth-gap*(fixedColumns-1))/(maxWidth*fixedColumns*dpi/72));
+                if(Fit==2)Zoom=(float)Math.Min((ClientSize.Width-2*margin-SystemInformation.VerticalScrollBarWidth-gap*(fixedColumns-1))/(maxWidth*fixedColumns*dpi/72),(ClientSize.Height-2*margin)/(maxHeight*dpi/72));
+                Zoom=Math.Max(0.01f,Math.Min(64,Zoom));double scale=Zoom*dpi/72;
+                int slotWidth=Math.Max(1,(int)Math.Round(maxWidth*scale));ColumnCount=LayoutMode==PageLayout.Grid?Math.Max(1,Math.Min(64,(ClientSize.Width-2*margin+gap)/(slotWidth+gap))):fixedColumns;
                 int contentWidth=ColumnCount*slotWidth+(ColumnCount-1)*gap,virtualWidth=Math.Max(ClientSize.Width,contentWidth+2*margin),left=(virtualWidth-contentWidth)/2;
                 pageRects=new Rectangle[Doc.Count];int activeRow=LayoutMode==PageLayout.Book?(Doc.Index==0?0:(Doc.Index+1)/2):Doc.Index/ColumnCount;
                 int previousRow=-1,rowHeight=0,y=margin;
@@ -70,7 +77,7 @@ namespace MiniPdf {
                     if(previousRow!=-1&&row!=previousRow){y=checked(y+rowHeight+rowGap);rowHeight=0;}previousRow=row;
                     int w=Math.Max(1,(int)Math.Round(sizes[i].Width*scale)),h=Math.Max(1,(int)Math.Round(sizes[i].Height*scale));pageRects[i]=new Rectangle(left+column*(slotWidth+gap)+(slotWidth-w)/2,y,w,h);rowHeight=Math.Max(rowHeight,h);
                 }
-                SyncPageSize();AutoScrollMinSize=new Size(contentWidth+2*margin,checked(y+rowHeight+margin));var active=pageRects[Doc.Index];if(resetScroll)AutoScrollPosition=new Point(Math.Max(0,active.X-24),Math.Max(0,active.Y-margin));else if(hasAnchor)AutoScrollPosition=new Point(Math.Max(0,(int)Math.Round(active.X+anchorX*active.Width-ClientSize.Width/2.0)),Math.Max(0,(int)Math.Round(active.Y+anchorY*active.Height-ClientSize.Height/2.0)));lastViewport=ClientSize;owner.UpdateZoom(Zoom);
+                SyncPageSize();AutoScrollMinSize=new Size(contentWidth+2*margin,checked(y+rowHeight+margin));var active=pageRects[Doc.Index];if(resetScroll)AutoScrollPosition=new Point(Math.Max(0,active.X-margin),Math.Max(0,active.Y-margin));else if(hasAnchor)AutoScrollPosition=new Point(Math.Max(0,(int)Math.Round(active.X+anchorX*active.Width-ClientSize.Width/2.0)),Math.Max(0,(int)Math.Round(active.Y+anchorY*active.Height-ClientSize.Height/2.0)));lastViewport=ClientSize;owner.UpdateZoom(Zoom);
             }catch(Exception e){owner.Report(e.Message);}finally{rebuilding=false;Invalidate();}
         }
         protected override void OnResize(EventArgs e){base.OnResize(e);if(owner!=null&&Doc!=null&&Fit!=0&&Visible)Rebuild(false);}
@@ -88,7 +95,7 @@ namespace MiniPdf {
             var viewport=ClientRectangle;viewport.Inflate(80,80);
             for(int i=0;i<pageRects.Length;i++){if(pageRects[i].IsEmpty)continue;var page=ScreenRect(pageRects[i]);if(!viewport.IntersectsWith(page))continue;
                 using(var shadow=new SolidBrush(Color.FromArgb(35,30,45,60)))g.FillRectangle(shadow,page.X+3,page.Y+4,page.Width+1,page.Height+1);
-                try{var rendered=ImageFor(i);if(rendered.Width==page.Width&&rendered.Height==page.Height)g.DrawImageUnscaled(rendered,page.Location);else{g.InterpolationMode=InterpolationMode.HighQualityBicubic;g.DrawImage(rendered,page);}}catch(Exception ex){g.FillRectangle(Brushes.White,page);owner.Report(ex.Message);}
+                try{DrawPageImage(g,i,page,e.ClipRectangle);}catch(Exception ex){g.FillRectangle(Brushes.White,page);owner.Report(ex.Message);}
                 using(var border=new Pen(i==Doc.Index&&LayoutMode==PageLayout.Grid?Color.FromArgb(24,117,152):Color.FromArgb(205,212,218),i==Doc.Index&&LayoutMode==PageLayout.Grid?2:1))g.DrawRectangle(border,page.X-1,page.Y-1,page.Width+1,page.Height+1);
                 if(LayoutMode==PageLayout.Grid)TextRenderer.DrawText(g,(i+1).ToString(),Font,new Rectangle(page.X,page.Bottom+3,page.Width,26),Color.FromArgb(100,110,120),TextFormatFlags.HorizontalCenter);
             }

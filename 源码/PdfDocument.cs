@@ -12,6 +12,7 @@ namespace MiniPdf {
         public int ObjectIndex=-1, AnnotIndex=-1, Type;
         public N.Rect Bounds;
         public string Text="";
+        public bool IsOcrText;
         public bool IsAnnotation {get{return AnnotIndex>=0;}}
     }
     internal sealed class Bookmark { public string Title; public int Page; public List<Bookmark> Children=new List<Bookmark>(); }
@@ -113,12 +114,17 @@ namespace MiniPdf {
         public void Undo(){if(!CanUndo)return;var current=Capture();var prior=undo[undo.Count-1];Restore(prior);undo.RemoveAt(undo.Count-1);redo.Add(current);Trim(redo);}
         public void Redo(){if(!CanRedo)return;var current=Capture();var next=redo[redo.Count-1];Restore(next);redo.RemoveAt(redo.Count-1);undo.Add(current);Trim(undo);}
         public Bitmap Render(int index,int width,int height,int rotation=0) {
+            return RenderRegion(index,width,height,rotation,new Rectangle(0,0,width,height));
+        }
+        internal Bitmap RenderRegion(int index,int pageWidth,int pageHeight,int rotation,Rectangle region) {
+            int width=region.Width,height=region.Height;
             if(width<1||height<1||width>14000||height>14000||(long)width*height>24000000)throw new InvalidOperationException("当前缩放超出显示内存限制，请减小缩放比例。");
+            Check(pageWidth>0&&pageHeight>0&&region.X>=0&&region.Y>=0&&(long)region.Right<=pageWidth&&(long)region.Bottom<=pageHeight,"页面显示范围无效。");
             IntPtr page=index==Index?Page:N.FPDF_LoadPage(Handle,index),bitmap=IntPtr.Zero;
             try {
                 Check(page!=IntPtr.Zero,"无法读取页面。");bitmap=N.FPDFBitmap_Create(width,height,1);Check(bitmap!=IntPtr.Zero,"无法分配页面图像。");
                 N.FPDFBitmap_FillRect(bitmap,0,0,width,height,0xffffffff);
-                N.FPDF_RenderPageBitmap(bitmap,page,0,0,width,height,rotation,1|2);
+                N.FPDF_RenderPageBitmap(bitmap,page,-region.X,-region.Y,pageWidth,pageHeight,rotation,1|2);
                 // GDI+ Clone can retain an external pixel buffer. Copy each row
                 // into an owned bitmap before releasing PDFium's native allocation.
                 var result=new Bitmap(width,height,PixelFormat.Format32bppArgb);
@@ -137,13 +143,17 @@ namespace MiniPdf {
                 try{int type=N.FPDFAnnot_GetSubtype(a);N.Rect r;if(type!=2&&type!=20&&N.FPDFAnnot_GetRect(a,out r)!=0&&Contains(r,point,2))return new Pick{AnnotIndex=i,Type=type,Bounds=r,Text=AnnotText(a)};}
                 finally{N.FPDFPage_CloseAnnot(a);}
             }
+            // OCR text may be invisible or be painted before a full-page scan image.
+            int character=CharAt(point);IntPtr text=character<0?IntPtr.Zero:N.FPDFText_GetTextObject(TextPage,character);
+            if(text!=IntPtr.Zero)for(int i=0;i<N.FPDFPage_CountObjects(Page);i++)if(N.FPDFPage_GetObject(Page,i)==text){var pick=PagePick(i,text);if(Contains(pick.Bounds,point,2)){for(int j=i+1;j<N.FPDFPage_CountObjects(Page);j++){IntPtr above=N.FPDFPage_GetObject(Page,j);if(N.FPDFPageObj_GetType(above)==3&&Contains(ObjectBounds(above),point,0)){pick.IsOcrText=true;break;}}return pick;}}
             for(int i=N.FPDFPage_CountObjects(Page)-1;i>=0;i--) {
                 IntPtr obj=N.FPDFPage_GetObject(Page,i);float l,b,r,t;
                 if(N.FPDFPageObj_GetBounds(obj,out l,out b,out r,out t)==0)continue;
                 var rect=new N.Rect(l,b,r,t);
-                if(Contains(rect,point,2)){int type=N.FPDFPageObj_GetType(obj);return new Pick{ObjectIndex=i,Type=type,Bounds=rect,Text=type==1?ObjectText(obj):""};}
+                if(Contains(rect,point,2))return PagePick(i,obj);
             }return null;
         }
+        Pick PagePick(int index,IntPtr obj){int type=N.FPDFPageObj_GetType(obj);bool hidden=false;if(type==1){int mode=N.FPDFTextObj_GetTextRenderMode(obj);uint r,g,b,a;hidden=mode==3||mode==7||(N.FPDFPageObj_GetFillColor(obj,out r,out g,out b,out a)!=0&&a==0);}return new Pick{ObjectIndex=index,Type=type,Bounds=ObjectBounds(obj),Text=type==1?ObjectText(obj):"",IsOcrText=hidden};}
         public string ObjectText(IntPtr obj){uint size=N.FPDFTextObj_GetText(obj,TextPage,null,0);if(size==0||size>16*1024*1024)return "";var buffer=new byte[size];N.FPDFTextObj_GetText(obj,TextPage,buffer,size);return Encoding.Unicode.GetString(buffer).TrimEnd('\0');}
         static string AnnotText(IntPtr a){uint size=N.FPDFAnnot_GetStringValue(a,"Contents",null,0);if(size<2||size>1024*1024)return "";var b=new byte[size];N.FPDFAnnot_GetStringValue(a,"Contents",b,size);return Encoding.Unicode.GetString(b).TrimEnd('\0');}
         public float ObjectFontSize(Pick pick){float size=12;N.FPDFTextObj_GetFontSize(ObjectAt(pick),out size);return Math.Max(1,size);}
@@ -176,11 +186,11 @@ namespace MiniPdf {
             Check(font!=IntPtr.Zero,"无法载入字体，请换用其他字体。");fonts.Add(key,font);CheckFontCharacters(key,text);return font;
         }
         void CheckFontCharacters(string key,string text){HashSet<char> supported;if(!fontGlyphs.TryGetValue(key,out supported)){foreach(char ch in text)if(ch>126)throw new InvalidOperationException("所选标准字体不包含这些字符，请选择“自动”或合适的系统字体。");return;}foreach(char ch in text){if(ch=='\r'||ch=='\n'||ch=='\t')continue;if(!supported.Contains(ch))throw new InvalidOperationException("所选字体不支持部分字符（U+"+((int)ch).ToString("X4")+"），请更换字体或删除该字符。");}}
-        void InsertText(string text,float size,string face,Color color,N.Matrix matrix,int at) {
+        void InsertText(string text,float size,string face,Color color,N.Matrix matrix,int at,int renderMode=0,uint opacity=255) {
             IntPtr font=FontFor(text,face);int line=0;
             foreach(string value in text.Replace("\r","").Replace("\t","    ").Split('\n')) {
                 if(value.Length>0){IntPtr obj=N.FPDFPageObj_CreateTextObj(Handle,font,size);Check(obj!=IntPtr.Zero,"无法创建文字对象。");
-                    try{Check(N.FPDFText_SetText(obj,value)!=0,"无法设置文字。");N.FPDFPageObj_SetFillColor(obj,color.R,color.G,color.B,255);var m=matrix;float offset=-line*size*1.4f;m.e+=m.c*offset;m.f+=m.d*offset;Check(N.FPDFPageObj_SetMatrix(obj,ref m)!=0,"无法设置文字位置。");Check(N.FPDFPage_InsertObjectAtIndex(Page,obj,new UIntPtr((uint)at))!=0,"无法插入文字。");obj=IntPtr.Zero;at++;}
+                    try{Check(N.FPDFText_SetText(obj,value)!=0,"无法设置文字。");Check(N.FPDFTextObj_SetTextRenderMode(obj,renderMode)!=0,"无法保留文字显示属性。");N.FPDFPageObj_SetFillColor(obj,color.R,color.G,color.B,opacity);N.FPDFPageObj_SetStrokeColor(obj,color.R,color.G,color.B,opacity);var m=matrix;float offset=-line*size*1.4f;m.e+=m.c*offset;m.f+=m.d*offset;Check(N.FPDFPageObj_SetMatrix(obj,ref m)!=0,"无法设置文字位置。");Check(N.FPDFPage_InsertObjectAtIndex(Page,obj,new UIntPtr((uint)at))!=0,"无法插入文字。");obj=IntPtr.Zero;at++;}
                     finally{if(obj!=IntPtr.Zero)N.FPDFPageObj_Destroy(obj);}}
                 line++;
             }
@@ -188,7 +198,7 @@ namespace MiniPdf {
         public void AddText(string text,float x,float y,float size,string face,Color color){Check(!String.IsNullOrWhiteSpace(text),"请输入文字。");Edit(delegate{InsertText(text,size,face,color,new N.Matrix{a=1,d=1,e=x,f=y},N.FPDFPage_CountObjects(Page));});}
         public void ReplaceText(Pick pick,string text,float size,string face,Color color) {
             Check(pick!=null&&!pick.IsAnnotation&&pick.Type==1,"请选择一个文字对象。");Check(!String.IsNullOrWhiteSpace(text),"删除文字请使用删除键。");
-            Edit(delegate{IntPtr obj=ObjectAt(pick);N.Matrix m;Check(N.FPDFPageObj_GetMatrix(obj,out m)!=0,"无法读取文字位置。");Check(N.FPDFPage_RemoveObject(Page,obj)!=0,"无法删除原文字。");N.FPDFPageObj_Destroy(obj);InsertText(text,size,face,color,m,pick.ObjectIndex);});
+            Edit(delegate{IntPtr obj=ObjectAt(pick);N.Matrix m;int mode=N.FPDFTextObj_GetTextRenderMode(obj);Check(mode>=0&&mode<=7,"无法读取文字显示属性。");uint r,g,b,alpha;if(N.FPDFPageObj_GetFillColor(obj,out r,out g,out b,out alpha)==0)alpha=255;Check(N.FPDFPageObj_GetMatrix(obj,out m)!=0,"无法读取文字位置。");Check(N.FPDFPage_RemoveObject(Page,obj)!=0,"无法删除原文字。");N.FPDFPageObj_Destroy(obj);InsertText(text,size,face,color,m,pick.ObjectIndex,mode,alpha);});
         }
         public void Remove(Pick pick){Check(pick!=null,"请先选择对象。");Edit(delegate{if(pick.IsAnnotation)Check(N.FPDFPage_RemoveAnnot(Page,pick.AnnotIndex)!=0,"无法删除批注。");else{IntPtr obj=ObjectAt(pick);Check(N.FPDFPage_RemoveObject(Page,obj)!=0,"无法删除对象。");N.FPDFPageObj_Destroy(obj);}});}
         public void Move(Pick pick,float dx,float dy){Check(pick!=null,"请选择对象。");if(pick.IsAnnotation)throw new InvalidOperationException("批注暂不支持移动，可撤销后重新添加。");Edit(delegate{N.FPDFPageObj_Transform(ObjectAt(pick),1,0,0,1,dx,dy);});}

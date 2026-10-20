@@ -54,6 +54,33 @@ def fixtures(root):
         many.drawString(55, 760, f"LARGE DOCUMENT PAGE {i + 1}")
         many.showPage()
     many.save()
+    from PIL import Image, ImageDraw, ImageFont
+    from reportlab.lib.utils import ImageReader
+    width,height=595.276,841.89
+    scan=Image.new('RGB',(1191,1684),'white')
+    painter=ImageDraw.Draw(scan)
+    font=ImageFont.truetype('C:/Windows/Fonts/arial.ttf',40)
+    painter.text((110,164),'OCR ORIGINAL LAYER',font=font,fill=(25,40,55),anchor='ls')
+    painter.text((110,264),'Scanned image stays unchanged',font=font,fill=(45,65,85),anchor='ls')
+    layered=canvas.Canvas(str(root/'layered-ocr.pdf'),pagesize=(width,height))
+    def ocr_text(mode=3):
+        text=layered.beginText(55,760)
+        text.setFont('Helvetica',20)
+        text.setTextRenderMode(mode)
+        text.textLine('OCR ORIGINAL LAYER')
+        layered.drawText(text)
+    for variant in range(4):
+        if variant==1:
+            ocr_text()
+        layered.drawImage(ImageReader(scan),0,0,width,height)
+        if variant==0:
+            ocr_text()
+        elif variant==2:
+            layered.saveState();layered.setFillAlpha(0);ocr_text(0);layered.restoreState()
+        elif variant==3:
+            layered.beginForm('NestedOCR',0,0,width,height);ocr_text();layered.endForm();layered.doForm('NestedOCR')
+        layered.showPage()
+    layered.save()
 
 
 def verify(root):
@@ -95,6 +122,20 @@ def verify(root):
     protected = PdfReader(root / "owner-edited.pdf")
     check(protected.is_encrypted and protected.decrypt("read123") != 0, "Saving an encrypted PDF retains password protection")
     check("OWNER_EDIT" in protected.pages[0].extract_text(), "Authorized owner-password editing persists")
+    if (root/'layered-ocr-edited.pdf').exists():
+        layered=PdfReader(root/'layered-ocr-edited.pdf')
+        original=PdfReader(root/'layered-ocr.pdf')
+        for index in range(3):
+            check(f'OCR_FIXED_{index}' in layered.pages[index].extract_text() and 'OCR ORIGINAL LAYER' not in layered.pages[index].extract_text(),f'OCR variant {index}: replacement updates searchable text')
+            original_images=[obj.get_object().get_data() for obj in original.pages[index]['/Resources']['/XObject'].get_object().values() if obj.get_object().get('/Subtype')=='/Image']
+            edited_images=[obj.get_object().get_data() for obj in layered.pages[index]['/Resources']['/XObject'].get_object().values() if obj.get_object().get('/Subtype')=='/Image']
+            check(original_images==edited_images and len(edited_images)==1,f'OCR variant {index}: scan image pixels preserved')
+        with pymupdf.open(root/'layered-ocr.pdf') as first, pymupdf.open(root/'layered-ocr-edited.pdf') as second:
+            for index in range(4):
+                before=first[index].get_pixmap(matrix=pymupdf.Matrix(1,1),alpha=False)
+                after=second[index].get_pixmap(matrix=pymupdf.Matrix(1,1),alpha=False)
+                check(before.samples==after.samples,f'OCR variant {index}: independent rendering stays identical without visible duplicate text')
+        check('OCR ORIGINAL LAYER' in layered.pages[3].extract_text(),'Nested OCR text preserved during save')
     for filename in ["baseline.pdf", "edited.pdf", "external-edited.pdf", "ui-edited.pdf", "multi-page.pdf"]:
         with pymupdf.open(root / filename) as doc:
             page = doc[0]

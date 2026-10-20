@@ -1,8 +1,8 @@
-﻿param([switch]$Test)
+﻿param([switch]$Test,[string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path -Parent $PSScriptRoot
 $buildWork = Join-Path $projectDir 'work'
-$appDir = $projectDir
+$appDir = if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory) } else { $projectDir }
 $stagingDir = Join-Path $buildWork 'application'
 New-Item -ItemType Directory -Force -Path $buildWork,$appDir,$stagingDir | Out-Null
 $env:TEMP = $buildWork

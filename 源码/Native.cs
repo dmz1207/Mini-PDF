@@ -66,6 +66,9 @@ namespace MiniPdf {
         [DllImport(D)] internal static extern IntPtr FPDFPageObj_CreateTextObj(IntPtr doc,IntPtr font,float size);
         [DllImport(D,CharSet=CharSet.Unicode)] internal static extern int FPDFText_SetText(IntPtr obj,string text);
         [DllImport(D)] internal static extern int FPDFTextObj_GetFontSize(IntPtr obj,out float size);
+        [DllImport(D)] internal static extern int FPDFTextObj_GetTextRenderMode(IntPtr obj);
+        [DllImport(D)] internal static extern int FPDFTextObj_SetTextRenderMode(IntPtr obj,int mode);
+        [DllImport(D)] internal static extern IntPtr FPDFText_GetTextObject(IntPtr textPage,int index);
         [DllImport(D)] internal static extern uint FPDFTextObj_GetText(IntPtr obj,IntPtr textPage,[Out] byte[] buffer,uint length);
         [DllImport(D)] internal static extern IntPtr FPDFText_LoadPage(IntPtr page);
         [DllImport(D)] internal static extern void FPDFText_ClosePage(IntPtr textPage);
