@@ -17,13 +17,22 @@ using System.Runtime.InteropServices;
 using System.Text;
 public static class MiniPdfWindowProbe {
     [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr window, StringBuilder text, int length);
+    public delegate bool ChildCallback(IntPtr window, IntPtr value);
+    [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr window, ChildCallback callback, IntPtr value);
+    [StructLayout(LayoutKind.Sequential)] public struct Rect { public int left,top,right,bottom; }
+    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr window, out Rect rect);
+    [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr window, int message, IntPtr w, IntPtr l);
+    public static int Tabs(IntPtr parent) { int count=0; EnumChildWindows(parent,delegate(IntPtr child,IntPtr unused){var text=new StringBuilder(256);GetClassName(child,text,256);Rect rect;GetWindowRect(child,out rect);if(text.ToString().Contains("SysTabControl32")&&rect.bottom-rect.top<90)count=(int)SendMessage(child,0x1304,IntPtr.Zero,IntPtr.Zero);return true;},IntPtr.Zero);return count; }
 }
 '@
 $checks = New-Object Collections.Generic.List[string]
 $running = New-Object Collections.Generic.List[object]
-function Start-CheckedWindow([string]$document, [string]$expectedTitle) {
-    $launchArgs = @{FilePath=$isolatedExe;PassThru=$true;WindowStyle='Hidden'}
-    if ($document) { $launchArgs.ArgumentList = '"' + $document + '"' }
+function Start-CheckedWindow([string]$document, [string]$expectedTitle, [bool]$separate=$true, [string]$extraDocument='') {
+    $launchArgs = @{FilePath=$isolatedExe;PassThru=$true;WindowStyle='Hidden';WorkingDirectory=$testRoot}
+    $arguments = if ($separate) { '--new-window ' } else { '' }
+    if ($document) { $arguments += '"' + $document + '"' }
+    if ($extraDocument) { $arguments += ' "' + $extraDocument + '"' }
+    if ($arguments.Trim()) { $launchArgs.ArgumentList = $arguments }
     $wrapper = Start-Process @launchArgs
     $child = $null
     $deadline = (Get-Date).AddSeconds(12)
@@ -52,6 +61,22 @@ function Close-CheckedWindow($record) {
     if (-not $record.Wrapper.WaitForExit(10000)) { throw '单文件程序退出超时。' }
     if ($record.Wrapper.ExitCode -ne 0) { throw ('单文件程序退出码错误：' + $record.Wrapper.ExitCode) }
 }
+function Forward-Checked([string]$arguments) {
+    $launchArgs = @{FilePath=$isolatedExe;PassThru=$true;WindowStyle='Hidden';WorkingDirectory=$testRoot}
+    if ($arguments) { $launchArgs.ArgumentList=$arguments }
+    $forwarded = Start-Process @launchArgs
+    if (-not $forwarded.WaitForExit(12000)) { throw '后续打开文件未转入已有窗口。' }
+    if ($forwarded.ExitCode -ne 0) { throw ('文件转交失败：' + $forwarded.ExitCode) }
+}
+function Wait-TabCount($record,[int]$count,[string]$title='') {
+    $deadline=(Get-Date).AddSeconds(8)
+    do {
+        $record.Child.Refresh()
+        if ([MiniPdfWindowProbe]::Tabs($record.Child.MainWindowHandle) -eq $count -and (-not $title -or $record.Child.MainWindowTitle.Contains($title))) { return }
+        Start-Sleep -Milliseconds 80
+    } while ((Get-Date) -lt $deadline)
+    throw ('标签数量或标题错误，预期 ' + $count + ' 个标签：' + $record.Child.MainWindowTitle)
+}
 try {
     if (Test-Path -LiteralPath (Join-Path $testRoot 'pdfium.dll')) { throw '独立测试目录不应含有额外 DLL。' }
     $first = Start-CheckedWindow '' 'Mini PDF'
@@ -77,6 +102,32 @@ try {
     $remaining = @(Get-ChildItem -LiteralPath $testRoot -Force -Directory | Where-Object Name -like '.MiniPDF-runtime-*')
     if ($remaining.Count -ne 0) { throw '再次启动没有清理遗留运行目录。' }
     $checks.Add('Next launch removes stale runtime files safely')
+    $primary = Start-CheckedWindow $sourcePdf 'baseline.pdf' $false
+    Forward-Checked ('"' + $spacedPdf + '"')
+    Wait-TabCount $primary 2 '中文 测试文件 with spaces.pdf'
+    $checks.Add('Subsequent double-click forwards Chinese filename to existing window as a new tab')
+    Forward-Checked ('"' + $sourcePdf + '"')
+    Wait-TabCount $primary 2 'baseline.pdf'
+    $checks.Add('Opening an existing document activates its tab without duplication')
+    Forward-Checked ''
+    Wait-TabCount $primary 2
+    $checks.Add('Starting without a filename focuses existing window without a new document')
+    $extra = Start-CheckedWindow '中文 测试文件 with spaces.pdf' 'baseline.pdf' $true $sourcePdf
+    Wait-TabCount $extra 2 'baseline.pdf'
+    $primary.Child.Refresh()
+    if ($primary.Child.HasExited) { throw '新建窗口破坏了原窗口。' }
+    $checks.Add('Explicit new window opens multiple arguments, including a relative Unicode filename')
+    Close-CheckedWindow $extra
+    $runtimeBefore = @(Get-ChildItem -LiteralPath $testRoot -Force -Directory | Where-Object Name -like '.MiniPDF-runtime-*')
+    if ($runtimeBefore.Count -ne 1) { throw '文件转交进程遗留了解包目录。' }
+    $checks.Add('Forwarding processes exit and clean their temporary engine copies')
+    $primary.Child.Kill()
+    if (-not $primary.Wrapper.WaitForExit(10000)) { throw '异常退出后的启动器未退出。' }
+    $restarted = Start-CheckedWindow $sourcePdf 'baseline.pdf' $false
+    Close-CheckedWindow $restarted
+    $checks.Add('Single-instance ownership and file opening recover after an unexpected process exit')
+    $remaining = @(Get-ChildItem -LiteralPath $testRoot -Force -Directory | Where-Object Name -like '.MiniPDF-runtime-*')
+    if ($remaining.Count -ne 0) { throw '单实例测试退出后遗留运行目录。' }
     $checks | Set-Content -LiteralPath (Join-Path $testRoot 'launcher-checks.txt') -Encoding UTF8
     'Launcher checks: ' + $checks.Count + ' passed'
 } finally {

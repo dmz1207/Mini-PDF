@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,10 +21,10 @@ namespace MiniPdf.Boot {
         [STAThread] static int Main(string[] args){string root=AppDomain.CurrentDomain.BaseDirectory,folder=null;FileStream lease=null;try{
             CleanupStale(root);folder=Path.Combine(root,Prefix+Process.GetCurrentProcess().Id+"-"+Guid.NewGuid().ToString("N").Substring(0,8));Directory.CreateDirectory(folder);
             File.SetAttributes(folder,File.GetAttributes(folder)|FileAttributes.Hidden);lease=new FileStream(Path.Combine(folder,".lease"),FileMode.CreateNew,FileAccess.ReadWrite,FileShare.None);
-            Extract(folder);var arguments=new StringBuilder();foreach(string argument in args){if(arguments.Length>0)arguments.Append(' ');arguments.Append(Quote(argument));}
+            Extract(folder);var arguments=new StringBuilder();foreach(string argument in args){if(arguments.Length>0)arguments.Append(' ');arguments.Append(Quote(argument.StartsWith("--",StringComparison.Ordinal)?argument:Path.GetFullPath(argument)));}
             var start=new ProcessStartInfo(Path.Combine(folder,"MiniPDF.Core.exe"),arguments.ToString()){UseShellExecute=false,WorkingDirectory=root,CreateNoWindow=true};
             // All application-created temporary files stay beside the portable EXE.
-            start.EnvironmentVariables["TEMP"]=folder;start.EnvironmentVariables["TMP"]=folder;
+            start.EnvironmentVariables["MINIPDF_LAUNCHER"]=Assembly.GetExecutingAssembly().Location;start.EnvironmentVariables["TEMP"]=folder;start.EnvironmentVariables["TMP"]=folder;
             using(var child=Process.Start(start)){child.WaitForExit();return child.ExitCode;}
         }catch(Exception e){MessageBox.Show(e.Message+"\n\n请把程序放在可写入的文件夹中运行。","Mini PDF 无法启动",MessageBoxButtons.OK,MessageBoxIcon.Error);return 1;}
         finally{if(lease!=null)lease.Dispose();if(folder!=null)RemoveFolder(folder,root);}}

@@ -4,6 +4,10 @@ using System.Runtime.InteropServices;
 namespace MiniPdf {
     // PDFium's Windows ABI uses 32-bit unsigned long, including on x64.
     internal static class N {
+        [DllImport("user32.dll")] internal static extern bool SetForegroundWindow(IntPtr window);
+        [DllImport("user32.dll")] internal static extern bool ShowWindow(IntPtr window,int command);
+        [DllImport("user32.dll")] internal static extern bool AllowSetForegroundWindow(uint processId);
+        [DllImport("kernel32.dll",SetLastError=true)] internal static extern bool GetNamedPipeServerProcessId(IntPtr pipe,out uint processId);
         const string D = "pdfium.dll";
         [StructLayout(LayoutKind.Sequential)] internal struct Matrix { public float a,b,c,d,e,f; }
         [StructLayout(LayoutKind.Sequential)] internal struct Rect { public float left,top,right,bottom; public Rect(float l,float b,float r,float t) {left=l;bottom=b;right=r;top=t;} }

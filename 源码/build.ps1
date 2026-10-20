@@ -32,7 +32,7 @@ New-Item -ItemType Directory -Force -Path $licenseDir | Out-Null
 Copy-Item -Path (Join-Path $PSScriptRoot 'third-party-licenses\*') -Destination $licenseDir -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'LICENSE') -Destination (Join-Path $licenseDir 'MiniPDF-MIT.txt') -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '使用说明.txt') -Destination $stagingDir -Force
-$sources = @('AssemblyInfo.cs','Dialogs.cs','MainWindow.cs','Native.cs','PdfCanvas.cs','PdfDocument.cs','Program.cs' | ForEach-Object { Join-Path $PSScriptRoot $_ })
+$sources = @('AssemblyInfo.cs','Dialogs.cs','MainWindow.cs','DocumentTabs.cs','SingleInstance.cs','Native.cs','NativeViewport.cs','PdfCanvas.cs','PdfDocument.cs','Program.cs' | ForEach-Object { Join-Path $PSScriptRoot $_ })
 $common = @('/nologo','/platform:x64','/optimize+','/debug-','/codepage:65001',('/win32manifest:' + (Join-Path $PSScriptRoot 'app.manifest')),'/reference:System.dll','/reference:System.Core.dll','/reference:System.Drawing.dll','/reference:System.Windows.Forms.dll')
 $iconPath = Join-Path $PSScriptRoot 'app.ico'
 if (Test-Path -LiteralPath $iconPath) { $common += '/win32icon:' + $iconPath }
@@ -72,7 +72,7 @@ if ($Test) {
     # The regression runner references the same production assembly, but is never packaged.
     $testRunner = Join-Path $stagingDir 'MiniPdf.Tests.exe'
     $testArguments = $common + @('/target:winexe',('/out:' + $testRunner),('/reference:' + $corePath))
-    & $compiler @testArguments (Join-Path $PSScriptRoot 'SelfTest.cs') (Join-Path $PSScriptRoot 'TestProgram.cs')
+    & $compiler @testArguments (Join-Path $PSScriptRoot 'SelfTest.cs') (Join-Path $PSScriptRoot 'ViewTests.cs') (Join-Path $PSScriptRoot 'TestProgram.cs')
     if ($LASTEXITCODE -ne 0) { throw '回归测试工具编译失败。' }
     $testFolder = Join-Path $buildWork 'tests'
     New-Item -ItemType Directory -Force -Path $testFolder | Out-Null

@@ -54,6 +54,13 @@ def fixtures(root):
         many.drawString(55, 760, f"LARGE DOCUMENT PAGE {i + 1}")
         many.showPage()
     many.save()
+    mixed = canvas.Canvas(str(root / 'mixed-sizes.pdf'))
+    for i, size in enumerate([(595.276,841.89),(595.276,841.89),(1190.55,841.89),(420,595),(595.276,841.89)]):
+        mixed.setPageSize(size)
+        mixed.setFont('Helvetica',20)
+        mixed.drawString(40,size[1]-60,f'MIXED SIZE PAGE {i+1}')
+        mixed.showPage()
+    mixed.save()
     from PIL import Image, ImageDraw, ImageFont
     from reportlab.lib.utils import ImageReader
     width,height=595.276,841.89
