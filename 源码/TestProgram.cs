@@ -1,0 +1,27 @@
+using System;
+using System.IO;
+using System.Windows.Forms;
+
+namespace MiniPdf.Tests {
+    internal static class TestProgram {
+        [STAThread] static int Main(string[] args) {
+            bool initialized = false;
+            string directory = args.Length > 0 ? args[0] : Path.Combine(Environment.CurrentDirectory, "work", "tests");
+            Directory.CreateDirectory(directory);
+            try {
+                N.SetDefaultDllDirectories(0x00000a00);
+                string library = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "pdfium.dll");
+                if (N.LoadLibraryEx(library, IntPtr.Zero, 0x00000900) == IntPtr.Zero)
+                    throw new IOException("测试运行目录缺少 pdfium.dll。");
+                N.FPDF_InitLibrary(); initialized = true;
+                N.SetProcessDPIAware();
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                return SelfTest.Run(directory);
+            } catch (Exception e) {
+                File.WriteAllText(Path.Combine(directory, "fatal.txt"), e.ToString());
+                return 1;
+            } finally { if (initialized) N.FPDF_DestroyLibrary(); }
+        }
+    }
+}

@@ -1,0 +1,128 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Text;
+using System.Windows.Forms;
+
+namespace MiniPdf {
+    internal static class SelfTest {
+        static readonly StringBuilder log=new StringBuilder();
+        static int assertions;
+        static string logPath;
+        static void Assert(bool test,string name){if(!test)throw new Exception("FAIL: "+name);assertions++;log.AppendLine("PASS: "+name);File.WriteAllText(logPath,log.ToString(),new UTF8Encoding(true));}
+        static Pick TextPick(PdfDocument d,int index){var o=N.FPDFPage_GetObject(d.Page,index);return new Pick{ObjectIndex=index,Type=1,Bounds=PdfDocument.ObjectBounds(o),Text=d.ObjectText(o)};}
+        static IntPtr Position(Point p){return new IntPtr((p.X&65535)|((p.Y&65535)<<16));}
+        static void Mouse(PdfCanvas canvas,Point from,Point to){N.SendMessage(canvas.Handle,0x201,new IntPtr(1),Position(from));N.SendMessage(canvas.Handle,0x200,new IntPtr(1),Position(to));N.SendMessage(canvas.Handle,0x202,IntPtr.Zero,Position(to));Application.DoEvents();}
+        static Point PagePoint(PdfCanvas canvas,PdfDocument doc,float x,float y){var r=canvas.PageRectangle;var p=doc.ToDevice(x,y,r.Width,r.Height,canvas.ViewRotation);p.Offset(r.Location);return p;}
+        static void NativeUiEditing(string directory){
+            using(var form=new MainWindow(null)){
+                form.LoadForTest(PdfDocument.Open(Path.Combine(directory,"edited.pdf"),""));form.Show();Application.DoEvents();var view=form.CanvasForTest;var doc=form.Document;
+                int sidebarPage=doc.Index;form.ClickSidebarHandleForTest();Application.DoEvents();Assert(!form.SidebarShownForTest&&form.SidebarButtonVisibleForTest,"sidebar edge button remains available after hiding sidebar");using(var hiddenPreview=new Bitmap(form.Width,form.Height)){form.DrawToBitmap(hiddenPreview,new Rectangle(0,0,hiddenPreview.Width,hiddenPreview.Height));hiddenPreview.Save(Path.Combine(directory,"sidebar-hidden-preview.png"),ImageFormat.Png);}form.ClickSidebarHandleForTest();Application.DoEvents();Assert(form.SidebarShownForTest&&doc.Index==sidebarPage&&!doc.Dirty,"sidebar edge button reopens panel without changing document");
+                for(int toggle=0;toggle<10;toggle++)form.ToggleSidebar();Application.DoEvents();Assert(form.SidebarShownForTest&&form.SidebarButtonVisibleForTest,"repeated sidebar toggling restores visible panel");
+                form.SetTool(Tool.Read);Mouse(view,PagePoint(view,doc,61,766),PagePoint(view,doc,180,766));Assert(view.CopiedText().Contains("REPLACED"),"real mouse drag selects PDF text");
+                form.SetTool(Tool.Object);var image=doc.PickObject(new N.Pt(150,535));var before=image.Bounds;var rect=view.DeviceRect(before);var center=new Point(rect.Left+rect.Width/2,rect.Top+rect.Height/2);Mouse(view,center,new Point(center.X+18,center.Y+12));var after=PdfDocument.ObjectBounds(N.FPDFPage_GetObject(doc.Page,image.ObjectIndex));Assert(Math.Abs(after.left-before.left)>1&&Math.Abs(after.top-before.top)>1,"real mouse drag moves existing PDF image");
+                int paths=N.FPDFPage_CountObjects(doc.Page);form.SetTool(Tool.Rectangle);Mouse(view,PagePoint(view,doc,340,370),PagePoint(view,doc,480,270));Assert(N.FPDFPage_CountObjects(doc.Page)==paths+1,"real mouse drag creates rectangle");
+                int annotations=N.FPDFPage_GetAnnotCount(doc.Page);form.SetTool(Tool.Ink);Mouse(view,PagePoint(view,doc,340,230),PagePoint(view,doc,430,190));Assert(N.FPDFPage_GetAnnotCount(doc.Page)==annotations+1,"real mouse drag creates ink annotation");
+                form.SetTool(Tool.Text);bool dialogOpened=false;using(var timer=new System.Windows.Forms.Timer{Interval=40}){timer.Tick+=delegate{foreach(Form open in Application.OpenForms){var dialog=open as TextDialog;if(dialog==null)continue;dialogOpened=true;dialog.EnterForTest("UI 鼠标输入文字");using(var imagePreview=new Bitmap(dialog.Width,dialog.Height)){dialog.DrawToBitmap(imagePreview,new Rectangle(0,0,imagePreview.Width,imagePreview.Height));imagePreview.Save(Path.Combine(directory,"text-dialog-preview.png"),ImageFormat.Png);}dialog.DialogResult=DialogResult.OK;timer.Stop();break;}};timer.Start();Point at=PagePoint(view,doc,60,330);Mouse(view,at,at);}
+                Assert(dialogOpened&&doc.AllText().Contains("UI 鼠标输入文字"),"native mouse click and real text dialog add Chinese text");doc.Save(Path.Combine(directory,"ui-edited.pdf"));
+                form.SetTool(Tool.Read);uint beforeGdi=N.GetGuiResources(System.Diagnostics.Process.GetCurrentProcess().Handle,0);for(int i=0;i<16;i++){form.SetLayout((PageLayout)(i%4));Application.DoEvents();}uint afterGdi=N.GetGuiResources(System.Diagnostics.Process.GetCurrentProcess().Handle,0);Assert(afterGdi<=beforeGdi+35,"repeated layout changes do not leak GDI handles");Assert(view.CacheBytesForTest<=64L*1024*1024,"page image cache remains bounded");
+                form.SetLayout(PageLayout.Single);Assert(form.ApplyZoom("87%")&&Math.Abs(view.Zoom-.87f)<.00001,"exact integer zoom input");Assert(form.ApplyZoom("123.5%")&&Math.Abs(view.Zoom-1.235f)<.00001,"exact decimal zoom input");Assert(form.ApplyZoom("12.345％")&&Math.Abs(view.Zoom-.12345f)<.00001,"decimal zoom accepts full-width percent");Assert(form.ApplyZoom("4%")&&Math.Abs(view.Zoom-.04f)<.00001,"minimum precise zoom");Assert(form.ApplyZoom("400%")&&Math.Abs(view.Zoom-4f)<.00001,"maximum zoom preserves exact scale while bounding render resolution");float priorZoom=view.Zoom;Assert(!form.ApplyZoom("NaN")&&!form.ApplyZoom("401%")&&!form.ApplyZoom("hello")&&view.Zoom==priorZoom,"invalid zoom input is rejected without changing view");form.ApplyZoom("100%");
+                int rotation=N.FPDFPage_GetRotation(doc.Page);for(int angle=0;angle<4;angle++){form.RotateView(1);Application.DoEvents();var point=PagePoint(view,doc,150,535);var mapped=view.PointAt(point);Assert(Math.Abs(mapped.x-150)<2&&Math.Abs(mapped.y-535)<2,"view rotation "+((angle+1)*90)+" degrees preserves editing coordinates");}Assert(!doc.Dirty&&N.FPDFPage_GetRotation(doc.Page)==rotation,"view-only rotation leaves PDF unchanged");
+                form.ApplyZoom("100%");view.AutoScrollPosition=new Point(0,250);Application.DoEvents();int scrollBefore=view.AutoScrollPosition.Y;form.Run(delegate{doc.AddRectangle(new N.Rect(340,150,420,180),Color.Blue,1);});Assert(Math.Abs(view.AutoScrollPosition.Y-scrollBefore)<=2,"editing does not jump to top of scrolled page");doc.Save(Path.Combine(directory,"ui-edited.pdf"));
+                var bounds=form.Bounds;form.ToggleFullScreenForTest();Application.DoEvents();Assert(form.FormBorderStyle==FormBorderStyle.None,"full screen removes window border");form.ToggleFullScreenForTest();Application.DoEvents();Assert(form.FormBorderStyle!=FormBorderStyle.None&&Math.Abs(form.Bounds.Width-bounds.Width)<5,"leaving full screen restores window");var layout=view.LayoutMode;bool continuous=view.Continuous;form.SlideShowForTest();Application.DoEvents();Assert(view.LayoutMode==PageLayout.Single&&!view.Continuous&&form.FormBorderStyle==FormBorderStyle.None,"presentation is single-page full screen");form.ToggleFullScreenForTest();Application.DoEvents();Assert(view.LayoutMode==layout&&view.Continuous==continuous,"leaving presentation restores prior layout");form.ToggleSidebar();form.SetTool(Tool.Object);form.ToggleReadingMode();Application.DoEvents();Assert(form.ReadingModeForTest&&view.Mode==Tool.Read,"reading mode hides every menu, toolbar and sidebar");using(var context=form.BuildContext(new Point(100,100)))Assert(context.Items[0].Text.Contains("退出阅读模式"),"reading mode retains right-click exit action");using(var screen=new Bitmap(form.Width,form.Height)){form.DrawToBitmap(screen,new Rectangle(0,0,screen.Width,screen.Height));screen.Save(Path.Combine(directory,"reading-mode-preview.png"),ImageFormat.Png);}form.ToggleReadingMode();Application.DoEvents();Assert(!form.ReadingModeForTest&&form.FormBorderStyle!=FormBorderStyle.None&&view.LayoutMode==layout&&view.Mode==Tool.Object&&!form.SidebarShownForTest&&form.SidebarButtonVisibleForTest,"exiting reading mode restores prior layout and collapsed sidebar");form.Close();Application.DoEvents();
+            }
+        }
+        static void InteropAndFailures(string directory){
+            string external=Path.Combine(directory,"external.pdf");if(!File.Exists(external))return;
+            using(var doc=PdfDocument.Open(external,"")){
+                Assert(doc.Count==3&&doc.Bookmarks().Count==3,"independent PDF outline loads");Assert(doc.AllText().Contains("外部生成的中文 PDF 测试"),"independent CID-font Chinese text loads");int target;string link=doc.LinkAt(new N.Pt(100,640),out target);Assert(link=="https://example.org/","external hyperlink target resolves");doc.LinkAt(new N.Pt(350,640),out target);Assert(target==1,"internal link target resolves");
+                var text=TextPick(doc,0);doc.ReplaceText(text,"EXTERNAL_REPLACED",22,"自动",Color.Black);doc.Save(Path.Combine(directory,"external-edited.pdf"));Assert(doc.AllText().Contains("EXTERNAL_REPLACED"),"independently generated original text can be replaced");
+            }
+            string previewPrinter=null;foreach(string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters)if(printer=="Microsoft Print to PDF"||printer=="Microsoft XPS Document Writer"){previewPrinter=printer;break;}
+            if(previewPrinter!=null){using(var form=new MainWindow(null)){form.LoadForTest(PdfDocument.Open(external,""));using(var print=form.CreatePrintJob()){print.PrinterSettings.PrinterName=previewPrinter;print.PrinterSettings.PrintRange=System.Drawing.Printing.PrintRange.SomePages;print.PrinterSettings.FromPage=2;print.PrinterSettings.ToPage=2;var preview=new System.Drawing.Printing.PreviewPrintController{UseAntiAlias=true};print.PrintController=preview;print.Print();var pages=preview.GetPreviewPageInfo();Assert(pages.Length==1&&pages[0].Image!=null,"printing pipeline previews requested page range without sending a print job");foreach(var page in pages)page.Image.Dispose();}}}else log.AppendLine("SKIP: print preview; no local virtual printer is installed");
+            bool wrong=false;try{using(var unused=PdfDocument.Open(Path.Combine(directory,"restricted.pdf"),"wrong")){} }catch(PdfException e){wrong=e.Code==4;}Assert(wrong,"incorrect password is rejected");
+            using(var restricted=PdfDocument.Open(Path.Combine(directory,"restricted.pdf"),"read123")){Assert(!restricted.CanEdit&&restricted.CanPrint,"user-password document respects edit and print permissions");bool blocked=false;try{restricted.AddText("FORBIDDEN",55,400,12,"自动",Color.Black);}catch(InvalidOperationException){blocked=true;}Assert(blocked&&!restricted.Dirty,"restricted editing fails without changes");}
+            using(var owner=PdfDocument.Open(Path.Combine(directory,"restricted.pdf"),"owner123")){Assert(owner.CanEdit,"owner password grants editing");owner.AddText("OWNER_EDIT",55,400,12,"自动",Color.Black);owner.Save(Path.Combine(directory,"owner-edited.pdf"));}
+            using(var unicode=PdfDocument.Open(Path.Combine(directory,"unicode-password.pdf"),"阅读密码中文"))Assert(unicode.Count==3,"UTF-8 Chinese PDF password opens correctly");
+            using(var doc=PdfDocument.New()){
+                bool onlyPage=false;try{doc.DeletePage();}catch(InvalidOperationException){onlyPage=true;}Assert(onlyPage&&doc.Count==1,"deleting final page is rejected");doc.AddText("SAFE_CONTENT",55,700,15,"自动",Color.Black);string path=Path.Combine(directory,"readonly-output.pdf");doc.Save(path);byte[] before=File.ReadAllBytes(path);doc.AddText("UNSAVED_CHANGE",55,650,12,"自动",Color.Black);
+                File.SetAttributes(path,File.GetAttributes(path)|FileAttributes.ReadOnly);bool denied=false;try{doc.Save(path);}catch(UnauthorizedAccessException){denied=true;}catch(IOException){denied=true;}finally{File.SetAttributes(path,File.GetAttributes(path)&~FileAttributes.ReadOnly);}byte[] after=File.ReadAllBytes(path);Assert(denied&&Convert.ToBase64String(before)==Convert.ToBase64String(after)&&doc.Dirty,"failed overwrite preserves original file bytes and unsaved state");
+                string content=doc.AllText();bool missingGlyph=false;try{doc.AddText("中文",55,500,12,"Courier",Color.Black);}catch(InvalidOperationException){missingGlyph=true;}Assert(missingGlyph&&doc.AllText()==content,"unsupported font characters fail without silent text loss");doc.AddText("LINE ONE\nLINE TWO\tTAB",55,450,12,"自动",Color.Black);Assert(doc.AllText().Contains("LINE TWO"),"multiline and tab text is supported");doc.Save(Path.Combine(directory,"edge-cases.pdf"));Assert(!doc.Dirty,"edge case output saves cleanly");doc.Undo();Assert(doc.Dirty,"undo after save marks document dirty");doc.Redo();Assert(!doc.Dirty,"redo returns to saved revision");
+            }
+            using(var form=new MainWindow(null)){var watch=System.Diagnostics.Stopwatch.StartNew();form.LoadForTest(PdfDocument.Open(Path.Combine(directory,"large-200.pdf"),""));form.Show();Application.DoEvents();form.SetLayout(PageLayout.Grid);Application.DoEvents();watch.Stop();Assert(form.Document.Count==200&&form.CanvasForTest.LayoutRectangles.Length==200,"large document layout handles 200 pages");Assert(form.CanvasForTest.CacheBytesForTest<64L*1024*1024,"large document renders only viewport-near pages");log.AppendLine("200-page open and grid: "+watch.ElapsedMilliseconds+" ms");form.Close();Application.DoEvents();}
+        }
+        internal static int Run(string directory) {
+            Directory.CreateDirectory(directory);
+            logPath=Path.Combine(directory,"self-test.txt");File.WriteAllText(logPath,"Starting self-test");
+            try {
+                string sample=Path.Combine(directory,"baseline.pdf"),edited=Path.Combine(directory,"edited.pdf"),picture=Path.Combine(directory,"input.png");
+                using(var image=new Bitmap(160,90)){using(var g=Graphics.FromImage(image)){g.Clear(Color.FromArgb(228,245,246));g.FillEllipse(Brushes.Teal,25,10,70,70);g.FillRectangle(Brushes.Orange,100,25,35,35);}image.Save(picture,ImageFormat.Png);}
+                using(var d=PdfDocument.New()) {
+                    Assert(d.Count==1&&d.CanEdit,"new document has one editable page");
+                    d.AddText("ORIGINAL_SENTENCE",60,760,20,"自动",Color.FromArgb(31,53,73));
+                    d.AddText("Mini PDF 中文编辑测试",60,720,18,"自动",Color.FromArgb(24,117,152));
+                    d.AddText("Select, search, edit, annotate, and save.",60,680,12,"自动",Color.Black);
+                    d.AddRectangle(new N.Rect(55,650,535,790),Color.FromArgb(24,117,152),1.3f);
+                    d.AddImage(picture,new N.Rect(60,470,300,605));
+                    d.AddMarkup(new List<N.Rect>{new N.Rect(60,677,165,693)},9,Color.FromArgb(255,214,56));
+                    d.AddMarkup(new List<N.Rect>{new N.Rect(180,677,240,693)},10,Color.Blue);
+                    d.AddMarkup(new List<N.Rect>{new N.Rect(250,677,310,693)},12,Color.Red);
+                    d.AddInk(new List<N.Pt>{new N.Pt(70,420),new N.Pt(100,448),new N.Pt(130,423),new N.Pt(180,450)},Color.FromArgb(210,80,60),2);
+                    d.AddNote(455,605,"这是一条标准 PDF 便签。",Color.Orange);
+                    d.Save(sample);Assert(!d.Dirty,"save clears dirty state");
+                    Assert(new FileInfo(sample).Length<1024*1024,"Chinese text font is subset below 1 MiB");
+                    log.AppendLine("TEXT: "+d.AllText().Replace("\r","\\r").Replace("\n","\\n").Replace("\0","\\0"));
+                    Assert(d.AllText().Contains("Mini PDF 中文编辑测试"),"Chinese text is searchable");
+                    var hit=d.Find("search",0,0,false);Assert(hit!=null&&hit.Page==0&&hit.Rectangles.Count>0,"search finds text with coordinates");
+                    var pick=TextPick(d,0);Assert(pick.Text=="ORIGINAL_SENTENCE","existing text object is readable");
+                    d.ReplaceText(pick,"REPLACED_TEXT",20,"自动",Color.FromArgb(31,53,73));
+                    Assert(!d.AllText().Contains("ORIGINAL_SENTENCE")&&d.AllText().Contains("REPLACED_TEXT"),"replacement removes original text");
+                    Assert(d.Dirty&&d.CanUndo,"editing is undoable and dirty");
+                    d.Undo();Assert(d.AllText().Contains("ORIGINAL_SENTENCE")&&!d.Dirty,"undo restores saved state and original text");
+                    d.Redo();Assert(d.AllText().Contains("REPLACED_TEXT")&&d.Dirty,"redo restores replacement");
+                    var image=d.PickObject(new N.Pt(150,535));Assert(image!=null&&image.Type==3,"existing image can be selected");
+                    d.Move(image,35,-20);var moved=d.PickObject(new N.Pt(185,515));Assert(moved!=null&&moved.Type==3&&Math.Abs(moved.Bounds.left-95)<1,"image movement persists in object bounds");
+                    d.Resize(moved,180,101.25f);var resized=d.PickObject(new N.Pt(160,515));Assert(resized!=null&&resized.Type==3&&Math.Abs(resized.Bounds.right-resized.Bounds.left-180)<1,"image object can be resized");
+                    d.Save(edited);
+                    using(var reopened=PdfDocument.Open(edited,"")) {
+                        string text=reopened.AllText();Assert(text.Contains("REPLACED_TEXT")&&!text.Contains("ORIGINAL_SENTENCE"),"replacement survives a save and reopen");Assert(text.Contains("Mini PDF 中文编辑测试"),"Chinese Unicode survives save and reopen");Assert(N.FPDFPage_GetAnnotCount(reopened.Page)==5,"all five annotation types survive save and reopen");
+                        using(var render=reopened.Render(0,850,1202)){render.Save(Path.Combine(directory,"edited-render.png"),ImageFormat.Png);Assert(render.GetPixel(5,5).ToArgb()==Color.White.ToArgb(),"render has white page background");}
+                        var note=reopened.PickObject(new N.Pt(460,595));Assert(note!=null&&note.IsAnnotation&&note.Text.Contains("标准 PDF 便签"),"Chinese note content roundtrips");reopened.EditNote(note,"更新后的便签");reopened.Remove(reopened.PickObject(new N.Pt(460,595)));Assert(N.FPDFPage_GetAnnotCount(reopened.Page)==4,"annotations are editable and removable");reopened.Undo();Assert(N.FPDFPage_GetAnnotCount(reopened.Page)==5,"annotation deletion can be undone");
+                    }
+                    d.InsertBlank();d.AddText("SECOND_PAGE",60,760,16,"自动",Color.Black);Assert(d.Count==2&&d.Index==1,"blank page insertion");d.DuplicatePage();Assert(d.Count==3&&d.Index==2,"page duplication");d.MovePage(0);Assert(d.Index==0&&d.SelectedText(0,200).Contains("SECOND_PAGE"),"page reordering preserves page content");d.DeletePage();Assert(d.Count==2,"page deletion");d.OpenPage(0);Assert(d.SelectedText(0,200).Contains("REPLACED_TEXT"),"page tree keeps original first-page content");
+                    d.Extract(new[]{1,0},Path.Combine(directory,"extracted.pdf"));using(var extracted=PdfDocument.Open(Path.Combine(directory,"extracted.pdf"),"")){Assert(extracted.Count==2&&extracted.SelectedText(0,200).Contains("SECOND_PAGE"),"extraction honors requested page order");}
+                    using(var source=PdfDocument.Open(sample,"")){d.Import(source,2);Assert(d.Count==3,"merge imports document pages");}
+                    d.OpenPage(0);d.Rotate(1);Assert(N.FPDFPage_GetRotation(d.Page)==1&&d.Width>d.Height,"page rotation changes display orientation");var pt=d.ToPage(new Point(350,250),1000,700);var screen=d.ToDevice(pt.x,pt.y,1000,700);Assert(Math.Abs(screen.X-350)<=1&&Math.Abs(screen.Y-250)<=1,"rotated page coordinates roundtrip");d.Rotate(-1);d.Save(Path.Combine(directory,"pages.pdf"));
+                    bool failed=false;try{d.Edit(delegate{throw new InvalidOperationException("expected rollback");});}catch(InvalidOperationException){failed=true;}Assert(failed&&d.Count==3&&d.AllText().Contains("REPLACED_TEXT"),"failed edit rolls back to intact document");
+                    d.AddText("UNSAVED",60,60,10,"自动",Color.Black);bool saveFailed=false;try{d.Save(Path.Combine(directory,"missing-directory","fail.pdf"));}catch(IOException){saveFailed=true;}Assert(saveFailed&&d.Dirty,"failed file write does not mark document saved");
+                }
+                Assert(PdfDocument.ParsePages("1,3-5,5",5).Length==4,"page range parsing deduplicates pages");bool invalid=false;try{PdfDocument.ParsePages("0,99",5);}catch(FormatException){invalid=true;}Assert(invalid,"invalid page range rejected");
+                byte[] bad=Encoding.ASCII.GetBytes("This is not a PDF");bool rejected=false;try{using(var unused=PdfDocument.FromBytes(bad,"")){} }catch(PdfException){rejected=true;}Assert(rejected,"invalid input rejected");
+                using(var form=new MainWindow(null)) {
+                    form.LoadForTest(PdfDocument.Open(edited,""));form.Show();Application.DoEvents();Assert(form.Visible&&form.Text.Contains("edited.pdf"),"real Windows form launches with PDF");
+                    using(var screen=new Bitmap(form.Width,form.Height)){form.DrawToBitmap(screen,new Rectangle(0,0,screen.Width,screen.Height));screen.Save(Path.Combine(directory,"ui-preview.png"),ImageFormat.Png);}
+                    form.SetTool(Tool.Object);form.Navigate(0);using(var context=form.BuildContext(new Point(100,100))){Assert(context.Items.Count>=15,"native context menu contains reading and editing actions");}
+                    Exception uiFailure=null;System.Threading.ThreadExceptionEventHandler onUiException=delegate(object sender,System.Threading.ThreadExceptionEventArgs e){uiFailure=e.Exception;};Application.ThreadException+=onUiException;
+                    try{for(int i=0;i<10;i++){form.ShowContext(new Point(100,100));Application.DoEvents();form.CloseContextForTest();Application.DoEvents();}Assert(uiFailure==null,"native context menu opens and closes ten times without disposal errors");}finally{Application.ThreadException-=onUiException;}
+                    form.Close();Application.DoEvents();
+                }
+                string multiPath=Path.Combine(directory,"multi-page.pdf");
+                using(var multi=PdfDocument.New()){for(int i=0;i<24;i++){if(i>0)multi.InsertBlank();multi.AddText("PAGE "+(i+1),55,755,36,"自动",Color.FromArgb(24,117,152));multi.AddText("Multi-page layout and native PDF editing",55,715,14,"自动",Color.Black);multi.AddRectangle(new N.Rect(55,450,540,670),Color.FromArgb(24,117,152),2);}multi.Save(multiPath);}
+                using(var form=new MainWindow(null)){
+                    form.LoadForTest(PdfDocument.Open(multiPath,""));form.Show();Application.DoEvents();var view=form.CanvasForTest;
+                    form.SetLayout(PageLayout.Double);Application.DoEvents();var r=view.LayoutRectangles;Assert(r[0].Y==r[1].Y&&r[0].X<r[1].X,"facing pages share one row");form.TurnPage(1);Assert(form.Document.Index==2,"facing-page next skips to next spread");form.TurnPage(-1);Assert(form.Document.Index==0,"facing-page previous returns to first spread");
+                    form.SetLayout(PageLayout.Book);Application.DoEvents();r=view.LayoutRectangles;Assert(r[0].X>r[1].X&&r[1].Y==r[2].Y&&r[0].Y<r[1].Y,"book cover occupies right slot followed by facing pages");form.TurnPage(1);Assert(form.Document.Index==1,"book cover advances to first paired spread");form.TurnPage(1);Assert(form.Document.Index==3,"book spread advances by two pages");form.Navigate(0);view.Continuous=false;view.Rebuild(true);r=view.LayoutRectangles;Assert(view.ColumnCount==1&&Math.Abs(r[0].Left+r[0].Width/2-view.ClientSize.Width/2)<=15,"noncontinuous book cover is centered");view.Continuous=true;
+                    form.SetLayout(PageLayout.Grid);Application.DoEvents();int originalColumns=view.ColumnCount;view.Zoom*=0.5f;view.Fit=0;view.Rebuild(true);Application.DoEvents();Assert(view.ColumnCount>originalColumns,"zooming out increases grid column count");int visible=0;foreach(var rectangle in view.LayoutRectangles){var screen=rectangle;screen.Offset(view.AutoScrollPosition);if(!rectangle.IsEmpty&&screen.IntersectsWith(view.ClientRectangle))visible++;}Assert(visible>=10,"grid overview shows at least ten pages in viewport");
+                    using(var screen=new Bitmap(form.Width,form.Height)){form.DrawToBitmap(screen,new Rectangle(0,0,screen.Width,screen.Height));screen.Save(Path.Combine(directory,"grid-preview.png"),ImageFormat.Png);}
+                    form.ActivatePageFromCanvas(5);Assert(form.Document.Index==5,"click activation addresses correct grid page");
+                    form.SetLayout(PageLayout.Single);view.Continuous=true;view.Rebuild(true);r=view.LayoutRectangles;Assert(r[1].Y>=r[0].Bottom,"continuous view arranges pages vertically");form.Navigate(12);form.ApplyZoom("100%");Application.DoEvents();Assert(form.Document.Index==12&&view.PageRectangle.IntersectsWith(view.ClientRectangle),"zoom preserves current page in long continuous document");form.Navigate(5);view.Continuous=false;view.Rebuild(true);Assert(view.LayoutRectangles[0].IsEmpty&&!view.LayoutRectangles[5].IsEmpty,"noncontinuous view keeps selected page");
+                    form.Close();Application.DoEvents();
+                }
+                NativeUiEditing(directory);InteropAndFailures(directory);
+                log.AppendLine("TOTAL: "+assertions+" assertions, 0 failures");File.WriteAllText(Path.Combine(directory,"self-test.txt"),log.ToString(),new UTF8Encoding(true));return 0;
+            }catch(Exception e){log.AppendLine(e.ToString());File.WriteAllText(Path.Combine(directory,"self-test.txt"),log.ToString(),new UTF8Encoding(true));return 1;}
+        }
+    }
+}

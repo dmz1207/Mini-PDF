@@ -1,0 +1,14 @@
+/work/
+**/.MiniPDF-runtime-*/
+**/bin/
+**/obj/
+**/__pycache__/
+*.pyc
+*.pdb
+*.tmp
+*.tgz
+*.zip
+.vs/
+.vscode/
+Thumbs.db
+Desktop.ini
