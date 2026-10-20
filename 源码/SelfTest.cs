@@ -72,6 +72,7 @@ namespace MiniPdf {
             Directory.CreateDirectory(directory);
             logPath=Path.Combine(directory,"self-test.txt");File.WriteAllText(logPath,"Starting self-test");
             try {
+                Assert(UiText.English,"application defaults to English");UiText.English=false;
                 string sample=Path.Combine(directory,"baseline.pdf"),edited=Path.Combine(directory,"edited.pdf"),picture=Path.Combine(directory,"input.png");
                 using(var image=new Bitmap(160,90)){using(var g=Graphics.FromImage(image)){g.Clear(Color.FromArgb(228,245,246));g.FillEllipse(Brushes.Teal,25,10,70,70);g.FillRectangle(Brushes.Orange,100,25,35,35);}image.Save(picture,ImageFormat.Png);}
                 using(var d=PdfDocument.New()) {
@@ -135,7 +136,7 @@ namespace MiniPdf {
                     form.SetLayout(PageLayout.Single);view.Continuous=true;view.Rebuild(true);r=view.LayoutRectangles;Assert(r[1].Y>=r[0].Bottom,"continuous view arranges pages vertically");form.Navigate(12);form.ApplyZoom("100%");Application.DoEvents();Assert(form.Document.Index==12&&view.PageRectangle.IntersectsWith(view.ClientRectangle),"zoom preserves current page in long continuous document");form.Navigate(5);view.Continuous=false;view.Rebuild(true);Assert(view.LayoutRectangles[0].IsEmpty&&!view.LayoutRectangles[5].IsEmpty,"noncontinuous view keeps selected page");
                     form.Close();Application.DoEvents();
                 }
-                NativeUiEditing(directory);InteropAndFailures(directory);LayeredAndTiles(directory);TabsAndFit(directory);
+                NativeUiEditing(directory);InteropAndFailures(directory);LayeredAndTiles(directory);TabsAndFit(directory);HeaderDragging(directory);LanguageUi(directory);
                 log.AppendLine("TOTAL: "+assertions+" assertions, 0 failures");File.WriteAllText(Path.Combine(directory,"self-test.txt"),log.ToString(),new UTF8Encoding(true));return 0;
             }catch(Exception e){log.AppendLine(e.ToString());File.WriteAllText(Path.Combine(directory,"self-test.txt"),log.ToString(),new UTF8Encoding(true));return 1;}
         }

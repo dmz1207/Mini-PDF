@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -49,17 +49,17 @@ namespace MiniPdf {
         }
         public static PdfDocument New() {
             var doc=new PdfDocument();doc.Handle=N.FPDF_CreateNewDocument();
-            Check(doc.Handle!=IntPtr.Zero,"无法创建 PDF。");
+            Check(doc.Handle!=IntPtr.Zero,UiText.Get("无法创建 PDF。"));
             doc.Page=N.FPDFPage_New(doc.Handle,0,595.276,841.89);
-            Check(doc.Page!=IntPtr.Zero,"无法创建页面。");
+            Check(doc.Page!=IntPtr.Zero,UiText.Get("无法创建页面。"));
             doc.CanEdit=doc.CanPrint=true;doc.revision=doc.clock=1;return doc;
         }
         void Load(byte[] data) {
-            if(data.Length==0)throw new IOException("文件为空。");
+            if(data.Length==0)throw new IOException(UiText.Get("文件为空。"));
             inputPin=GCHandle.Alloc(data,GCHandleType.Pinned);
             Handle=N.FPDF_LoadMemDocument64(inputPin.AddrOfPinnedObject(),new UIntPtr((ulong)data.LongLength),Encoding.UTF8.GetBytes(Password+"\0"));
-            if(Handle==IntPtr.Zero) {uint code=N.FPDF_GetLastError();inputPin.Free();throw new PdfException(code==4?"PDF 需要正确的密码。":"无法打开 PDF（错误 "+code+"）。",code);}
-            if(Count<1){CloseHandles();throw new IOException("这个 PDF 没有可显示的页面。");}
+            if(Handle==IntPtr.Zero) {uint code=N.FPDF_GetLastError();inputPin.Free();throw new PdfException(code==4?UiText.Get("PDF 需要正确的密码。"):UiText.Get("无法打开 PDF（错误 ")+code+UiText.Get("）。"),code);}
+            if(Count<1){CloseHandles();throw new IOException(UiText.Get("这个 PDF 没有可显示的页面。"));}
             uint permissions=N.FPDF_GetDocPermissions(Handle);
             bool unsecured=N.FPDF_GetSecurityHandlerRevision(Handle)<0;
             CanEdit=unsecured||(permissions&8)!=0;CanPrint=unsecured||(permissions&4)!=0;
@@ -70,23 +70,23 @@ namespace MiniPdf {
         void ClosePage(){CloseText();if(Page!=IntPtr.Zero){N.FPDF_ClosePage(Page);Page=IntPtr.Zero;}}
         void CloseHandles(){ClosePage();foreach(var font in fonts.Values)N.FPDFFont_Close(font);fonts.Clear();fontGlyphs.Clear();if(Handle!=IntPtr.Zero){N.FPDF_CloseDocument(Handle);Handle=IntPtr.Zero;}if(inputPin.IsAllocated)inputPin.Free();}
         public void Dispose(){CloseHandles();undo.Clear();redo.Clear();}
-        public void OpenPage(int index){if(Page!=IntPtr.Zero&&index==Index)return;ClosePage();Index=Math.Max(0,Math.Min(Count-1,index));Page=N.FPDF_LoadPage(Handle,Index);Check(Page!=IntPtr.Zero,"无法读取第 "+(Index+1)+" 页。");}
+        public void OpenPage(int index){if(Page!=IntPtr.Zero&&index==Index)return;ClosePage();Index=Math.Max(0,Math.Min(Count-1,index));Page=N.FPDF_LoadPage(Handle,Index);Check(Page!=IntPtr.Zero,UiText.Get("无法读取第 ")+(Index+1)+UiText.Get(" 页。"));}
         public byte[] Serialize(bool subsetFonts) {
             using(var stream=new MemoryStream()) {
                 Exception failure=null;
                 N.WriteBlock callback=delegate(IntPtr self,IntPtr data,uint size){
-                    try {if(size>int.MaxValue)throw new IOException("写入块过大。");var buffer=new byte[(int)size];Marshal.Copy(data,buffer,0,buffer.Length);stream.Write(buffer,0,buffer.Length);return 1;}
+                    try {if(size>int.MaxValue)throw new IOException(UiText.Get("写入块过大。"));var buffer=new byte[(int)size];Marshal.Copy(data,buffer,0,buffer.Length);stream.Write(buffer,0,buffer.Length);return 1;}
                     catch(Exception e){failure=e;return 0;}
                 };
                 var writer=new N.Writer{version=1,write=callback};
                 int ok=N.FPDF_SaveAsCopy(Handle,ref writer,subsetFonts?10u:2u);
                 GC.KeepAlive(callback);
-                if(failure!=null)throw new IOException("写入 PDF 失败。",failure);
-                Check(ok!=0,"保存 PDF 失败。");return stream.ToArray();
+                if(failure!=null)throw new IOException(UiText.Get("写入 PDF 失败。"),failure);
+                Check(ok!=0,UiText.Get("保存 PDF 失败。"));return stream.ToArray();
             }
         }
         internal static void AtomicWrite(string path,byte[] bytes,string password,int expectedPages) {
-            using(var verify=FromBytes(bytes,password))Check(verify.Count==expectedPages,"保存校验失败，页数不一致。");
+            using(var verify=FromBytes(bytes,password))Check(verify.Count==expectedPages,UiText.Get("保存校验失败，页数不一致。"));
             string full=Path.GetFullPath(path),dir=Path.GetDirectoryName(full);
             string temp=Path.Combine(dir,".minipdf-"+Guid.NewGuid().ToString("N")+".tmp");
             try {
@@ -96,7 +96,7 @@ namespace MiniPdf {
         }
         public void Save(string path){
             var before=Capture();byte[] bytes;
-            try{bytes=Serialize(true);using(var verify=FromBytes(bytes,Password))Check(verify.Count==Count,"保存校验失败。");CloseHandles();Load(bytes);OpenPage(before.Page);}
+            try{bytes=Serialize(true);using(var verify=FromBytes(bytes,Password))Check(verify.Count==Count,UiText.Get("保存校验失败。"));CloseHandles();Load(bytes);OpenPage(before.Page);}
             catch{Restore(before);throw;}
             // Font subsetting changes the engine's font encodings. Reload the
             // serialized document before accepting further edits, even if disk I/O fails.
@@ -106,9 +106,9 @@ namespace MiniPdf {
         void Restore(State state){CloseHandles();Load(state.Data);OpenPage(state.Page);revision=state.Revision;}
         static void Trim(List<State> list){long size=0;foreach(var s in list)size+=s.Data.LongLength;while(list.Count>1&&(list.Count>12||size>64L*1024*1024)){size-=list[0].Data.LongLength;list.RemoveAt(0);}}
         public void Edit(Action change) {
-            Check(CanEdit,"此 PDF 限制内容修改，请使用具有编辑权限的密码打开。");
+            Check(CanEdit,UiText.Get("此 PDF 限制内容修改，请使用具有编辑权限的密码打开。"));
             var before=Capture();
-            try {CloseText();change();if(Page==IntPtr.Zero)OpenPage(Index);Check(N.FPDFPage_GenerateContent(Page)!=0,"无法生成页面内容。");CloseText();undo.Add(before);Trim(undo);redo.Clear();revision=++clock;}
+            try {CloseText();change();if(Page==IntPtr.Zero)OpenPage(Index);Check(N.FPDFPage_GenerateContent(Page)!=0,UiText.Get("无法生成页面内容。"));CloseText();undo.Add(before);Trim(undo);redo.Clear();revision=++clock;}
             catch {Restore(before);throw;}
         }
         public void Undo(){if(!CanUndo)return;var current=Capture();var prior=undo[undo.Count-1];Restore(prior);undo.RemoveAt(undo.Count-1);redo.Add(current);Trim(redo);}
@@ -118,11 +118,11 @@ namespace MiniPdf {
         }
         internal Bitmap RenderRegion(int index,int pageWidth,int pageHeight,int rotation,Rectangle region) {
             int width=region.Width,height=region.Height;
-            if(width<1||height<1||width>14000||height>14000||(long)width*height>24000000)throw new InvalidOperationException("当前缩放超出显示内存限制，请减小缩放比例。");
-            Check(pageWidth>0&&pageHeight>0&&region.X>=0&&region.Y>=0&&(long)region.Right<=pageWidth&&(long)region.Bottom<=pageHeight,"页面显示范围无效。");
+            if(width<1||height<1||width>14000||height>14000||(long)width*height>24000000)throw new InvalidOperationException(UiText.Get("当前缩放超出显示内存限制，请减小缩放比例。"));
+            Check(pageWidth>0&&pageHeight>0&&region.X>=0&&region.Y>=0&&(long)region.Right<=pageWidth&&(long)region.Bottom<=pageHeight,UiText.Get("页面显示范围无效。"));
             IntPtr page=index==Index?Page:N.FPDF_LoadPage(Handle,index),bitmap=IntPtr.Zero;
             try {
-                Check(page!=IntPtr.Zero,"无法读取页面。");bitmap=N.FPDFBitmap_Create(width,height,1);Check(bitmap!=IntPtr.Zero,"无法分配页面图像。");
+                Check(page!=IntPtr.Zero,UiText.Get("无法读取页面。"));bitmap=N.FPDFBitmap_Create(width,height,1);Check(bitmap!=IntPtr.Zero,UiText.Get("无法分配页面图像。"));
                 N.FPDFBitmap_FillRect(bitmap,0,0,width,height,0xffffffff);
                 N.FPDF_RenderPageBitmap(bitmap,page,-region.X,-region.Y,pageWidth,pageHeight,rotation,1|2);
                 // GDI+ Clone can retain an external pixel buffer. Copy each row
@@ -131,12 +131,12 @@ namespace MiniPdf {
                 try{var bits=result.LockBits(new Rectangle(0,0,width,height),ImageLockMode.WriteOnly,PixelFormat.Format32bppArgb);try{IntPtr source=N.FPDFBitmap_GetBuffer(bitmap);int stride=N.FPDFBitmap_GetStride(bitmap);var row=new byte[checked(width*4)];for(int y=0;y<height;y++){Marshal.Copy(IntPtr.Add(source,y*stride),row,0,row.Length);Marshal.Copy(row,0,IntPtr.Add(bits.Scan0,y*bits.Stride),row.Length);}}finally{result.UnlockBits(bits);}return result;}catch{result.Dispose();throw;}
             } finally {if(bitmap!=IntPtr.Zero)N.FPDFBitmap_Destroy(bitmap);if(page!=IntPtr.Zero&&page!=Page)N.FPDF_ClosePage(page);}
         }
-        public SizeF PageSize(int index){if(index==Index)return new SizeF((float)Width,(float)Height);N.PageSize size;Check(N.FPDF_GetPageSizeByIndexF(Handle,index,out size)!=0,"页面不可用。");return new SizeF(size.width,size.height);}
-        public N.Pt ToPage(Point point,int width,int height,int rotation=0){double x,y;Check(N.FPDF_DeviceToPage(Page,0,0,width,height,rotation,point.X,point.Y,out x,out y)!=0,"坐标转换失败。");return new N.Pt((float)x,(float)y);}
+        public SizeF PageSize(int index){if(index==Index)return new SizeF((float)Width,(float)Height);N.PageSize size;Check(N.FPDF_GetPageSizeByIndexF(Handle,index,out size)!=0,UiText.Get("页面不可用。"));return new SizeF(size.width,size.height);}
+        public N.Pt ToPage(Point point,int width,int height,int rotation=0){double x,y;Check(N.FPDF_DeviceToPage(Page,0,0,width,height,rotation,point.X,point.Y,out x,out y)!=0,UiText.Get("坐标转换失败。"));return new N.Pt((float)x,(float)y);}
         public Point ToDevice(float x,float y,int width,int height,int rotation=0){int dx,dy;N.FPDF_PageToDevice(Page,0,0,width,height,rotation,x,y,out dx,out dy);return new Point(dx,dy);}
         internal static bool Contains(N.Rect rect,N.Pt p,float tolerance){return p.x>=rect.left-tolerance&&p.x<=rect.right+tolerance&&p.y>=rect.bottom-tolerance&&p.y<=rect.top+tolerance;}
-        internal static N.Rect ObjectBounds(IntPtr obj){float l,b,r,t;Check(N.FPDFPageObj_GetBounds(obj,out l,out b,out r,out t)!=0,"无法读取对象范围。");return new N.Rect(l,b,r,t);}
-        internal IntPtr ObjectAt(Pick selection){Check(selection!=null&&!selection.IsAnnotation,"请选择页面对象。");IntPtr obj=N.FPDFPage_GetObject(Page,selection.ObjectIndex);Check(obj!=IntPtr.Zero,"对象已失效，请重新选择。");return obj;}
+        internal static N.Rect ObjectBounds(IntPtr obj){float l,b,r,t;Check(N.FPDFPageObj_GetBounds(obj,out l,out b,out r,out t)!=0,UiText.Get("无法读取对象范围。"));return new N.Rect(l,b,r,t);}
+        internal IntPtr ObjectAt(Pick selection){Check(selection!=null&&!selection.IsAnnotation,UiText.Get("请选择页面对象。"));IntPtr obj=N.FPDFPage_GetObject(Page,selection.ObjectIndex);Check(obj!=IntPtr.Zero,UiText.Get("对象已失效，请重新选择。"));return obj;}
         public Pick PickObject(N.Pt point) {
             for(int i=N.FPDFPage_GetAnnotCount(Page)-1;i>=0;i--) {
                 IntPtr a=N.FPDFPage_GetAnnot(Page,i);if(a==IntPtr.Zero)continue;
@@ -162,18 +162,18 @@ namespace MiniPdf {
             bool ascii=true;foreach(char ch in text)if(ch>126){ascii=false;break;}
             string key=(face=="自动"||String.IsNullOrEmpty(face))?(ascii?"Helvetica":"Microsoft YaHei"):face;
             IntPtr font;if(fonts.TryGetValue(key,out font)){CheckFontCharacters(key,text);return font;}
-            if(key=="Helvetica"||key=="Times-Roman"||key=="Courier"){Check(ascii,"所选标准字体不包含这些字符，请选择“自动”或合适的系统字体。");font=N.FPDFText_LoadStandardFont(Handle,key);}
+            if(key=="Helvetica"||key=="Times-Roman"||key=="Courier"){Check(ascii,UiText.Get("所选标准字体不包含这些字符，请选择“自动”或合适的系统字体。"));font=N.FPDFText_LoadStandardFont(Handle,key);}
             else {
                 using(var f=new Font(key,12,FontStyle.Regular,GraphicsUnit.Point))
                 using(var graphics=Graphics.FromHwnd(IntPtr.Zero)) {
                     IntPtr hdc=graphics.GetHdc(),hf=f.ToHfont(),old=N.SelectObject(hdc,hf);
                     // For TTC faces GDI's table=0 view keeps collection-relative offsets.
                     // Request the complete collection first, then fall back to an ordinary TTF.
-                    try {uint table=0x66637474;uint length=N.GetFontData(hdc,table,0,null,0);if(length==0xffffffff){table=0;length=N.GetFontData(hdc,0,0,null,0);}Check(length!=0xffffffff&&length>0&&length<64000000,"无法读取系统字体。");var bytes=new byte[length];Check(N.GetFontData(hdc,table,0,bytes,length)==length,"系统字体读取不完整。");
+                    try {uint table=0x66637474;uint length=N.GetFontData(hdc,table,0,null,0);if(length==0xffffffff){table=0;length=N.GetFontData(hdc,0,0,null,0);}Check(length!=0xffffffff&&length>0&&length<64000000,UiText.Get("无法读取系统字体。"));var bytes=new byte[length];Check(N.GetFontData(hdc,table,0,bytes,length)==length,UiText.Get("系统字体读取不完整。"));
                         // Explicit Unicode CIDs avoid ambiguous reverse glyph mappings
                         // (e.g. regular space and NBSP sharing the same system-font glyph).
                         var chars=new char[65536];var glyphs=new ushort[65536];for(int i=0;i<chars.Length;i++)chars[i]=(char)i;
-                        Check(N.GetGlyphIndicesW(hdc,chars,chars.Length,glyphs,1)!=0xffffffff,"无法读取字体字符映射。");var mapping=new byte[131072];for(int i=0;i<glyphs.Length;i++){ushort glyph=glyphs[i]==65535?(ushort)0:glyphs[i];mapping[i*2]=(byte)(glyph>>8);mapping[i*2+1]=(byte)glyph;}
+                        Check(N.GetGlyphIndicesW(hdc,chars,chars.Length,glyphs,1)!=0xffffffff,UiText.Get("无法读取字体字符映射。"));var mapping=new byte[131072];for(int i=0;i<glyphs.Length;i++){ushort glyph=glyphs[i]==65535?(ushort)0:glyphs[i];mapping[i*2]=(byte)(glyph>>8);mapping[i*2+1]=(byte)glyph;}
                         var codes=new List<int>();for(int i=1;i<glyphs.Length;i++)if(glyphs[i]!=0&&glyphs[i]!=65535&&!Char.IsSurrogate((char)i))codes.Add(i);
                         var supported=new HashSet<char>();foreach(int code in codes)supported.Add((char)code);fontGlyphs[key]=supported;
                         var cmap=new StringBuilder("/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /MiniPdfUnicode def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n");
@@ -183,58 +183,58 @@ namespace MiniPdf {
                     finally{N.SelectObject(hdc,old);N.DeleteObject(hf);graphics.ReleaseHdc(hdc);}
                 }
             }
-            Check(font!=IntPtr.Zero,"无法载入字体，请换用其他字体。");fonts.Add(key,font);CheckFontCharacters(key,text);return font;
+            Check(font!=IntPtr.Zero,UiText.Get("无法载入字体，请换用其他字体。"));fonts.Add(key,font);CheckFontCharacters(key,text);return font;
         }
-        void CheckFontCharacters(string key,string text){HashSet<char> supported;if(!fontGlyphs.TryGetValue(key,out supported)){foreach(char ch in text)if(ch>126)throw new InvalidOperationException("所选标准字体不包含这些字符，请选择“自动”或合适的系统字体。");return;}foreach(char ch in text){if(ch=='\r'||ch=='\n'||ch=='\t')continue;if(!supported.Contains(ch))throw new InvalidOperationException("所选字体不支持部分字符（U+"+((int)ch).ToString("X4")+"），请更换字体或删除该字符。");}}
+        void CheckFontCharacters(string key,string text){HashSet<char> supported;if(!fontGlyphs.TryGetValue(key,out supported)){foreach(char ch in text)if(ch>126)throw new InvalidOperationException(UiText.Get("所选标准字体不包含这些字符，请选择“自动”或合适的系统字体。"));return;}foreach(char ch in text){if(ch=='\r'||ch=='\n'||ch=='\t')continue;if(!supported.Contains(ch))throw new InvalidOperationException(UiText.Get("所选字体不支持部分字符（U+")+((int)ch).ToString("X4")+UiText.Get("），请更换字体或删除该字符。"));}}
         void InsertText(string text,float size,string face,Color color,N.Matrix matrix,int at,int renderMode=0,uint opacity=255) {
             IntPtr font=FontFor(text,face);int line=0;
             foreach(string value in text.Replace("\r","").Replace("\t","    ").Split('\n')) {
-                if(value.Length>0){IntPtr obj=N.FPDFPageObj_CreateTextObj(Handle,font,size);Check(obj!=IntPtr.Zero,"无法创建文字对象。");
-                    try{Check(N.FPDFText_SetText(obj,value)!=0,"无法设置文字。");Check(N.FPDFTextObj_SetTextRenderMode(obj,renderMode)!=0,"无法保留文字显示属性。");N.FPDFPageObj_SetFillColor(obj,color.R,color.G,color.B,opacity);N.FPDFPageObj_SetStrokeColor(obj,color.R,color.G,color.B,opacity);var m=matrix;float offset=-line*size*1.4f;m.e+=m.c*offset;m.f+=m.d*offset;Check(N.FPDFPageObj_SetMatrix(obj,ref m)!=0,"无法设置文字位置。");Check(N.FPDFPage_InsertObjectAtIndex(Page,obj,new UIntPtr((uint)at))!=0,"无法插入文字。");obj=IntPtr.Zero;at++;}
+                if(value.Length>0){IntPtr obj=N.FPDFPageObj_CreateTextObj(Handle,font,size);Check(obj!=IntPtr.Zero,UiText.Get("无法创建文字对象。"));
+                    try{Check(N.FPDFText_SetText(obj,value)!=0,UiText.Get("无法设置文字。"));Check(N.FPDFTextObj_SetTextRenderMode(obj,renderMode)!=0,UiText.Get("无法保留文字显示属性。"));N.FPDFPageObj_SetFillColor(obj,color.R,color.G,color.B,opacity);N.FPDFPageObj_SetStrokeColor(obj,color.R,color.G,color.B,opacity);var m=matrix;float offset=-line*size*1.4f;m.e+=m.c*offset;m.f+=m.d*offset;Check(N.FPDFPageObj_SetMatrix(obj,ref m)!=0,UiText.Get("无法设置文字位置。"));Check(N.FPDFPage_InsertObjectAtIndex(Page,obj,new UIntPtr((uint)at))!=0,UiText.Get("无法插入文字。"));obj=IntPtr.Zero;at++;}
                     finally{if(obj!=IntPtr.Zero)N.FPDFPageObj_Destroy(obj);}}
                 line++;
             }
         }
-        public void AddText(string text,float x,float y,float size,string face,Color color){Check(!String.IsNullOrWhiteSpace(text),"请输入文字。");Edit(delegate{InsertText(text,size,face,color,new N.Matrix{a=1,d=1,e=x,f=y},N.FPDFPage_CountObjects(Page));});}
+        public void AddText(string text,float x,float y,float size,string face,Color color){Check(!String.IsNullOrWhiteSpace(text),UiText.Get("请输入文字。"));Edit(delegate{InsertText(text,size,face,color,new N.Matrix{a=1,d=1,e=x,f=y},N.FPDFPage_CountObjects(Page));});}
         public void ReplaceText(Pick pick,string text,float size,string face,Color color) {
-            Check(pick!=null&&!pick.IsAnnotation&&pick.Type==1,"请选择一个文字对象。");Check(!String.IsNullOrWhiteSpace(text),"删除文字请使用删除键。");
-            Edit(delegate{IntPtr obj=ObjectAt(pick);N.Matrix m;int mode=N.FPDFTextObj_GetTextRenderMode(obj);Check(mode>=0&&mode<=7,"无法读取文字显示属性。");uint r,g,b,alpha;if(N.FPDFPageObj_GetFillColor(obj,out r,out g,out b,out alpha)==0)alpha=255;Check(N.FPDFPageObj_GetMatrix(obj,out m)!=0,"无法读取文字位置。");Check(N.FPDFPage_RemoveObject(Page,obj)!=0,"无法删除原文字。");N.FPDFPageObj_Destroy(obj);InsertText(text,size,face,color,m,pick.ObjectIndex,mode,alpha);});
+            Check(pick!=null&&!pick.IsAnnotation&&pick.Type==1,UiText.Get("请选择一个文字对象。"));Check(!String.IsNullOrWhiteSpace(text),UiText.Get("删除文字请使用删除键。"));
+            Edit(delegate{IntPtr obj=ObjectAt(pick);N.Matrix m;int mode=N.FPDFTextObj_GetTextRenderMode(obj);Check(mode>=0&&mode<=7,UiText.Get("无法读取文字显示属性。"));uint r,g,b,alpha;if(N.FPDFPageObj_GetFillColor(obj,out r,out g,out b,out alpha)==0)alpha=255;Check(N.FPDFPageObj_GetMatrix(obj,out m)!=0,UiText.Get("无法读取文字位置。"));Check(N.FPDFPage_RemoveObject(Page,obj)!=0,UiText.Get("无法删除原文字。"));N.FPDFPageObj_Destroy(obj);InsertText(text,size,face,color,m,pick.ObjectIndex,mode,alpha);});
         }
-        public void Remove(Pick pick){Check(pick!=null,"请先选择对象。");Edit(delegate{if(pick.IsAnnotation)Check(N.FPDFPage_RemoveAnnot(Page,pick.AnnotIndex)!=0,"无法删除批注。");else{IntPtr obj=ObjectAt(pick);Check(N.FPDFPage_RemoveObject(Page,obj)!=0,"无法删除对象。");N.FPDFPageObj_Destroy(obj);}});}
-        public void Move(Pick pick,float dx,float dy){Check(pick!=null,"请选择对象。");if(pick.IsAnnotation)throw new InvalidOperationException("批注暂不支持移动，可撤销后重新添加。");Edit(delegate{N.FPDFPageObj_Transform(ObjectAt(pick),1,0,0,1,dx,dy);});}
-        public void Resize(Pick pick,float width,float height){Check(pick!=null&&!pick.IsAnnotation,"请选择页面对象。");var r=pick.Bounds;Check(r.right>r.left&&r.top>r.bottom&&width>0&&height>0,"尺寸必须大于零。");Edit(delegate{double sx=width/(r.right-r.left),sy=height/(r.top-r.bottom);N.FPDFPageObj_Transform(ObjectAt(pick),sx,0,0,sy,r.left*(1-sx),r.top*(1-sy));});}
+        public void Remove(Pick pick){Check(pick!=null,UiText.Get("请先选择对象。"));Edit(delegate{if(pick.IsAnnotation)Check(N.FPDFPage_RemoveAnnot(Page,pick.AnnotIndex)!=0,UiText.Get("无法删除批注。"));else{IntPtr obj=ObjectAt(pick);Check(N.FPDFPage_RemoveObject(Page,obj)!=0,UiText.Get("无法删除对象。"));N.FPDFPageObj_Destroy(obj);}});}
+        public void Move(Pick pick,float dx,float dy){Check(pick!=null,UiText.Get("请选择对象。"));if(pick.IsAnnotation)throw new InvalidOperationException(UiText.Get("批注暂不支持移动，可撤销后重新添加。"));Edit(delegate{N.FPDFPageObj_Transform(ObjectAt(pick),1,0,0,1,dx,dy);});}
+        public void Resize(Pick pick,float width,float height){Check(pick!=null&&!pick.IsAnnotation,UiText.Get("请选择页面对象。"));var r=pick.Bounds;Check(r.right>r.left&&r.top>r.bottom&&width>0&&height>0,UiText.Get("尺寸必须大于零。"));Edit(delegate{double sx=width/(r.right-r.left),sy=height/(r.top-r.bottom);N.FPDFPageObj_Transform(ObjectAt(pick),sx,0,0,sy,r.left*(1-sx),r.top*(1-sy));});}
         public void AddImage(string path,N.Rect box) {
             using(var input=Image.FromFile(path)) {
-                Check(input.Width<=14000&&input.Height<=14000&&(long)input.Width*input.Height<=32000000,"图片过大，请先缩小至 3200 万像素以内。");
+                Check(input.Width<=14000&&input.Height<=14000&&(long)input.Width*input.Height<=32000000,UiText.Get("图片过大，请先缩小至 3200 万像素以内。"));
                 using(var image=new Bitmap(input.Width,input.Height,PixelFormat.Format32bppArgb)) {
                     using(var g=Graphics.FromImage(image)){g.Clear(Color.Transparent);g.DrawImage(input,0,0,image.Width,image.Height);}
                     Edit(delegate{var bits=image.LockBits(new Rectangle(0,0,image.Width,image.Height),ImageLockMode.ReadOnly,PixelFormat.Format32bppArgb);IntPtr bm=IntPtr.Zero,obj=IntPtr.Zero;
-                        try{bm=N.FPDFBitmap_CreateEx(image.Width,image.Height,4,bits.Scan0,bits.Stride);Check(bm!=IntPtr.Zero,"无法读取图片像素。");obj=N.FPDFPageObj_NewImageObj(Handle);Check(obj!=IntPtr.Zero,"无法创建图片对象。");Check(N.FPDFImageObj_SetBitmap(new[]{Page},1,obj,bm)!=0,"无法写入图片。");var m=new N.Matrix{a=box.right-box.left,d=box.top-box.bottom,e=box.left,f=box.bottom};Check(N.FPDFPageObj_SetMatrix(obj,ref m)!=0,"图片定位失败。");IntPtr inserted=obj;obj=IntPtr.Zero;Check(N.FPDFPage_InsertObject(Page,inserted)!=0,"插入图片失败。");}
+                        try{bm=N.FPDFBitmap_CreateEx(image.Width,image.Height,4,bits.Scan0,bits.Stride);Check(bm!=IntPtr.Zero,UiText.Get("无法读取图片像素。"));obj=N.FPDFPageObj_NewImageObj(Handle);Check(obj!=IntPtr.Zero,UiText.Get("无法创建图片对象。"));Check(N.FPDFImageObj_SetBitmap(new[]{Page},1,obj,bm)!=0,UiText.Get("无法写入图片。"));var m=new N.Matrix{a=box.right-box.left,d=box.top-box.bottom,e=box.left,f=box.bottom};Check(N.FPDFPageObj_SetMatrix(obj,ref m)!=0,UiText.Get("图片定位失败。"));IntPtr inserted=obj;obj=IntPtr.Zero;Check(N.FPDFPage_InsertObject(Page,inserted)!=0,UiText.Get("插入图片失败。"));}
                         finally{if(obj!=IntPtr.Zero)N.FPDFPageObj_Destroy(obj);if(bm!=IntPtr.Zero)N.FPDFBitmap_Destroy(bm);image.UnlockBits(bits);}});
                 }
             }
         }
         public void AddRectangle(N.Rect r,Color color,float width) {
-            Edit(delegate{IntPtr obj=N.FPDFPageObj_CreateNewRect(r.left,r.bottom,r.right-r.left,r.top-r.bottom);Check(obj!=IntPtr.Zero,"无法创建矩形。");N.FPDFPageObj_SetStrokeColor(obj,color.R,color.G,color.B,255);N.FPDFPageObj_SetStrokeWidth(obj,width);N.FPDFPath_SetDrawMode(obj,0,1);Check(N.FPDFPage_InsertObject(Page,obj)!=0,"无法插入矩形。");});
+            Edit(delegate{IntPtr obj=N.FPDFPageObj_CreateNewRect(r.left,r.bottom,r.right-r.left,r.top-r.bottom);Check(obj!=IntPtr.Zero,UiText.Get("无法创建矩形。"));N.FPDFPageObj_SetStrokeColor(obj,color.R,color.G,color.B,255);N.FPDFPageObj_SetStrokeWidth(obj,width);N.FPDFPath_SetDrawMode(obj,0,1);Check(N.FPDFPage_InsertObject(Page,obj)!=0,UiText.Get("无法插入矩形。"));});
         }
-        void ConfigureAnnot(IntPtr a,N.Rect r,Color c){Check(a!=IntPtr.Zero,"无法创建批注。");Check(N.FPDFAnnot_SetRect(a,ref r)!=0,"批注范围设置失败。");N.FPDFAnnot_SetFlags(a,4);N.FPDFAnnot_SetColor(a,0,c.R,c.G,c.B,255);N.FPDFAnnot_SetStringValue(a,"T","Mini PDF");N.FPDFAnnot_SetStringValue(a,"M","D:"+DateTime.Now.ToString("yyyyMMddHHmmss"));}
+        void ConfigureAnnot(IntPtr a,N.Rect r,Color c){Check(a!=IntPtr.Zero,UiText.Get("无法创建批注。"));Check(N.FPDFAnnot_SetRect(a,ref r)!=0,UiText.Get("批注范围设置失败。"));N.FPDFAnnot_SetFlags(a,4);N.FPDFAnnot_SetColor(a,0,c.R,c.G,c.B,255);N.FPDFAnnot_SetStringValue(a,"T","Mini PDF");N.FPDFAnnot_SetStringValue(a,"M","D:"+DateTime.Now.ToString("yyyyMMddHHmmss"));}
         public void AddMarkup(List<N.Rect> rectangles,int subtype,Color color) {
-            Check(rectangles.Count>0,"请框选需要标记的位置。");
-            Edit(delegate{IntPtr a=N.FPDFPage_CreateAnnot(Page,subtype);try{var union=rectangles[0];foreach(var r in rectangles){union.left=Math.Min(union.left,r.left);union.right=Math.Max(union.right,r.right);union.top=Math.Max(union.top,r.top);union.bottom=Math.Min(union.bottom,r.bottom);}ConfigureAnnot(a,union,color);foreach(var r in rectangles){var q=new N.Quad{x1=r.left,y1=r.top,x2=r.right,y2=r.top,x3=r.left,y3=r.bottom,x4=r.right,y4=r.bottom};Check(N.FPDFAnnot_AppendAttachmentPoints(a,ref q)!=0,"无法设置标记范围。");}}finally{if(a!=IntPtr.Zero)N.FPDFPage_CloseAnnot(a);}});
+            Check(rectangles.Count>0,UiText.Get("请框选需要标记的位置。"));
+            Edit(delegate{IntPtr a=N.FPDFPage_CreateAnnot(Page,subtype);try{var union=rectangles[0];foreach(var r in rectangles){union.left=Math.Min(union.left,r.left);union.right=Math.Max(union.right,r.right);union.top=Math.Max(union.top,r.top);union.bottom=Math.Min(union.bottom,r.bottom);}ConfigureAnnot(a,union,color);foreach(var r in rectangles){var q=new N.Quad{x1=r.left,y1=r.top,x2=r.right,y2=r.top,x3=r.left,y3=r.bottom,x4=r.right,y4=r.bottom};Check(N.FPDFAnnot_AppendAttachmentPoints(a,ref q)!=0,UiText.Get("无法设置标记范围。"));}}finally{if(a!=IntPtr.Zero)N.FPDFPage_CloseAnnot(a);}});
         }
         public void AddInk(List<N.Pt> points,Color color,float width) {
-            Check(points.Count>=2,"请绘制至少一条笔画。");
-            Edit(delegate{IntPtr a=N.FPDFPage_CreateAnnot(Page,15);try{float l=points[0].x,r=l,b=points[0].y,t=b;foreach(var p in points){l=Math.Min(l,p.x);r=Math.Max(r,p.x);b=Math.Min(b,p.y);t=Math.Max(t,p.y);}ConfigureAnnot(a,new N.Rect(l-width,b-width,r+width,t+width),color);Check(N.FPDFAnnot_SetBorder(a,0,0,width)!=0,"无法设置笔迹宽度。");Check(N.FPDFAnnot_AddInkStroke(a,points.ToArray(),new UIntPtr((uint)points.Count))>=0,"无法写入手写笔迹。");}finally{if(a!=IntPtr.Zero)N.FPDFPage_CloseAnnot(a);}});
+            Check(points.Count>=2,UiText.Get("请绘制至少一条笔画。"));
+            Edit(delegate{IntPtr a=N.FPDFPage_CreateAnnot(Page,15);try{float l=points[0].x,r=l,b=points[0].y,t=b;foreach(var p in points){l=Math.Min(l,p.x);r=Math.Max(r,p.x);b=Math.Min(b,p.y);t=Math.Max(t,p.y);}ConfigureAnnot(a,new N.Rect(l-width,b-width,r+width,t+width),color);Check(N.FPDFAnnot_SetBorder(a,0,0,width)!=0,UiText.Get("无法设置笔迹宽度。"));Check(N.FPDFAnnot_AddInkStroke(a,points.ToArray(),new UIntPtr((uint)points.Count))>=0,UiText.Get("无法写入手写笔迹。"));}finally{if(a!=IntPtr.Zero)N.FPDFPage_CloseAnnot(a);}});
         }
-        public void AddNote(float x,float y,string contents,Color color){Edit(delegate{IntPtr a=N.FPDFPage_CreateAnnot(Page,1);try{ConfigureAnnot(a,new N.Rect(x,y-22,x+22,y),color);Check(N.FPDFAnnot_SetStringValue(a,"Contents",contents)!=0,"无法写入便签。");}finally{if(a!=IntPtr.Zero)N.FPDFPage_CloseAnnot(a);}});}
-        public void EditNote(Pick pick,string value){Check(pick!=null&&pick.IsAnnotation&&pick.Type==1,"请选择便签。");Edit(delegate{IntPtr a=N.FPDFPage_GetAnnot(Page,pick.AnnotIndex);try{Check(N.FPDFAnnot_SetStringValue(a,"Contents",value)!=0,"无法更新便签。");}finally{if(a!=IntPtr.Zero)N.FPDFPage_CloseAnnot(a);}});}
+        public void AddNote(float x,float y,string contents,Color color){Edit(delegate{IntPtr a=N.FPDFPage_CreateAnnot(Page,1);try{ConfigureAnnot(a,new N.Rect(x,y-22,x+22,y),color);Check(N.FPDFAnnot_SetStringValue(a,"Contents",contents)!=0,UiText.Get("无法写入便签。"));}finally{if(a!=IntPtr.Zero)N.FPDFPage_CloseAnnot(a);}});}
+        public void EditNote(Pick pick,string value){Check(pick!=null&&pick.IsAnnotation&&pick.Type==1,UiText.Get("请选择便签。"));Edit(delegate{IntPtr a=N.FPDFPage_GetAnnot(Page,pick.AnnotIndex);try{Check(N.FPDFAnnot_SetStringValue(a,"Contents",value)!=0,UiText.Get("无法更新便签。"));}finally{if(a!=IntPtr.Zero)N.FPDFPage_CloseAnnot(a);}});}
         public void Rotate(int quarterTurns){Edit(delegate{N.FPDFPage_SetRotation(Page,(N.FPDFPage_GetRotation(Page)+quarterTurns+4)%4);});}
-        public void InsertBlank(){Edit(delegate{int after=Index+1;ClosePage();IntPtr p=N.FPDFPage_New(Handle,after,595.276,841.89);Check(p!=IntPtr.Zero,"无法插入空白页。");N.FPDF_ClosePage(p);OpenPage(after);});}
-        public void DeletePage(){Check(Count>1,"至少需要保留一页。");Edit(delegate{int index=Index;ClosePage();N.FPDFPage_Delete(Handle,index);OpenPage(Math.Min(index,Count-1));});}
-        public void DuplicatePage(){using(var source=FromBytes(Serialize(false),Password)){int index=Index;Edit(delegate{ClosePage();Check(N.FPDF_ImportPagesByIndex(Handle,source.Handle,new[]{index},1,index+1)!=0,"无法复制页面。");OpenPage(index+1);});}}
-        public void MovePage(int destination){Check(destination>=0&&destination<Count,"页码超出范围。");int from=Index;if(from==destination)return;Edit(delegate{ClosePage();Check(N.FPDF_MovePages(Handle,new[]{from},1,destination)!=0,"无法移动页面。");OpenPage(destination);});}
-        public void Import(PdfDocument source,int destination){int[] pages=new int[source.Count];for(int i=0;i<pages.Length;i++)pages[i]=i;Edit(delegate{ClosePage();Check(N.FPDF_ImportPagesByIndex(Handle,source.Handle,pages,(uint)pages.Length,destination)!=0,"无法合并页面。");OpenPage(destination);});}
-        public void Extract(int[] indices,string path){using(var output=new PdfDocument()){output.Handle=N.FPDF_CreateNewDocument();Check(output.Handle!=IntPtr.Zero,"无法创建导出文件。");Check(N.FPDF_ImportPagesByIndex(output.Handle,Handle,indices,(uint)indices.Length,0)!=0,"页面提取失败。");AtomicWrite(path,output.Serialize(true),"",indices.Length);}}
+        public void InsertBlank(){Edit(delegate{int after=Index+1;ClosePage();IntPtr p=N.FPDFPage_New(Handle,after,595.276,841.89);Check(p!=IntPtr.Zero,UiText.Get("无法插入空白页。"));N.FPDF_ClosePage(p);OpenPage(after);});}
+        public void DeletePage(){Check(Count>1,UiText.Get("至少需要保留一页。"));Edit(delegate{int index=Index;ClosePage();N.FPDFPage_Delete(Handle,index);OpenPage(Math.Min(index,Count-1));});}
+        public void DuplicatePage(){using(var source=FromBytes(Serialize(false),Password)){int index=Index;Edit(delegate{ClosePage();Check(N.FPDF_ImportPagesByIndex(Handle,source.Handle,new[]{index},1,index+1)!=0,UiText.Get("无法复制页面。"));OpenPage(index+1);});}}
+        public void MovePage(int destination){Check(destination>=0&&destination<Count,UiText.Get("页码超出范围。"));int from=Index;if(from==destination)return;Edit(delegate{ClosePage();Check(N.FPDF_MovePages(Handle,new[]{from},1,destination)!=0,UiText.Get("无法移动页面。"));OpenPage(destination);});}
+        public void Import(PdfDocument source,int destination){int[] pages=new int[source.Count];for(int i=0;i<pages.Length;i++)pages[i]=i;Edit(delegate{ClosePage();Check(N.FPDF_ImportPagesByIndex(Handle,source.Handle,pages,(uint)pages.Length,destination)!=0,UiText.Get("无法合并页面。"));OpenPage(destination);});}
+        public void Extract(int[] indices,string path){using(var output=new PdfDocument()){output.Handle=N.FPDF_CreateNewDocument();Check(output.Handle!=IntPtr.Zero,UiText.Get("无法创建导出文件。"));Check(N.FPDF_ImportPagesByIndex(output.Handle,Handle,indices,(uint)indices.Length,0)!=0,UiText.Get("页面提取失败。"));AtomicWrite(path,output.Serialize(true),"",indices.Length);}}
         public int CharAt(N.Pt p){return N.FPDFText_GetCharIndexAtPos(TextPage,p.x,p.y,5,5);}
         public string SelectedText(int start,int count){if(count<=0||start<0)return "";count=Math.Min(count,N.FPDFText_CountChars(TextPage)-start);if(count<=0)return "";var bytes=new byte[checked((count+1)*2)];int got=N.FPDFText_GetText(TextPage,start,count,bytes);return got<=0?"":Encoding.Unicode.GetString(bytes,0,Math.Min(bytes.Length,got*2)).TrimEnd('\0');}
         public List<N.Rect> TextRects(int start,int count){var result=new List<N.Rect>();if(start<0||count<1)return result;int total=N.FPDFText_CountRects(TextPage,start,count);for(int i=0;i<Math.Min(total,20000);i++){double l,t,r,b;if(N.FPDFText_GetRect(TextPage,i,out l,out t,out r,out b)!=0)result.Add(new N.Rect((float)l,(float)b,(float)r,(float)t));}return result;}
@@ -253,8 +253,8 @@ namespace MiniPdf {
         public string LinkAt(N.Pt point,out int page){page=-1;IntPtr link=N.FPDFLink_GetLinkAtPoint(Page,point.x,point.y);if(link==IntPtr.Zero)return null;IntPtr dest=N.FPDFLink_GetDest(Handle,link),a=N.FPDFLink_GetAction(link);if(dest==IntPtr.Zero)dest=N.FPDFAction_GetDest(Handle,a);if(dest!=IntPtr.Zero){page=N.FPDFDest_GetDestPageIndex(Handle,dest);return null;}if(a==IntPtr.Zero||N.FPDFAction_GetType(a)!=3)return null;uint len=N.FPDFAction_GetURIPath(Handle,a,null,0);if(len<2||len>65536)return null;var bytes=new byte[len];N.FPDFAction_GetURIPath(Handle,a,bytes,len);return Encoding.UTF8.GetString(bytes).TrimEnd('\0');}
         public static int[] ParsePages(string input,int max) {
             var result=new List<int>();var seen=new HashSet<int>();
-            foreach(string item in input.Replace('，',',').Split(',')) {string[] range=item.Trim().Split('-');int first,last;if(range.Length<1||range.Length>2||!int.TryParse(range[0].Trim(),out first))throw new FormatException("页码格式示例：1,3-5,8");last=first;if(range.Length==2&&!int.TryParse(range[1].Trim(),out last))throw new FormatException("页码范围无效。");if(first<1||last>max||last<first)throw new FormatException("页码必须在 1 到 "+max+" 之间，并按小到大填写区间。");for(int p=first;p<=last;p++)if(seen.Add(p-1))result.Add(p-1);}
-            Check(result.Count>0,"请选择至少一页。");return result.ToArray();
+            foreach(string item in input.Replace('，',',').Split(',')) {string[] range=item.Trim().Split('-');int first,last;if(range.Length<1||range.Length>2||!int.TryParse(range[0].Trim(),out first))throw new FormatException(UiText.Get("页码格式示例：1,3-5,8"));last=first;if(range.Length==2&&!int.TryParse(range[1].Trim(),out last))throw new FormatException(UiText.Get("页码范围无效。"));if(first<1||last>max||last<first)throw new FormatException(UiText.Get("页码必须在 1 到 ")+max+UiText.Get(" 之间，并按小到大填写区间。"));for(int p=first;p<=last;p++)if(seen.Add(p-1))result.Add(p-1);}
+            Check(result.Count>0,UiText.Get("请选择至少一页。"));return result.ToArray();
         }
     }
 }

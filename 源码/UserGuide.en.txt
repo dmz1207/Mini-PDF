@@ -1,0 +1,100 @@
+Mini PDF 0.5 - User Guide
+Windows 10 / Windows 11 x64
+
+START AND LANGUAGE
+Double-click Mini PDF.exe in a writable folder. No installation or activation is required.
+The app uses the .NET Framework supplied with Windows, native Windows controls, and PDFium.
+There is no Electron, browser runtime, account, advertising, or telemetry.
+English is the default. Open Menu > Language to select English or Simplified Chinese.
+English is listed first and Chinese second. The change applies immediately to this window.
+Each new independent window starts in English. No language configuration file is created.
+Native Windows file and print dialogs follow your Windows display language.
+Help offers this English guide first and a complete Chinese guide second. F1 opens English help.
+
+OPEN AND ORGANIZE DOCUMENTS
+Ctrl+O opens one or more PDFs. You can also drag files onto the window.
+Each file has a tab; only the selected PDF appears in the document area.
+Tabs stay above the reading toolbar. A larger menu button sits at the left of the tab row.
+Drag a tab's text area left or right to change its position.
+When tabs overflow, hold the dragged tab near either edge to reach hidden tabs.
+Release the mouse to finish, or press Esc to stop dragging.
+Reordering preserves page, exact zoom, view, scroll position, tools, unsaved changes and undo.
+Ctrl+Tab / Ctrl+Shift+Tab switch tabs. Ctrl+W or Ctrl+F4 closes the current tab.
+A tab's X or a middle click also closes it. Modified files prompt you to save.
+Opening the same file again selects its existing tab. Later Explorer opens enter the existing window.
+Ctrl+Shift+N opens an independent window. --new-window is the equivalent command-line option.
+
+READING AND ZOOM
+Ctrl+1 fits the page; Ctrl+2 fits width; Ctrl+0 selects actual size.
+The dedicated Fit Width button and Fit Width menu entry remain available.
+Ctrl+6 fits a single page. Ctrl+7 fits the current two-page spread to the available width.
+Ctrl+8 selects book view; Ctrl+9 selects the multi-page grid.
+Single-page, double-page and grid views contain pages of the selected PDF, not different documents.
+In grid view, zoom out to show more columns; double-click a page for single-page reading.
+The zoom field accepts 1%-6400%, including decimals such as 87% or 123.5%. Press Enter to apply.
+100% retains its real scale. Use Fit Width to fill the available window width.
+Ctrl+mouse wheel zooms. The mouse wheel scrolls. Middle-button dragging pans.
+PageUp / PageDown navigate pages or spreads. Arrow keys scroll; Home / End reach document ends.
+The sidebar button or F12 toggles thumbnails, outline and annotations. F9 also works.
+The sidebar edge arrow floats over a small corner instead of reserving a full vertical strip.
+Ctrl+F finds text; Enter or F3 finds the next result. Drag in Read mode to select text; Ctrl+C copies.
+Ctrl+H enters reading mode, retaining the native title bar and window buttons.
+F11 enters true borderless full screen; Ctrl+L starts presentation.
+Esc or the right-click menu leaves these modes and restores the previous interface.
+View rotation changes reading orientation. Page rotation edits the PDF and is undoable.
+
+EDIT TEXT AND OBJECTS
+Expand Edit, select Object, then click a text block, image or shape.
+Double-click a text object to edit it. The original text object is replaced, not hidden under white paint.
+Replacement fonts may change character widths; this is not Word-style paragraph reflow.
+Drag selected objects to move them. Unrotated objects can be resized by dragging a corner.
+The resize command accepts a percentage. Delete removes the selected object.
+Text adds Chinese or English text at a clicked position, including multiple lines.
+Image lets you choose an image and drag its placement area, retaining the aspect ratio.
+Auto selects suitable standard or system fonts. System fonts are not bundled in the app.
+Text entered in dialogs, searches, notes and PDFs is never translated by the interface language switch.
+
+SCANNED PDF AND OCR LAYERS
+Existing OCR text can be read, selected, copied and searched, including hidden text over a scan.
+Editing top-level OCR text preserves its invisible or transparent state and the original scan image.
+Changing recognition text does not change the letters visible in the scanned image.
+Nested Form-object text remains readable and searchable but cannot be edited character by character.
+There is no built-in OCR engine to recognize a scan without a text layer.
+
+ANNOTATIONS AND PAGES
+Highlight, underline, strikeout, ink and sticky notes are standard PDF annotations.
+Rectangles, added text and inserted images are page content.
+Select an annotation to remove it; double-click a note to edit its contents.
+Page commands rotate, insert, duplicate, delete, move, extract and merge pages.
+Extraction accepts ranges such as 1,3-5,8, preserves requested order and removes duplicates.
+Merge inserts the selected PDFs after the current page.
+Export supports current-page PNG and all-document TXT. Print supports current page and page ranges.
+
+SAVE AND HISTORY
+Ctrl+S saves. Ctrl+Shift+S saves a copy. Ctrl+Z / Ctrl+Y undo and redo.
+Each tab has independent history: up to 12 steps with a 64 MiB target.
+At least the most recent step is retained; large files can exceed that target.
+Saving validates the generated PDF, rewrites it completely, then replaces the destination atomically.
+Failed saves preserve the original file and the unsaved state.
+Newly embedded fonts are subsetted. Existing password protection is retained.
+Restricted documents require a password with editing permission for changes.
+
+LIMITS AND LICENSES
+No interactive form filling, digital signatures or validation, permanent redaction, measurement,
+stamps, annotation replies, full paragraph reflow or image retouching are provided.
+Editing can invalidate existing signatures. Outlined text is not editable as ordinary text.
+The image-cache target is 64 MiB. High zoom renders visible areas as native-resolution tiles.
+The app and launcher use MIT; PDFium and dependencies retain their embedded license notices.
+Help > Open-source licenses displays them. These notices are not activation requirements.
+Tested on Windows 10 x64. Windows 11 uses the same target APIs but needs separate machine testing.
+
+PORTABLE FILES AND CLEANUP
+The EXE uses Windows LZMS compression and briefly extracts files beside itself.
+TEMP and TMP point to its .MiniPDF-runtime-* folder. Normal exit removes generated files.
+Next launch cleans stale folders after unexpected exit. Other active instances remain protected.
+Files created by the user inside a runtime folder are preserved.
+Save your own documents to the program folder or another chosen location.
+The app does not change your default PDF association.
+
+Project and English documentation: https://github.com/dmz1207/Mini-PDF
+Complete Chinese documentation: README.zh-CN.md in the repository and source folder.

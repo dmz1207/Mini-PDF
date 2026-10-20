@@ -32,7 +32,8 @@ New-Item -ItemType Directory -Force -Path $licenseDir | Out-Null
 Copy-Item -Path (Join-Path $PSScriptRoot 'third-party-licenses\*') -Destination $licenseDir -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'LICENSE') -Destination (Join-Path $licenseDir 'MiniPDF-MIT.txt') -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '使用说明.txt') -Destination $stagingDir -Force
-$sources = @('AssemblyInfo.cs','Dialogs.cs','MainWindow.cs','DocumentTabs.cs','SingleInstance.cs','Native.cs','NativeViewport.cs','PdfCanvas.cs','PdfDocument.cs','Program.cs' | ForEach-Object { Join-Path $PSScriptRoot $_ })
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'UserGuide.en.txt') -Destination $stagingDir -Force
+$sources = @('AssemblyInfo.cs','Dialogs.cs','MainWindow.cs','DocumentTabs.cs','SingleInstance.cs','UiText.cs','UiStrings.cs','Native.cs','NativeViewport.cs','PdfCanvas.cs','PdfDocument.cs','Program.cs' | ForEach-Object { Join-Path $PSScriptRoot $_ })
 $common = @('/nologo','/platform:x64','/optimize+','/debug-','/codepage:65001',('/win32manifest:' + (Join-Path $PSScriptRoot 'app.manifest')),'/reference:System.dll','/reference:System.Core.dll','/reference:System.Drawing.dll','/reference:System.Windows.Forms.dll')
 $iconPath = Join-Path $PSScriptRoot 'app.ico'
 if (Test-Path -LiteralPath $iconPath) { $common += '/win32icon:' + $iconPath }
@@ -44,7 +45,7 @@ $rawPayload = Join-Path $buildWork 'application.payload.raw'
 $payloadFile = [IO.File]::Create($rawPayload)
 $writer = New-Object IO.BinaryWriter($payloadFile,[Text.Encoding]::UTF8)
 try {
-    $packageFiles = @('MiniPDF.Core.exe','pdfium.dll','使用说明.txt','许可证\MiniPDF-MIT.txt')
+    $packageFiles = @('MiniPDF.Core.exe','pdfium.dll','使用说明.txt','UserGuide.en.txt','许可证\MiniPDF-MIT.txt')
     foreach ($license in Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'third-party-licenses') -File) { $packageFiles += '许可证\' + $license.Name }
     $files = @($packageFiles | Sort-Object -Unique | ForEach-Object { Get-Item -LiteralPath (Join-Path $stagingDir $_) })
     $writer.Write([int]0x53554A31)
@@ -72,7 +73,7 @@ if ($Test) {
     # The regression runner references the same production assembly, but is never packaged.
     $testRunner = Join-Path $stagingDir 'MiniPdf.Tests.exe'
     $testArguments = $common + @('/target:winexe',('/out:' + $testRunner),('/reference:' + $corePath))
-    & $compiler @testArguments (Join-Path $PSScriptRoot 'SelfTest.cs') (Join-Path $PSScriptRoot 'ViewTests.cs') (Join-Path $PSScriptRoot 'TestProgram.cs')
+    & $compiler @testArguments (Join-Path $PSScriptRoot 'SelfTest.cs') (Join-Path $PSScriptRoot 'ViewTests.cs') (Join-Path $PSScriptRoot 'LanguageTests.cs') (Join-Path $PSScriptRoot 'TestProgram.cs')
     if ($LASTEXITCODE -ne 0) { throw '回归测试工具编译失败。' }
     $testFolder = Join-Path $buildWork 'tests'
     New-Item -ItemType Directory -Force -Path $testFolder | Out-Null
