@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.1 — 2026-10-21
+
+- Fix name entry in visible signatures: input is always available, typing switches to a live CJK/Latin preview.
+- Add physical width settings with responsive preview, higher-resolution typed/drawn export, click/drag placement and immediate object selection.
+- Preserve proportions and support rotated-view corner resizing; allow reselecting signatures over body text.
+- Add third-party watermark text/image/Form/stamp selection, before/after preview, page-range content/position matching and undo.
+
+
 ## 0.7.0 — 2026-10-21
 
 - Add a native printing workspace with previews, ranges/parity/reverse, driver properties, paper/orientation, copies/collation/duplex, exact scaling, N-up, booklet and poster layouts.

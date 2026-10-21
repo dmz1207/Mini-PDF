@@ -1,4 +1,4 @@
-Mini PDF 0.7.0 - User Guide
+Mini PDF 0.7.1 - User Guide
 Windows 10 / Windows 11 x64
 
 START AND LANGUAGE
@@ -100,11 +100,22 @@ Booklet commonly uses landscape and short-edge duplex; manual flipping follows p
 
 VISIBLE SIGNATURES AND WATERMARKS
 Use the signatures/watermarks menu to draw, type or import visible signature artwork.
-Image white backgrounds can be removed. Drag a placement rectangle on the PDF after accepting.
+Name entry stays enabled; typing Chinese/English names immediately switches to live text preview.
+Set Page width (mm); preview size and proportional height update together. Image white backgrounds can be removed.
+Confirm, then click once to place the requested size or drag a rectangle. The signature follows the mouse.
+It is selected after placing: drag to move, drag the bottom-right corner to resize proportionally,
+or right-click for a percentage. Rotated views are supported. Esc cancels placement.
 This adds an editable image; it does not authenticate identity. Artwork is not stored or uploaded.
 Watermarks support text/images, opacity, rotation, position, tiling, foreground/background and ranges.
 Text supports {page} and {pages}; preview shows the active page. Apply can be undone.
-Replace/remove recognizes Mini PDF-tagged watermarks, not arbitrary third-party page artwork.
+Automatic replacement recognizes Mini PDF tags. Remove watermarks also supports third-party objects.
+Choose a preview page, filter the candidate list and check text, images, whole Form groups or stamps.
+Show all page objects exposes other content. Preview before/after; nothing changes until confirmation.
+Match same watermarks checks content/style and page-relative position/size in the requested range.
+Same words at another size/location stay intact. Mini PDF-tagged objects have a separate selection button.
+Removal is one undoable edit. Whole groups are removed together; inspect the preview.
+Large images/unidentified stamps may require per-page selection. Watermarks baked into scan pixels
+or inseparable from body content cannot be erased independently; no image inpainting is included.
 
 CERTIFICATE SIGNING AND INSPECTION
 Choose a Windows personal certificate with a private key, or load a password-protected PFX/P12.

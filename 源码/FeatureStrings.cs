@@ -4,7 +4,34 @@ namespace MiniPdf {
     internal static partial class UiText {
         static void AddFeatureTranslations(Dictionary<string,string> strings){
             // One entry per line keeps the optional feature vocabulary separate.
-            const string pairs=@"选择|Select
+            const string pairs=@"签名方式|Signature mode
+姓名（输入后立即预览）|Name (live preview)
+页面上的宽度 (mm)|Page width (mm)
+高 {0:0.#} mm · 保持比例|Height {0:0.#} mm · aspect ratio locked
+单击页面放置，或拖框设定大小；放置后拖动角点缩放。\n可见签名是图片；数字签名请使用证书菜单。|Click the page to place, or drag to size; drag the corner to resize afterwards.\nA visible signature is an image; use the certificate command for digital signing.
+请输入姓名。|Enter your name.
+请导入含有签名的图片。|Import an image containing a signature.
+请在预览区域绘制，或直接输入姓名。|Draw in the preview area, or type your name above.
+单击放置签名，或拖框设定大小；Esc 取消。|Click to place the signature, or drag to size; Esc cancels.
+签名已放置：拖动移动，拖动右下角缩放；右键可输入缩放比例。|Signature placed: drag to move, drag the bottom-right corner to resize, or right-click for a percentage.
+移除水印…|Remove watermarks...
+移除水印|Remove watermarks
+图章批注|Stamp annotation
+组合对象|Object group
+图形|Graphic
+请先勾选要移除的对象。|Check the objects to remove first.
+显示全部页面对象|Show all page objects
+预览移除后|Preview after removal
+预览页码|Preview page
+筛选文字|Filter text
+勾选要移除的独立文字、图片或图章。\n组合对象会整体移除，请核对预览。\n扫描图像像素内的水印无法作为对象删除。|Check independent text, images or stamps to remove.\nGroups are removed as a whole; inspect the preview.\nWatermarks baked into scan pixels cannot be deleted as objects.
+移除勾选对象|Remove checked objects
+匹配页码范围|Match page range
+匹配相同水印|Match same watermarks
+选择 Mini PDF 水印|Select Mini PDF watermarks
+清空选择|Clear selection
+已选 {0} 个对象 / {1} 页|Selected {0} objects on {1} pages
+选择|Select
 选择文字 (V)；Esc 返回选择模式|Select text (V); Esc returns to selection mode
 管理页面 (Ctrl+Shift+P)|Organize pages (Ctrl+Shift+P)
 作为图像打印（兼容模式）|Print as image (compatibility mode)

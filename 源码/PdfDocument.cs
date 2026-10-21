@@ -140,11 +140,13 @@ namespace MiniPdf {
         internal static N.Rect ObjectBounds(IntPtr obj){float l,b,r,t;Check(N.FPDFPageObj_GetBounds(obj,out l,out b,out r,out t)!=0,UiText.Get("无法读取对象范围。"));return new N.Rect(l,b,r,t);}
         internal IntPtr ObjectAt(Pick selection){Check(selection!=null&&!selection.IsAnnotation,UiText.Get("请选择页面对象。"));IntPtr obj=N.FPDFPage_GetObject(Page,selection.ObjectIndex);Check(obj!=IntPtr.Zero,UiText.Get("对象已失效，请重新选择。"));return obj;}
         public Pick PickObject(N.Pt point) {
+
             for(int i=N.FPDFPage_GetAnnotCount(Page)-1;i>=0;i--) {
                 IntPtr a=N.FPDFPage_GetAnnot(Page,i);if(a==IntPtr.Zero)continue;
                 try{int type=N.FPDFAnnot_GetSubtype(a);N.Rect r;if(type!=2&&type!=20&&N.FPDFAnnot_GetRect(a,out r)!=0&&Contains(r,point,2))return new Pick{AnnotIndex=i,Type=type,Bounds=r,Text=AnnotText(a)};}
                 finally{N.FPDFPage_CloseAnnot(a);}
             }
+            for(int i=N.FPDFPage_CountObjects(Page)-1;i>=0;i--){IntPtr image=N.FPDFPage_GetObject(Page,i);if(N.FPDFPageObj_GetType(image)==3&&HasMark(image,"MiniPDF_Signature")&&Contains(ObjectBounds(image),point,2))return PagePick(i,image);}
             // OCR text may be invisible or be painted before a full-page scan image.
             int character=CharAt(point);IntPtr text=character<0?IntPtr.Zero:N.FPDFText_GetTextObject(TextPage,character);
             if(text!=IntPtr.Zero)for(int i=0;i<N.FPDFPage_CountObjects(Page);i++)if(N.FPDFPage_GetObject(Page,i)==text){var pick=PagePick(i,text);if(Contains(pick.Bounds,point,2)){for(int j=i+1;j<N.FPDFPage_CountObjects(Page);j++){IntPtr above=N.FPDFPage_GetObject(Page,j);if(N.FPDFPageObj_GetType(above)==3&&Contains(ObjectBounds(above),point,0)){pick.IsOcrText=true;break;}}return pick;}}
@@ -204,6 +206,8 @@ namespace MiniPdf {
         }
         public void Remove(Pick pick){Check(pick!=null,UiText.Get("请先选择对象。"));Edit(delegate{if(pick.IsAnnotation)Check(N.FPDFPage_RemoveAnnot(Page,pick.AnnotIndex)!=0,UiText.Get("无法删除批注。"));else{IntPtr obj=ObjectAt(pick);Check(N.FPDFPage_RemoveObject(Page,obj)!=0,UiText.Get("无法删除对象。"));N.FPDFPageObj_Destroy(obj);}});}
         public void Move(Pick pick,float dx,float dy){Check(pick!=null,UiText.Get("请选择对象。"));if(pick.IsAnnotation)throw new InvalidOperationException(UiText.Get("批注暂不支持移动，可撤销后重新添加。"));Edit(delegate{N.FPDFPageObj_Transform(ObjectAt(pick),1,0,0,1,dx,dy);});}
+        internal Pick PickIndex(int index){return index>=0&&index<N.FPDFPage_CountObjects(Page)?PagePick(index,N.FPDFPage_GetObject(Page,index)):null;}
+        internal void ScaleAt(Pick pick,float ratio,N.Pt anchor){Check(pick!=null&&!pick.IsAnnotation&&ratio>0&&ratio<=100,UiText.Get("尺寸必须大于零。"));Edit(delegate{N.FPDFPageObj_Transform(ObjectAt(pick),ratio,0,0,ratio,anchor.x*(1-ratio),anchor.y*(1-ratio));});}
         public void Resize(Pick pick,float width,float height){Check(pick!=null&&!pick.IsAnnotation,UiText.Get("请选择页面对象。"));var r=pick.Bounds;Check(r.right>r.left&&r.top>r.bottom&&width>0&&height>0,UiText.Get("尺寸必须大于零。"));Edit(delegate{double sx=width/(r.right-r.left),sy=height/(r.top-r.bottom);N.FPDFPageObj_Transform(ObjectAt(pick),sx,0,0,sy,r.left*(1-sx),r.top*(1-sy));});}
         public void AddImage(string path,N.Rect box) {
             using(var input=Image.FromFile(path)) {

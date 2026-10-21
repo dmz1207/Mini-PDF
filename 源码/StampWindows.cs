@@ -8,42 +8,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Windows.Forms;
 
 namespace MiniPdf {
-    internal sealed class SignatureWindow : Form {
-        readonly SignaturePad pad=new SignaturePad();
-        readonly ComboBox kind;
-        readonly TextBox name;
-        readonly CheckBox removeWhite;
-        Bitmap imported;
-        internal Bitmap Result;
-        internal SignatureWindow(){FormUi.Setup(this,"放置可见签名",new Size(740,390));MinimumSize=new Size(540,360);
-            var layout=new TableLayoutPanel{Dock=DockStyle.Fill,RowCount=5,ColumnCount=1,Padding=new Padding(14)};layout.RowStyles.Add(new RowStyle(SizeType.Absolute,42));layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,40));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,42));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,58));Controls.Add(layout);
-            kind=FormUi.Combo(145,"绘制签名","输入签名","图片签名");name=new TextBox{Width=240,BorderStyle=BorderStyle.FixedSingle};var import=FormUi.Button("导入图片…",Import);var clear=FormUi.Button("清除",delegate{pad.Clear();});layout.Controls.Add(FormUi.Row(kind,name,import,clear),0,0);pad.Dock=DockStyle.Fill;layout.Controls.Add(pad,0,1);
-            removeWhite=FormUi.Check("移除图片白底",true);var hint=FormUi.Label("可见签名是页面图像；证书数字签名请使用证书菜单。");hint.MaximumSize=new Size(680,0);layout.Controls.Add(hint,0,2);layout.Controls.Add(removeWhite,0,3);
-            var footer=FormUi.Row(FormUi.Button("放置签名",delegate{using(var image=Build()){if(image==null)return;Result=new Bitmap(image);DialogResult=DialogResult.OK;}}),FormUi.Button("取消",delegate{DialogResult=DialogResult.Cancel;}));layout.Controls.Add(footer,0,4);AcceptButton=(IButtonControl)footer.Controls[0];CancelButton=(IButtonControl)footer.Controls[1];
-            kind.SelectedIndexChanged+=delegate{pad.Kind=kind.SelectedIndex;name.Enabled=kind.SelectedIndex==1;removeWhite.Enabled=kind.SelectedIndex==2;pad.Invalidate();};name.TextChanged+=delegate{pad.Value=name.Text;pad.Invalidate();};pad.Kind=0;name.Enabled=removeWhite.Enabled=false;
-        }
-        void Import(object sender,EventArgs e){using(var d=new OpenFileDialog{Filter=UiText.Get("图片 (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp"),RestoreDirectory=true})if(d.ShowDialog(this)==DialogResult.OK)try{using(var image=Image.FromFile(d.FileName)){PdfDocument.Check(image.Width<=14000&&image.Height<=14000&&(long)image.Width*image.Height<=32000000,UiText.Get("图片过大，请先缩小至 3200 万像素以内。"));if(imported!=null)imported.Dispose();imported=new Bitmap(image.Width,image.Height,PixelFormat.Format32bppArgb);using(var g=Graphics.FromImage(imported))g.DrawImageUnscaled(image,0,0);pad.Image=imported;kind.SelectedIndex=2;pad.Invalidate();}}catch(Exception ex){MessageBox.Show(this,ex.Message,Text);}}
-        Bitmap Build(){try{Bitmap full;if(kind.SelectedIndex==2){if(imported==null)return null;full=new Bitmap(imported);}else full=pad.Export();using(full){return Crop(full,kind.SelectedIndex==2&&removeWhite.Checked);}}catch(Exception ex){MessageBox.Show(this,ex.Message,Text);return null;}}
-        internal static Bitmap Crop(Bitmap image,bool removeWhite=false){int l=image.Width,r=-1,t=image.Height,b=-1;var data=image.LockBits(new Rectangle(0,0,image.Width,image.Height),ImageLockMode.ReadWrite,PixelFormat.Format32bppArgb);try{var row=new byte[Math.Abs(data.Stride)];for(int y=0;y<image.Height;y++){IntPtr address=IntPtr.Add(data.Scan0,y*data.Stride);Marshal.Copy(address,row,0,row.Length);for(int x=0;x<image.Width;x++){int k=x*4;if(removeWhite&&row[k]>=245&&row[k+1]>=245&&row[k+2]>=245)row[k+3]=0;if(row[k+3]>8){l=Math.Min(l,x);r=Math.Max(r,x);t=Math.Min(t,y);b=Math.Max(b,y);}}if(removeWhite)Marshal.Copy(row,0,address,row.Length);}}finally{image.UnlockBits(data);}PdfDocument.Check(r>=l,UiText.Get("请先绘制、输入或导入签名。"));l=Math.Max(0,l-3);t=Math.Max(0,t-3);r=Math.Min(image.Width-1,r+3);b=Math.Min(image.Height-1,b+3);return image.Clone(new Rectangle(l,t,r-l+1,b-t+1),PixelFormat.Format32bppArgb);}
-        protected override void Dispose(bool disposing){if(disposing){if(imported!=null)imported.Dispose();if(Result!=null)Result.Dispose();}base.Dispose(disposing);}
-        internal sealed class SignaturePad : Control {
-            readonly List<List<PointF>> strokes=new List<List<PointF>>();
-            List<PointF> active;
-            internal int Kind;
-            internal string Value="";
-            internal Image Image;
-            internal SignaturePad(){DoubleBuffered=true;BackColor=Color.White;Cursor=Cursors.Cross;}
-            internal void Clear(){strokes.Clear();Invalidate();}
-            PointF Position(Point p){return new PointF(p.X*640f/Math.Max(1,Width),p.Y*200f/Math.Max(1,Height));}
-            protected override void OnMouseDown(MouseEventArgs e){base.OnMouseDown(e);if(e.Button!=MouseButtons.Left||Kind!=0)return;active=new List<PointF>{Position(e.Location)};strokes.Add(active);Capture=true;}
-            protected override void OnMouseMove(MouseEventArgs e){base.OnMouseMove(e);if(active==null||!Capture)return;active.Add(Position(e.Location));Invalidate();}
-            protected override void OnMouseUp(MouseEventArgs e){base.OnMouseUp(e);if(active!=null&&e.Button==MouseButtons.Left){active.Add(Position(e.Location));active=null;Capture=false;Invalidate();}}
-            protected override void OnMouseCaptureChanged(EventArgs e){base.OnMouseCaptureChanged(e);if(!Capture)active=null;}
-            void Draw(Graphics g){g.SmoothingMode=SmoothingMode.AntiAlias;if(Kind==1){using(var font=new Font("Segoe Script",42,FontStyle.Regular,GraphicsUnit.Pixel))using(var brush=new SolidBrush(Color.FromArgb(24,50,80)))g.DrawString(Value,font,brush,new RectangleF(10,45,620,150));}else using(var pen=new Pen(Color.FromArgb(24,50,80),2.8f){StartCap=LineCap.Round,EndCap=LineCap.Round,LineJoin=LineJoin.Round})foreach(var stroke in strokes)if(stroke.Count>1)g.DrawLines(pen,stroke.ToArray());}
-            protected override void OnPaint(PaintEventArgs e){base.OnPaint(e);if(Kind==2&&Image!=null){float s=Math.Min((Width-16f)/Image.Width,(Height-16f)/Image.Height);e.Graphics.DrawImage(Image,(Width-Image.Width*s)/2,(Height-Image.Height*s)/2,Image.Width*s,Image.Height*s);}else{e.Graphics.ScaleTransform(Width/640f,Height/200f);Draw(e.Graphics);}}
-            internal Bitmap Export(){var result=new Bitmap(640,200,PixelFormat.Format32bppArgb);using(var g=Graphics.FromImage(result)){g.Clear(Color.Transparent);Draw(g);}return result;}
-        }
-    }
     internal sealed class WatermarkWindow : Form {
         readonly PdfDocument document;
         readonly TextBox text,ranges;

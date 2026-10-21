@@ -6,11 +6,18 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.7.0 preview** is one approximately **2.86 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.7.1 preview** is one approximately **2.87 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-## New in v0.7.0
+## Refined in v0.7.1
+
+- Typing a Chinese or English name immediately switches to a live, readable signature preview, including after importing an image.
+- Set signature width in millimeters; the preview changes with it and height stays proportional. Typed/drawn artwork is exported at a higher resolution appropriate to placement size.
+- Click once to place, or drag a rectangle. The inserted signature is immediately selected; drag to move or use its bottom-right handle to resize proportionally, including rotated views. Esc cancels placement.
+- Remove third-party watermark text, images, whole Form groups and stamp annotations through a checked-object list and before/after preview. Match selected content and position across a page range; identical wording at a different size/location is kept.
+
+## Included tools
 
 - Native print workspace with preview, printer properties, page setup, ranges, odd/even filtering, reverse order, copies, collation and driver-supported duplex.
 - Fit, actual size, shrink-only and exact custom print scale; 2/4/6/9/16-up, booklet imposition, poster tiles with overlap and crop marks.
@@ -61,7 +68,7 @@ The collapsed menu, rounded draggable document tabs and window buttons share one
 | Annotations | Highlight, underline, strikeout, ink, sticky notes and annotation removal |
 | Highlight colors | Select text, then choose a toolbar or right-click highlight color; twelve presets plus a full custom color picker |
 | Pages | Insert blank pages, duplicate, rotate, delete, extract, reorder and combine |
-| Watermarks | Text/images, opacity, angle, position, tiling, page counters, ranges and replace/remove Mini PDF watermarks |
+| Watermarks | Text/images, opacity, angle, position, tiling, page counters, ranges, Mini PDF replacement and checked third-party watermark removal |
 | Navigation | Thumbnails, outline, current-page annotations, search, text selection/copy, internal and web links |
 | Export | Current-page PNG, document TXT and printing |
 | History | Per-document undo/redo, up to twelve steps with a 64 MiB target |
@@ -98,9 +105,11 @@ Booklet printing normally uses landscape with short-edge duplex. For manual dupl
 
 ## Signatures, watermarks and certificates
 
-**Visible signatures:** Open the signatures and watermarks menu and choose Place visible signature. Draw with the mouse, type a name or import an image; white image backgrounds can be removed. Drag a placement rectangle on the PDF. This adds an editable image and does not provide a cryptographic identity. Signature artwork is not stored as a reusable file or uploaded.
+**Visible signatures:** open the signatures and watermarks menu and choose Place visible signature. Draw with the mouse, type a name or import an image. Name entry stays enabled in every mode and typing automatically switches to typed preview. Chinese names use a suitable Windows CJK font. Image white backgrounds can be removed. Set Page width (mm); the preview responds and height remains proportional. Confirm, then click the PDF to place that size or drag a rectangle for another size. A mouse-following preview shows placement. The image is selected immediately; drag it to move, use the bottom-right corner to resize without distortion, or right-click to enter a scaling percentage. Esc cancels placement. This is editable artwork, not cryptographic identity; it is not stored as a reusable file or uploaded.
 
-**Watermarks:** text or images, color, opacity, rotation, center/top/bottom, foreground/background, tiling and page ranges. Text supports {page} and {pages}. Preview shows the current page. Apply is undoable. Replace/remove recognizes watermarks tagged by Mini PDF; it does not promise to remove arbitrary third-party artwork.
+**Watermarks:** add text or images with color, opacity, rotation, center/top/bottom, foreground/background, tiling and page ranges. Text supports {page} and {pages}; preview shows the current page and Apply is undoable. Automatic replacement recognizes Mini PDF-tagged watermarks.
+
+**Remove watermarks:** the removal workspace also works with third-party PDF objects. Choose a preview page, filter the candidate list, and check the text, image, whole Form group or stamp annotation to remove. Show all page objects exposes content omitted by the initial candidate filter. Before/after preview leaves the document untouched until Remove checked objects. Match same watermarks searches the specified page range for equal content/style and similar page-relative position/size. A separate button selects Mini PDF-tagged watermarks. The whole removal is one undoable document edit. Complex groups are removed as a whole, so inspect the preview. Large images without a computed fingerprint, or stamps without identifying content, may need per-page selection. Watermarks baked into scan pixels or combined with body content cannot be independently erased by object deletion; this does not provide image inpainting or guaranteed universal watermark recognition.
 
 **Certificate signatures:** select an existing Windows personal certificate with a private key or load a PFX/P12 with its password. PFX keys are loaded ephemerally; Mini PDF does not install the certificate or persist its private key. Certificate signing creates a separate copy with a SHA-256 detached CMS approval signature. Existing AcroForm fields are preserved. Place any visible signature artwork before signing; the certificate approval signature itself is invisible.
 
@@ -154,9 +163,11 @@ Basic program tests run with build.ps1 -Test. Full external-fixture coverage add
 ~~~powershell
 python .\源码\verify_pdf.py fixtures .\work\tests
 python .\源码\verify_features.py fixtures .\work\tests
+python .\源码\verify_fixes.py fixtures .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\build.ps1 -Test
 python .\源码\verify_pdf.py verify .\work\tests
 python .\源码\verify_features.py verify .\work\tests
+python .\源码\verify_fixes.py verify .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 ~~~
 

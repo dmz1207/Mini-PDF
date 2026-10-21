@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 namespace MiniPdf {
@@ -102,6 +103,9 @@ namespace MiniPdf {
         internal N.Pt PointAt(Point p){return PagePoint(p);}
         internal Pick PickAt(Point p){return Doc==null?null:Doc.PickObject(PagePoint(p));}
         static Rectangle DragBox(Point p,Point q){return new Rectangle(Math.Min(p.X,q.X),Math.Min(p.Y,q.Y),Math.Abs(p.X-q.X),Math.Abs(p.Y-q.Y));}
+        internal N.Matrix ImageMatrix(Rectangle r){var a=PagePoint(new Point(r.Left,r.Bottom));var b=PagePoint(new Point(r.Right,r.Bottom));var c=PagePoint(r.Location);return new N.Matrix{a=b.x-a.x,b=b.y-a.y,c=c.x-a.x,d=c.y-a.y,e=a.x,f=a.y};}
+        internal Rectangle SignatureBounds(Point point){double width=(ViewRotation&1)==0?Doc.Width:Doc.Height;float scale=(float)(PageRectangle.Width/width);var size=owner.SignatureSize;float fit=Math.Min(1,Math.Min(PageRectangle.Width/(size.Width*scale),PageRectangle.Height/(size.Height*scale)));int w=Math.Max(1,(int)Math.Round(size.Width*scale*fit)),h=Math.Max(1,(int)Math.Round(size.Height*scale*fit));return new Rectangle(Math.Max(PageRectangle.Left,Math.Min(PageRectangle.Right-w,point.X)),Math.Max(PageRectangle.Top,Math.Min(PageRectangle.Bottom-h,point.Y)),w,h);}
+        Rectangle SignatureDrag(){var r=Rectangle.Intersect(DragBox(origin,current),PageRectangle);if(owner.PendingSignature==null)return r;float aspect=(float)owner.PendingSignature.Width/owner.PendingSignature.Height;if(r.Width>r.Height*aspect)r.Width=Math.Max(1,(int)Math.Round(r.Height*aspect));else r.Height=Math.Max(1,(int)Math.Round(r.Width/aspect));return r;}
         N.Rect PdfBox(Rectangle r){var a=PagePoint(r.Location);var b=PagePoint(new Point(r.Right,r.Bottom));return new N.Rect(Math.Min(a.x,b.x),Math.Min(a.y,b.y),Math.Max(a.x,b.x),Math.Max(a.y,b.y));}
         protected override void OnPaint(PaintEventArgs e){
             base.OnPaint(e);var g=e.Graphics;
@@ -117,7 +121,8 @@ namespace MiniPdf {
             using(var highlight=new SolidBrush(Color.FromArgb(95,255,211,73)))foreach(var r in Markers)g.FillRectangle(highlight,DeviceRect(r));
             if(TextStart>=0&&TextCount>0){using(var brush=new SolidBrush(Color.FromArgb(75,48,129,220)))foreach(var r in Doc.TextRects(TextStart,TextCount))g.FillRectangle(brush,DeviceRect(r));}
             if(Selected!=null){Rectangle r=DeviceRect(Selected.Bounds);if(down&&Mode==Tool.Object){if(resizing)r=DragBox(r.Location,current);else r.Offset(current.X-origin.X,current.Y-origin.Y);}r.Inflate(3,3);using(var pen=new Pen(Color.FromArgb(25,119,155),1.5f)){pen.DashStyle=DashStyle.Dash;g.DrawRectangle(pen,r);}if(!Selected.IsAnnotation){using(var b=new SolidBrush(Color.White))g.FillRectangle(b,r.Right-4,r.Bottom-4,8,8);using(var p=new Pen(Color.FromArgb(25,119,155)))g.DrawRectangle(p,r.Right-4,r.Bottom-4,8,8);}}
-            if(down&&(Mode==Tool.Highlight||Mode==Tool.Rectangle||Mode==Tool.Image||Mode==Tool.Underline||Mode==Tool.Strike)){var r=DragBox(origin,current);using(var b=new SolidBrush(Color.FromArgb(50,owner.Ink)))g.FillRectangle(b,r);using(var p=new Pen(owner.Ink,1))g.DrawRectangle(p,r);}
+            if(owner.PendingSignature!=null&&PageRectangle.Contains(current)){var r=down?SignatureDrag():SignatureBounds(current);if(r.Width>0&&r.Height>0){using(var attributes=new ImageAttributes()){var colors=new ColorMatrix();colors.Matrix33=.7f;attributes.SetColorMatrix(colors);g.DrawImage(owner.PendingSignature,r,0,0,owner.PendingSignature.Width,owner.PendingSignature.Height,GraphicsUnit.Pixel,attributes);}using(var pen=new Pen(Color.FromArgb(25,119,155),1){DashStyle=DashStyle.Dash})g.DrawRectangle(pen,r);}}
+            if(down&&(Mode==Tool.Highlight||Mode==Tool.Rectangle||Mode==Tool.Image&&owner.PendingSignature==null||Mode==Tool.Underline||Mode==Tool.Strike)){var r=DragBox(origin,current);using(var b=new SolidBrush(Color.FromArgb(50,owner.Ink)))g.FillRectangle(b,r);using(var p=new Pen(owner.Ink,1))g.DrawRectangle(p,r);}
             if(down&&Mode==Tool.Ink&&screenStroke.Count>1){g.SmoothingMode=SmoothingMode.AntiAlias;using(var pen=new Pen(owner.Ink,Math.Max(1,owner.LineWidth*pixelWidth/(float)Doc.Width))){pen.StartCap=pen.EndCap=LineCap.Round;g.DrawLines(pen,screenStroke.ToArray());}}
         }
         protected override void OnMouseDown(MouseEventArgs e){base.OnMouseDown(e);Focus();if(Doc==null||pageRects.Length==0)return;
@@ -126,7 +131,7 @@ namespace MiniPdf {
             if(e.Button==MouseButtons.Right){owner.ShowContext(e.Location);return;}
             if(e.Button!=MouseButtons.Left||!PageRectangle.Contains(e.Location))return;
             down=true;origin=current=e.Location;startPoint=PagePoint(e.Location);Capture=true;
-            if(Mode==Tool.Object){resizing=false;if(Selected!=null&&!Selected.IsAnnotation){var r=DeviceRect(Selected.Bounds);r.Inflate(3,3);resizing=new Rectangle(r.Right-8,r.Bottom-8,16,16).Contains(e.Location)&&N.FPDFPage_GetRotation(Doc.Page)==0&&ViewRotation==0;}if(!resizing)Selected=Doc.PickObject(startPoint);owner.SelectionChanged();}
+            if(Mode==Tool.Object){resizing=false;if(Selected!=null&&!Selected.IsAnnotation){var r=DeviceRect(Selected.Bounds);r.Inflate(3,3);resizing=new Rectangle(r.Right-8,r.Bottom-8,16,16).Contains(e.Location)&&(Selected.Type==3||N.FPDFPage_GetRotation(Doc.Page)==0&&ViewRotation==0);}if(!resizing)Selected=Doc.PickObject(startPoint);owner.SelectionChanged();}
             else if(Mode==Tool.Read){Selected=null;Markers.Clear();startChar=Doc.CharAt(startPoint);TextStart=startChar;TextCount=startChar<0?0:1;}
             else if(Mode==Tool.Ink){stroke.Clear();screenStroke.Clear();stroke.Add(startPoint);screenStroke.Add(e.Location);}
             Invalidate();
@@ -135,12 +140,13 @@ namespace MiniPdf {
             if(panning){AutoScrollPosition=new Point(-scrollOrigin.X+origin.X-e.X,-scrollOrigin.Y+origin.Y-e.Y);return;}
             if(down){current=e.Location;if(Mode==Tool.Read&&startChar>=0){int end=Doc.CharAt(PagePoint(e.Location));if(end>=0){TextStart=Math.Min(startChar,end);TextCount=Math.Abs(end-startChar)+1;}}
                 if(Mode==Tool.Ink&&stroke.Count<20000&&(Math.Abs(e.X-screenStroke[screenStroke.Count-1].X)+Math.Abs(e.Y-screenStroke[screenStroke.Count-1].Y)>1)){stroke.Add(PagePoint(e.Location));screenStroke.Add(e.Location);}Invalidate();}
-            else {if(Mode==Tool.Hand||spacePan)Cursor=Cursors.Hand;else if(!PageRectangle.Contains(e.Location))Cursor=Cursors.Default;else if(Mode==Tool.Read)Cursor=Doc.CharAt(PagePoint(e.Location))>=0?Cursors.IBeam:Cursors.Default;else Cursor=Mode==Tool.Object?Cursors.Default:Cursors.Cross;}
+            else {if(owner.PendingSignature!=null){current=e.Location;Invalidate();}if(Mode==Tool.Hand||spacePan)Cursor=Cursors.Hand;else if(!PageRectangle.Contains(e.Location))Cursor=Cursors.Default;else if(Mode==Tool.Read)Cursor=Doc.CharAt(PagePoint(e.Location))>=0?Cursors.IBeam:Cursors.Default;else Cursor=Mode==Tool.Object?Cursors.Default:Cursors.Cross;}
         }
         protected override void OnMouseUp(MouseEventArgs e){base.OnMouseUp(e);if(panning){if(e.Button!=panButton)return;panning=false;Capture=false;Cursor=Mode==Tool.Hand||spacePan?Cursors.Hand:Cursors.Default;return;}if(!down||e.Button!=MouseButtons.Left||Doc==null)return;
             down=false;Capture=false;current=e.Location;var endPoint=PagePoint(e.Location);int distance=Math.Abs(current.X-origin.X)+Math.Abs(current.Y-origin.Y);
             if(Mode==Tool.Read){if(distance<5&&TextCount<=1)owner.OpenLink(startPoint);Invalidate();return;}
-            if(Mode==Tool.Object){if(Selected!=null&&!Selected.IsAnnotation&&distance>3){var pick=Selected;if(resizing){float w=Math.Abs(endPoint.x-pick.Bounds.left),h=Math.Abs(pick.Bounds.top-endPoint.y);owner.Run(delegate{Doc.Resize(pick,w,h);});}else{float dx=endPoint.x-startPoint.x,dy=endPoint.y-startPoint.y;owner.Run(delegate{Doc.Move(pick,dx,dy);});}}Invalidate();return;}
+            if(Mode==Tool.Object){if(Selected!=null&&!Selected.IsAnnotation&&distance>3){var pick=Selected;int index=pick.ObjectIndex;if(resizing){if(pick.Type==3){var r=DeviceRect(pick.Bounds);float sx=Math.Max(4,e.X-r.Left)/(float)r.Width,sy=Math.Max(4,e.Y-r.Top)/(float)r.Height;float ratio=Math.Max(.01f,Math.Min(100,Math.Abs(sx-1)>Math.Abs(sy-1)?sx:sy));var anchor=PagePoint(r.Location);owner.Run(delegate{Doc.ScaleAt(pick,ratio,anchor);});}else{float w=Math.Abs(endPoint.x-pick.Bounds.left),h=Math.Abs(pick.Bounds.top-endPoint.y);owner.Run(delegate{Doc.Resize(pick,w,h);});}}else{float dx=endPoint.x-startPoint.x,dy=endPoint.y-startPoint.y;owner.Run(delegate{Doc.Move(pick,dx,dy);});}Selected=Doc.PickIndex(index);owner.SelectionChanged();}Invalidate();return;}
+            if(Mode==Tool.Image&&owner.PendingSignature!=null){var signatureBox=distance<4?SignatureBounds(e.Location):SignatureDrag();if(signatureBox.Width>0&&signatureBox.Height>0)owner.InsertSignature(signatureBox);return;}
             if(Mode==Tool.Text){owner.InsertText(startPoint);return;}if(Mode==Tool.Note){owner.InsertNote(startPoint);return;}
             if(Mode==Tool.Ink){if(stroke.Count>1)owner.Run(delegate{Doc.AddInk(stroke,owner.Ink,owner.LineWidth);});return;}
             var box=DragBox(origin,current);if(box.Width<4||box.Height<4)return;var rect=PdfBox(box);
