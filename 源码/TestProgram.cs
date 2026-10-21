@@ -17,6 +17,7 @@ namespace MiniPdf.Tests {
                 N.SetProcessDPIAware();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                if(args.Length>1&&args[1]=="--features-only")return SelfTest.RunFeatures(directory);
                 return args.Length>1&&args[1]=="--header-only"?SelfTest.RunHeader(directory):SelfTest.Run(directory);
             } catch (Exception e) {
                 File.WriteAllText(Path.Combine(directory, "fatal.txt"), e.ToString());

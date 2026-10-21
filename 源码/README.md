@@ -4,210 +4,168 @@
 
 **A small, native Windows PDF reader and editor.**
 
-Mini PDF combines a compact reading interface with text, object, annotation, and page editing. It uses Windows controls and PDFium, with no Electron, WebView, or bundled browser runtime.
+Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.6.1 preview** is a single **2.82 MiB executable** for **Windows 10 / Windows 11 x64**. The application starts in English and includes an immediate English / Simplified Chinese language switch.
+The **v0.7.0 preview** is one approximately **2.86 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-## What's new in v0.6.1
+## New in v0.7.0
 
-- The menu button, rounded document tabs, and minimize/maximize/close controls share the top title row, matching the compact layout of Sumatra PDF. There is no separate blank title row.
-- Flat white toolbars and rounded blue tabs replace the old raised tab and toolbar borders.
-- Fix duplicate title rows in ordinary windows: minimize, maximize and close appear once. Reading mode retains the normal system caption.
-- Hold the left mouse button on a tab and drag it to any position. The tab follows the pointer; you can cross multiple tabs and reverse direction without releasing.
-- Releasing finishes the move; Esc restores the previous order. Edge hovering reaches hidden tabs when many documents are open.
-- Window movement, resize borders, double-click maximize/restore, reading mode and true full screen remain available. Reading mode keeps a normal system title bar.
-- English remains the default interface and documentation; Simplified Chinese is the second language option. No extra runtime or UI framework is added.
+- Native print workspace with preview, printer properties, page setup, ranges, odd/even filtering, reverse order, copies, collation and driver-supported duplex.
+- Fit, actual size, shrink-only and exact custom print scale; 2/4/6/9/16-up, booklet imposition, poster tiles with overlap and crop marks.
+- Default printing sends PDF text and graphics directly through PDFium to the Windows printer context. It avoids a fixed-resolution page screenshot. Optional image printing offers 300, 600 or 1200 DPI.
+- Draw, type or import a visible signature. Add text or image watermarks to selected pages, with rotation, opacity, tiling, page counters and preview.
+- Real SHA-256 certificate signatures using Windows cryptography, with separate integrity, revision-coverage and offline certificate-trust results.
+- Drag PDF or image files into Combine Files, expand groups into page thumbnails and drag individual or selected pages between groups.
+- Page organizer with multi-selection, drag sorting, duplicate, rotation, deletion and undo/redo. Apply to the current PDF in one undoable operation.
+- Visible **Select**, **Hand**, **Highlight** and **Pages** toolbar controls. Use V for selection, H for the hand, Esc to return to selection, or hold Space to pan temporarily.
+- Highlight selected text immediately using twelve preset colors or a custom color.
 
 ## Getting started
 
-1. Download `Mini PDF.exe` and place it in a writable folder.
-2. Double-click it, then open a PDF with `Ctrl+O`, or drag PDF files onto the window.
-3. Open more files to create tabs. Only the selected document appears in the reading area.
-4. Click **Edit** to expand editing tools. Use **Object**, select a text block, and double-click to edit it.
-5. Save with `Ctrl+S`, or use `Ctrl+Shift+S` to save a copy.
+1. Place Mini PDF.exe in a writable folder and double-click it. No installer or activation is required.
+2. Open a PDF with Ctrl+O, or drop PDF files on the window. Additional files get tabs; the selected tab supplies the reading area.
+3. Use Select to select and copy text. Use Hand to drag a zoomed page freely in both directions.
+4. Click Edit to expand object, text, image and drawing tools. Use Object and double-click a text block to change it.
+5. Use Pages to organize the current document, or Menu > Pages > Merge PDF files to combine files into a new document.
+6. Save with Ctrl+S, or save a copy with Ctrl+Shift+S. Ctrl+P opens the print workspace.
 
-There is no installer, activation, account, advertising, or telemetry. The app does not change your default PDF file association. It uses the .NET Framework 4.x provided by Windows; Node.js, Python, Electron, and a modern .NET SDK are not required to run it.
+The app uses the .NET Framework 4.x supplied with Windows. Node.js, Python, Electron and a modern .NET SDK are not needed to run it. It does not require an account, add advertising or telemetry, or change your default PDF association.
 
-**Compatibility:** tested on Windows 10 Home Chinese x64, build 19045. Windows 11 x64 uses the same target APIs, but has not yet been tested on a separate Windows 11 machine. ARM64 and 32-bit Windows builds are not provided.
+**Compatibility:** tested on Windows 10 Home Chinese x64, build 19045. Windows 11 uses the same target APIs but still needs testing on a separate Windows 11 machine. No x86 or ARM64 build is provided.
 
-## Interface and help languages
+## Compact reading interface
 
-Open **Menu > Language** to choose **English** (first) or **简体中文** (second). English is the default for each new independent window. Switching is immediate and preserves open documents, edits, reading state, and entered text. The choice applies to the current window; no language settings file is created. Native Windows file and print dialogs follow your Windows display language.
+The collapsed menu, rounded draggable document tabs and window buttons share one top row. The reading toolbar sits below. Editing tools, sidebar and status bar are hidden until needed. Reading mode retains a normal system title bar and close button.
 
-The **Help** menu lists the English user guide first and the Chinese guide second. Both are embedded in the EXE; `F1` opens the English guide.
+- Hold the left mouse button on a tab and drag continuously to any position. Release to finish; Esc restores the previous order. Edge hovering scrolls overflowing tabs.
+- A tab's ×, middle click, Ctrl+W or Ctrl+F4 closes it. Unsaved documents prompt before closing.
+- Ctrl+Tab / Ctrl+Shift+Tab cycle tabs. Opening the same file selects its existing tab; later Explorer opens normally enter the existing window.
+- Ctrl+Shift+N or the --new-window argument opens an independent window.
+- Single, double, book, continuous and grid layouts show pages of the selected document. Grid view adds columns when zoomed out; double-click a page to return to single-page reading.
+- Ctrl+6 fits a single page; Ctrl+7 fits the current two-page spread to width; Ctrl+2 fits the current layout to width.
+- Exact decimal zoom supports 1%–6400%. Enter a value such as 123.5% and press Enter. Manual 100% retains its actual scale.
+- Fit Width minimizes external side gutters to about 0–1 pixels, with possible two-pixel spread rounding. Page gaps are four pixels; Windows scrollbars are about ten pixels at 100% display scaling.
+- High zoom renders visible areas as native-resolution tiles. The image-cache target is 64 MiB; individual pages and document histories have separate limits.
 
-## Reading and document tabs
+**Hand and selection:** click Select or press V to select text; click Hand or press H for left-button panning. Esc returns to selection. Holding Space temporarily pans without changing the selected tool; middle-button panning also works. V/H shortcuts apply while the reading area has focus, so text fields retain ordinary typing.
 
-With one or more documents, rounded tabs share the top title row with the menu and window controls. The reading toolbar sits directly below it. Menus stay collapsed behind `☰`; press `F10` to open them. Editing tools, the sidebar, and the status bar are hidden until needed.
-
-- Hold the left mouse button on a tab's text area to reorder it continuously. Release to finish, or press `Esc` to restore the previous order.
-- Click a tab's `×`, middle-click the tab, or use `Ctrl+W` to close it. Unsaved changes trigger a save prompt.
-- Opening an already open file selects its existing tab. Opening another PDF from Explorer normally sends it to the existing window.
-- `Ctrl+Shift+N` opens an independent window. The command-line flag `--new-window` provides the same behavior.
-- `Ctrl+6` fits one page; `Ctrl+7` fits the current two-page spread to the available width.
-- Single-page, double-page, book, and grid layouts always refer to pages **within the selected PDF**. They do not combine different documents.
-
-### Views and zoom
-
-Single-page, double-page, book, continuous scrolling, and multi-page grid views are available. In grid view, zooming out increases the number of columns; double-click a page to return to single-page reading.
-
-The zoom box accepts exact integer or decimal percentages from **1% to 6400%**, such as `87%` or `123.5%`. Press Enter to apply. Manual `100%` keeps its actual scale; use Fit Width to fill the window. There is a dedicated `适宽` (Fit Width) toolbar button, a menu item, and the `Ctrl+2` shortcut.
-
-Fit Width uses the actual size of the current page or spread, including mixed paper sizes and an odd final page. External side margins are reduced to about 0–1 pixels, with a possible 2-pixel rounding difference for a spread. Page gaps are 4 pixels. Native Windows scrollbars are approximately 10 pixels wide at 100% system scaling.
-
-At high zoom, PDFium renders visible areas as native-resolution tiles rather than enlarging a low-resolution screenshot. The image-cache target is 64 MiB; a single full-page bitmap can exceed that target within its separate rendering limit.
-
-### Focused reading
-
-`Ctrl+H` hides document controls while keeping the native title bar, window buttons, and window position. `F11` enters borderless full screen; `Ctrl+L` starts a single-page presentation. Press `Esc`, or use the right-click menu, to leave these modes.
-
-## Editing features
+## Editing and page management
 
 | Area | Available features |
 | --- | --- |
-| Existing text | Select and replace top-level PDF text objects; the old text object is removed rather than covered with a white rectangle |
-| New text | Add Chinese or English text, including multiple lines; choose fonts, size, and color |
-| Objects | Select, move, resize, or delete text, images, and shapes; insert images while keeping their aspect ratio |
-| Annotations | Highlight, underline, strikeout, freehand ink, sticky notes, note editing, and annotation deletion |
-| Drawing | Add rectangles; choose stroke color and width |
-| Pages | Rotate, insert blank pages, duplicate, delete, move, extract, and merge |
-| Export | Current page as PNG, document text as TXT, and printing of the current page or a page range |
-| Navigation | Thumbnails, document outline, current-page annotation list, search, text selection and copy, internal links, and web links |
-| History | Independent undo/redo history for each document, up to 12 steps with a 64 MiB history target |
-| Save | Generated-document reload checks, complete rewriting, atomic replacement through a temporary file beside the destination, and font subsetting |
-| Passwords | Open with a valid password, respect editing and printing permissions, and preserve encryption when saving |
+| Existing text | Replace top-level text objects; the old object is removed rather than hidden under white paint |
+| New content | Add Chinese/English multiline text, images, rectangles and visible signatures |
+| Objects | Select, move, resize and delete text, images and shapes; double-click text or notes to edit |
+| Annotations | Highlight, underline, strikeout, ink, sticky notes and annotation removal |
+| Highlight colors | Select text, then choose a toolbar or right-click highlight color; twelve presets plus a full custom color picker |
+| Pages | Insert blank pages, duplicate, rotate, delete, extract, reorder and combine |
+| Watermarks | Text/images, opacity, angle, position, tiling, page counters, ranges and replace/remove Mini PDF watermarks |
+| Navigation | Thumbnails, outline, current-page annotations, search, text selection/copy, internal and web links |
+| Export | Current-page PNG, document TXT and printing |
+| History | Per-document undo/redo, up to twelve steps with a 64 MiB target |
+| Save | Reload validation, atomic replacement, font subsetting and preservation of existing encryption |
 
-Highlight, underline, strikeout, ink, and sticky notes are saved as standard PDF annotations. Added text, images, and rectangles become page content. Existing PDF links are readable; creating or editing links is not currently provided.
+Select text in Select mode, then choose a color from Highlight or the right-click menu. Ctrl+Alt+H uses the most recent highlight color. With no text selected, the highlight tool supports a rectangular area. Highlights and other markup use standard PDF annotations.
 
-Use the object tool to drag existing objects. Double-click a selected text block or note to edit it. Press `Delete` to remove the selected object. Direct corner resizing is available for unrotated page objects; the resize command also accepts a percentage.
+### Organize pages and combine files
+
+Open Pages or press Ctrl+Shift+P to manage the active document. Expand a file group to see its individual pages. Ctrl-click selects multiple pages; Shift-click selects a range. Hold the left mouse button to drag selected pages to another position. Rotate, duplicate, remove, undo and redo are available. Apply commits the whole operation to the active document; its normal undo restores the previous state. Destinations attached to retained original pages are preserved during reorder/delete; links to deleted pages may no longer resolve.
+
+Combine Files accepts dropped or selected PDF, PNG, JPEG and BMP files. Drag collapsed groups to change file order, or expand groups and drag pages across them. Images are placed on A4 pages. Combining creates a new unsaved document and preserves the original files. Word/Excel import is not provided. Source outlines and document-level form structures are not combined into a unified outline or interactive form. Each workspace supports up to 10,000 pages and twenty workspace undo steps.
 
 ### Scanned PDFs with a text layer
 
-Mini PDF can read, select, copy, and search existing OCR text layered over a scanned image. Top-level invisible or transparent OCR text can be edited while preserving its visibility settings and the original scan image, including when the scan is above the text layer.
+Existing OCR text can be read, selected, copied, searched and edited when it is a top-level text object. Editing preserves the text's invisibility/transparency and the original scan. Changing the recognition layer does not alter letters inside the scan image. Nested Form text remains readable/searchable but cannot be edited character by character. No OCR engine is bundled.
 
-**Changing OCR text changes the recognition layer, not the letters printed in the scan image.** OCR text inside nested Form objects remains readable and searchable but cannot currently be edited character by character. Mini PDF does not include an OCR engine to recognize a scan that has no text layer.
+## Printing
 
-## Keyboard shortcuts
+Ctrl+P opens Mini PDF's own native Windows print workspace. Printer Properties and Page Setup use Windows/the printer driver. It offers:
+
+- All/current/custom pages, explicit ranges such as 5,1-3,8, odd/even filtering and reverse order.
+- Copies, collation, driver duplex defaults, simplex, long-edge or short-edge duplex where supported.
+- Fit printable area, actual size, shrink oversized pages or an exact custom percentage; auto/portrait/landscape orientation.
+- Driver paper sizes, choosing paper from PDF page dimensions, optional extra margins, grayscale and annotation inclusion.
+- 2/4/6/9/16 pages per side, booklet pairs with blank padding/fronts/backs/right binding, and poster tiles with overlap/crop marks.
+- A preview of the same layout and sheet sequence used by the print job.
+
+The default sends source PDF text and vector paths to the Windows printer device context using PDFium's native EMF output. Viewer zoom does not affect print resolution. Existing image detail stays limited by the source image; complex transparency or printer drivers may rasterize some content. Actual paper detail, color, minimum margins and duplex depend on the printer and its driver. Mini PDF cannot make a low-resolution scan sharper than its source.
+
+Enable **Print as image (compatibility mode)** only when needed. Choose 300, 600 (default) or 1200 DPI. Rendering uses bounded tiles instead of allocating a full high-resolution page bitmap. Existing AcroForm appearance streams are prepared in temporary in-memory copies for printing; the open PDF and its form fields are preserved.
+
+Booklet printing normally uses landscape with short-edge duplex. For manual duplex, use front-only and back-only sequences and follow your printer's feed direction. Poster output is one-sided tiled artwork; check the preview and paper selection before printing.
+
+## Signatures, watermarks and certificates
+
+**Visible signatures:** Open the signatures and watermarks menu and choose Place visible signature. Draw with the mouse, type a name or import an image; white image backgrounds can be removed. Drag a placement rectangle on the PDF. This adds an editable image and does not provide a cryptographic identity. Signature artwork is not stored as a reusable file or uploaded.
+
+**Watermarks:** text or images, color, opacity, rotation, center/top/bottom, foreground/background, tiling and page ranges. Text supports {page} and {pages}. Preview shows the current page. Apply is undoable. Replace/remove recognizes watermarks tagged by Mini PDF; it does not promise to remove arbitrary third-party artwork.
+
+**Certificate signatures:** select an existing Windows personal certificate with a private key or load a PFX/P12 with its password. PFX keys are loaded ephemerally; Mini PDF does not install the certificate or persist its private key. Certificate signing creates a separate copy with a SHA-256 detached CMS approval signature. Existing AcroForm fields are preserved. Place any visible signature artwork before signing; the certificate approval signature itself is invisible.
+
+Signature inspection separates cryptographic byte integrity, coverage of the current file and offline Windows certificate-chain trust. A self-signed certificate can have valid integrity while remaining untrusted. Bytes appended after a signature are flagged as later, unverified content. Signed documents open read-only; Save As copies their original bytes to preserve signatures.
+
+Current certificate scope is deliberately bounded: PDFs below 128 MiB, one new approval signature on an unsigned editable PDF, no encrypted/XFA signing or additional signatures on already signed documents. Inspection supports detached CMS signatures, including the basic integrity of CAdES detached signatures. It does not validate trusted timestamps, revocation, DocMDP permissions or later revisions, or provide PAdES/LTV qualification, cloud signing or legal-identity assurance. Unsupported signatures are reported rather than marked valid. Certificate viewing uses Windows UI.
+
+## Languages and shortcuts
+
+Menu > Language lists English first and 简体中文 second. Changes apply immediately to the current window while keeping document content, edits and reading state. Each new independent window starts in English; no language-settings file is created. Windows-owned file, certificate and driver dialogs follow Windows display language. Help lists the English guide first and the Chinese guide second; F1 opens English help.
 
 | Action | Shortcut |
 | --- | --- |
-| Open / save / save as | `Ctrl+O` / `Ctrl+S` / `Ctrl+Shift+S` |
-| Next / previous document tab | `Ctrl+Tab` / `Ctrl+Shift+Tab` |
-| Close current tab | `Ctrl+W` or `Ctrl+F4` |
-| New document / independent window | `Ctrl+N` / `Ctrl+Shift+N` |
-| Fit page / fit width / actual size | `Ctrl+1` / `Ctrl+2` / `Ctrl+0` |
-| Automatic single page / two-page width | `Ctrl+6` / `Ctrl+7` |
-| Book view / multi-page grid | `Ctrl+8` / `Ctrl+9` |
-| Reading mode / full screen / presentation | `Ctrl+H` / `F11` / `Ctrl+L` |
-| Leave reading mode, full screen, or presentation; stop a tab drag | `Esc` |
-| Show or hide sidebar | `F12` (`F9` also supported) |
-| Find / next result | `Ctrl+F` / `Enter` or `F3` |
-| Select page text / copy | `Ctrl+A` / `Ctrl+C` |
-| Undo / redo | `Ctrl+Z` / `Ctrl+Y` |
-| Previous / next page or spread | `PageUp` / `PageDown` |
-| Rotate view left / right | `Ctrl+Shift+-` / `Ctrl+Shift++` |
-| Edit page rotation | `Ctrl+R` / `Ctrl+Shift+R` |
-| Open collapsed menu | `F10` |
+| Open / save / save as | Ctrl+O / Ctrl+S / Ctrl+Shift+S |
+| New PDF / independent window | Ctrl+N / Ctrl+Shift+N |
+| Fit page / fit width / actual size | Ctrl+1 / Ctrl+2 / Ctrl+0 |
+| Automatic single / two-page width | Ctrl+6 / Ctrl+7 |
+| Book / grid | Ctrl+8 / Ctrl+9 |
+| Select / hand / temporary pan | V / H / hold Space |
+| Highlight selected text | Ctrl+Alt+H |
+| Organize pages / print | Ctrl+Shift+P / Ctrl+P |
+| Find / next result | Ctrl+F / Enter or F3 |
+| Undo / redo | Ctrl+Z / Ctrl+Y |
+| Sidebar | F12 or F9 |
+| Reading mode / full screen / presentation | Ctrl+H / F11 / Ctrl+L |
+| Exit tool/mode or cancel tab drag | Esc |
+| Collapsed menu | F10 |
 
-Use `Ctrl+mouse wheel` to zoom, the mouse wheel to scroll, and middle-button dragging to pan. Right-click the document for reading and editing commands. Text fields retain their normal editing shortcuts.
+## Portable operation and size
 
-## Portable operation and cleanup
+The EXE uses Windows LZMS compression with no additional decompression library. On startup it extracts its engine, guides and open-source notices into a hidden .MiniPDF-runtime-* directory beside itself, and directs its TEMP/TMP there. Normal exit removes generated files; the next launch cleans stale runtime directories after an unexpected exit. Active instances and unrelated files created by the user in a runtime directory are protected.
 
-The EXE is **2,955,264 bytes**, approximately **2.82 MiB**. Its resources use the Windows Compression API with LZMS and 8 MiB blocks. No additional decompression library is shipped.
+The portable folder must be writable. Save documents outside the runtime directory. The program source remains readable; removing whitespace does not reduce the compiled application. Test programs, Python dependencies, debug symbols and build tools are excluded from the EXE.
 
-On startup, the app extracts the engine, help text, and licenses to a hidden `.MiniPDF-runtime-*` folder beside the EXE. The application's `TEMP` and `TMP` point to that folder. Normal exit removes extracted files; the next launch cleans up stale runtime folders after an unexpected exit. Active instances keep their own files protected. Extra files created by the user inside a runtime folder are preserved.
+## Current limits
 
-The portable directory must be writable. Documents are saved to the program folder or a user-selected location; they are not automatically saved inside the extracted runtime folder.
+This remains a preview. PDF text editing is object-based, not flowing paragraph editing; replacement fonts may change metrics. Outlined or nested Form text cannot be edited character by character. No built-in OCR, general interactive form filling, permanent redaction, measurement, paragraph reflow, annotation replies or Adobe cloud workflows are included. Existing links can be followed but new link creation is not provided. Very large PDFs can exceed the history/cache targets, especially with multiple tabs.
 
-## Current limitations
+## Build and verification
 
-This is a preview release, and the editing scope differs from a full commercial PDF editor:
+From the complete repository on x64 Windows:
 
-- No built-in OCR, interactive form filling, digital signatures, signature verification, permanent redaction, measurement, stamps, or annotation replies.
-- Text editing works on PDF text objects, not Word-style flowing paragraphs. Replacement fonts can change character widths and do not preserve every original font or layout property.
-- Text converted to outlines, or text inside nested Form objects, cannot currently be edited character by character. Some grouped objects can be manipulated as a whole.
-- Editing the recognition layer does not change the scan image. Image retouching is not provided.
-- Editing can invalidate existing digital signatures.
-- Undo keeps at least the most recent step, so a very large document can exceed the history target. Multiple open documents also require memory for their own PDF data and histories.
-- The language switch translates application controls and help. Native system dialogs follow the Windows display language.
-
-## Build from source
-
-Download or clone the complete repository. From the project root, run Windows PowerShell:
-
-```powershell
+~~~powershell
 powershell -ExecutionPolicy Bypass -File .\源码\build.ps1
-```
+~~~
 
-No additional SDK is required. The script uses the C# compiler supplied with the system .NET Framework. The first build downloads the pinned PDFium **158.0.8111.0 x64** archive and verifies SHA-256. PDFium is built without V8 and XFA.
+The script uses the Windows .NET Framework C# compiler, downloads pinned PDFium **158.0.8111.0 x64** without V8/XFA and verifies SHA-256. Downloads, builds and tests stay in the project's work directory. Output is Mini PDF.exe in the root.
 
-Downloads, intermediate files, and tests stay under the project's `work/` folder. The output is `Mini PDF.exe` in the project root. The application is optimized, debug symbols are omitted, and test and packing tools are excluded from the portable payload. Source files remain readable; removing whitespace does not reduce compiled code size.
+Basic program tests run with build.ps1 -Test. Full external-fixture coverage additionally needs development-only Python packages pypdf, reportlab, pymupdf and cryptography, plus OpenSSL for independent CMS verification:
 
-```text
-Mini-PDF/
-├─ Mini PDF.exe             Portable application
-├─ README.md                English documentation (default)
-├─ README.zh-CN.md          Chinese documentation
-├─ LICENSE                  MIT license for application code
-├─ CHANGELOG.md             Version history
-└─ 源码/                     Source code
-   ├─ *.cs                 Application, launcher, and regression tests
-   ├─ build.ps1            Build and production-assembly tests
-   ├─ WindowFrame.cs       Compact title row, native window actions and frame geometry
-   ├─ FlatUi.cs            Flat menu and toolbar rendering
-   ├─ FrameTests.cs        Continuous drag and title/window regressions
-   ├─ test-launcher.ps1     Portable EXE, file forwarding, and cleanup tests
-   ├─ verify_pdf.py         Independent PDF fixtures and verification
-   ├─ README.md             English source guide
-   ├─ README.zh-CN.md       Chinese source guide
-   ├─ 使用说明.txt            Embedded application help
-   ├─ 测试记录.md             Detailed test record
-   └─ third-party-licenses/ PDFium and dependency notices
-```
-
-## Verification
-
-The current release passed **238 program regressions, 33 independent PDF checks, and 14 portable-launcher checks: 285 checks in total**, on Windows 10 x64.
-
-Coverage includes native windows and mouse messages, text dialogs, tab dragging in both directions, overflow scrolling, cancellation and capture loss, title geometry, window maximize/restore, per-document state, unsaved-change prompts, layouts, exact zoom, scan/OCR layers, editing, passwords, save-failure protection, 200-page files, and print preview. Printing tests use a preview controller and do not send a physical print job.
-
-Independent checks use ReportLab fixtures, pypdf parsing, and MuPDF rendering to verify saved text, image and annotation preservation, page trees, existing outlines and unmodified form fields, encryption, and unchanged scan pixels after OCR-layer edits. Compression is checked with a SHA-256 round trip. The final portable EXE is tested in an isolated folder without an adjacent DLL, including later file-open requests and cleanup after unexpected termination.
-
-These results describe tested flows, not a guarantee that every PDF, printer, or Windows configuration is free of defects. Windows 11 still needs separate machine testing.
-
-Run the built-in regressions:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\源码\build.ps1 -Test
-```
-
-For the full independent checks, install the development-only Python packages `pypdf`, `reportlab`, `pymupdf`, and `cryptography` in your development environment, then run:
-
-```powershell
+~~~powershell
 python .\源码\verify_pdf.py fixtures .\work\tests
+python .\源码\verify_features.py fixtures .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\build.ps1 -Test
 python .\源码\verify_pdf.py verify .\work\tests
+python .\源码\verify_features.py verify .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
-```
+~~~
 
-These Python dependencies are not bundled and are not needed to run Mini PDF. Generated PDFs, screenshots, downloads, and caches can be removed by deleting the build's `work/` directory after testing; keep your own documents elsewhere.
+Missing external fixtures are explicitly skipped by the program runner. These packages and generated test certificates are not needed by the application. Tests inspect native controls and real mouse/key messages, persisted PDFs, page order/destinations, OCR image preservation, print geometry/vector records and form appearances, CMS signatures/tamper detection, and isolated EXE startup/cleanup. Printing tests use preview controllers and do not send physical print jobs. The detailed test record reports the verified build, counts and hash. Passing tests do not guarantee every PDF or printer configuration is free of defects.
 
-Current EXE SHA-256:
+## Technology, references and licenses
 
-```text
-313FDFD5CC05AAC312499E9DC947B7712F602BBAB14E6965F05EFDCC9E97884B
-```
+C# 5 / Windows Forms and .NET Framework; PDFium for PDF processing; Windows GDI/EMF for printing; Windows Cryptographic APIs via System.Security for CMS and certificate chains; Windows Compression API for LZMS packaging.
 
-## Technology, references, and licenses
+Reading behavior and compact tabs are inspired by [SumatraPDF](https://github.com/sumatrapdfreader/sumatrapdf); feature references include [PDF Looker Pro](https://github.com/dongfangxy/pdf-looker-pro) and Adobe Acrobat's printing/page workflows. Mini PDF uses its own application code and does not bundle or link SumatraPDF, MuPDF, Electron or Adobe SDKs. MuPDF is used only as an independent development-test renderer.
 
-- Interface: C# 5, Windows Forms, and the Windows-supplied .NET Framework 4.x.
-- Engine: [PDFium](https://pdfium.googlesource.com/pdfium/), using the [pinned x64 binary build](https://github.com/bblanchon/pdfium-binaries/releases/tag/chromium%2F8111).
-- Compression: [Microsoft Windows Compression API](https://learn.microsoft.com/en-us/windows/win32/cmpapi/using-the-compression-api).
-- Reading behavior references: [SumatraPDF viewing modes](https://www.sumatrapdfreader.org/docs/Viewing-modes), [DisplayModel](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/shared/DisplayModel.cpp), [menus](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/Menu.cpp), and [selection](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/shared/Selection.cpp).
-- Feature reference: [PDF Looker Pro](https://github.com/dongfangxy/pdf-looker-pro).
-
-The application code is independently implemented; SumatraPDF's GPL application code and PDF Looker Pro's application code were not copied into it. Application and launcher sources use the [MIT license](LICENSE). PDFium and its dependencies retain their [respective license notices](third-party-licenses), embedded in the EXE and accessible from the Help menu. They are open-source attribution notices, not activation requirements.
-
-When reporting a problem, include the Windows version, Mini PDF version, reproduction steps, expected behavior, and actual behavior. Share only PDFs that you are allowed to make public.
+Application/launcher code is MIT licensed. [PDFium](https://pdfium.googlesource.com/pdfium/) and its dependencies retain their separate notices under third-party-licenses and inside Help > Open-source licenses. These notices are attribution requirements, not activation or payment requirements. Retain them when redistributing.

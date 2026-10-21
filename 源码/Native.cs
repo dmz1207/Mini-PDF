@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace MiniPdf {
     // PDFium's Windows ABI uses 32-bit unsigned long, including on x64.
-    internal static class N {
+    internal static partial class N {
         [DllImport("user32.dll")] internal static extern bool SetForegroundWindow(IntPtr window);
         [DllImport("user32.dll")] internal static extern bool ShowWindow(IntPtr window,int command);
         [DllImport("user32.dll")] internal static extern bool AllowSetForegroundWindow(uint processId);

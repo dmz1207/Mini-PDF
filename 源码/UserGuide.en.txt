@@ -1,4 +1,4 @@
-Mini PDF 0.6.1 - User Guide
+Mini PDF 0.7.0 - User Guide
 Windows 10 / Windows 11 x64
 
 START AND LANGUAGE
@@ -8,7 +8,7 @@ There is no Electron, browser runtime, account, advertising, or telemetry.
 English is the default. Open Menu > Language to select English or Simplified Chinese.
 English is listed first and Chinese second. The change applies immediately to this window.
 Each new independent window starts in English. No language configuration file is created.
-Native Windows file and print dialogs follow your Windows display language.
+Windows-owned file, certificate and printer-driver dialogs follow your Windows display language.
 Help offers this English guide first and a complete Chinese guide second. F1 opens English help.
 
 OPEN AND ORGANIZE DOCUMENTS
@@ -36,7 +36,10 @@ Single-page, double-page and grid views contain pages of the selected PDF, not d
 In grid view, zoom out to show more columns; double-click a page for single-page reading.
 The zoom field accepts 1%-6400%, including decimals such as 87% or 123.5%. Press Enter to apply.
 100% retains its real scale. Use Fit Width to fill the available window width.
-Ctrl+mouse wheel zooms. The mouse wheel scrolls. Middle-button dragging pans.
+Ctrl+mouse wheel zooms. The mouse wheel scrolls.
+Select (V) selects text; Hand (H) pans with the left button in any direction.
+Esc returns to Select. Holding Space pans temporarily; middle-button panning also works.
+V/H tool shortcuts apply while the reading area has focus. Use the visible top toolbar to switch.
 PageUp / PageDown navigate pages or spreads. Arrow keys scroll; Home / End reach document ends.
 The sidebar button or F12 toggles thumbnails, outline and annotations. F9 also works.
 The sidebar edge arrow floats over a small corner instead of reserving a full vertical strip.
@@ -70,22 +73,66 @@ Rectangles, added text and inserted images are page content.
 Select an annotation to remove it; double-click a note to edit its contents.
 Page commands rotate, insert, duplicate, delete, move, extract and merge pages.
 Extraction accepts ranges such as 1,3-5,8, preserves requested order and removes duplicates.
-Merge inserts the selected PDFs after the current page.
-Export supports current-page PNG and all-document TXT. Print supports current page and page ranges.
+Pages or Ctrl+Shift+P opens the current document page organizer.
+Expand groups, Ctrl-click multiple pages or Shift-click a range, then hold the left button to drag.
+Duplicate, rotate, remove, undo and redo are available. Apply commits one undoable document edit.
+Merge PDF files opens Combine Files; drop PDFs, PNG/JPEG/BMP images, reorder groups or pages,
+then combine into a new unsaved document. Original files stay intact. Images use A4 pages.
+Word/Excel import and unified source outlines/interactive forms are not provided.
+Export supports current-page PNG and all-document TXT. Ctrl+P opens the native print workspace.
+Select text, then choose Highlight on the toolbar or right-click menu: twelve presets plus Custom.
+Ctrl+Alt+H uses the most recent highlight color; with no text selected, draw a highlight area.
+
+PRINTING
+Ctrl+P opens Mini PDF's print workspace. Printer Properties and Page Setup use Windows/driver UI.
+Select all/current pages or ranges such as 5,1-3,8; filter odd/even pages or reverse the order.
+Copies, collate and driver-supported simplex/long-edge/short-edge duplex are available.
+Size offers fit printable area, actual size, shrink-only or an exact custom percentage.
+Select auto/portrait/landscape, paper size, optional PDF-size paper choice and extra margins.
+Multiple places 2/4/6/9/16 pages per side. Booklet imposes fold pairs with blank padding,
+front/back subsets and optional right binding. Poster tiles artwork with overlap and crop marks.
+The preview uses the same sheet plan as the job. Grayscale and annotation inclusion are optional.
+Printing defaults to native PDFium vector/GDI output, independent of the viewer's zoom.
+Print as image is a compatibility option with 300, 600 (default) or 1200 DPI and bounded tiles.
+Existing form appearances are prepared in memory copies; the open document stays intact.
+Source scan resolution, printer hardware, driver, paper margins and color handling set final limits.
+Booklet commonly uses landscape and short-edge duplex; manual flipping follows printer feed direction.
+
+VISIBLE SIGNATURES AND WATERMARKS
+Use the signatures/watermarks menu to draw, type or import visible signature artwork.
+Image white backgrounds can be removed. Drag a placement rectangle on the PDF after accepting.
+This adds an editable image; it does not authenticate identity. Artwork is not stored or uploaded.
+Watermarks support text/images, opacity, rotation, position, tiling, foreground/background and ranges.
+Text supports {page} and {pages}; preview shows the active page. Apply can be undone.
+Replace/remove recognizes Mini PDF-tagged watermarks, not arbitrary third-party page artwork.
+
+CERTIFICATE SIGNING AND INSPECTION
+Choose a Windows personal certificate with a private key, or load a password-protected PFX/P12.
+PFX keys are ephemeral; certificates/private keys are not installed or saved by Mini PDF.
+Signing creates a separate PDF copy with a SHA-256 detached CMS approval signature.
+The certificate approval signature is invisible; place any visible signature artwork first.
+Inspect signatures to distinguish integrity, full-file coverage and offline Windows chain trust.
+A self-signed test certificate may have valid integrity but remain untrusted.
+Later appended bytes are reported as unverified changes; unsupported signature types are reported.
+Signed documents are read-only. Save As preserves their original signature bytes.
+Signing supports unsigned editable PDFs below 128 MiB, with no encrypted/XFA or additional signing.
+No trusted timestamp, revocation, DocMDP/later-revision validation, PAdES/LTV qualification,
+cloud signing or legal identity assurance is included. Certificate viewing uses Windows UI.
 
 SAVE AND HISTORY
 Ctrl+S saves. Ctrl+Shift+S saves a copy. Ctrl+Z / Ctrl+Y undo and redo.
 Each tab has independent history: up to 12 steps with a 64 MiB target.
 At least the most recent step is retained; large files can exceed that target.
-Saving validates the generated PDF, rewrites it completely, then replaces the destination atomically.
+Saving editable PDFs validates generated content and replaces the destination atomically.
+Saving a signed document copies the original bytes without rewriting the signature.
 Failed saves preserve the original file and the unsaved state.
 Newly embedded fonts are subsetted. Existing password protection is retained.
 Restricted documents require a password with editing permission for changes.
 
 LIMITS AND LICENSES
-No interactive form filling, digital signatures or validation, permanent redaction, measurement,
-stamps, annotation replies, full paragraph reflow or image retouching are provided.
-Editing can invalidate existing signatures. Outlined text is not editable as ordinary text.
+No general interactive form filling, permanent redaction, measurement, annotation replies,
+full paragraph reflow or image retouching is provided. Outlined text cannot be edited as text.
+Documents containing digital signatures open read-only; Save As preserves the original bytes.
 The image-cache target is 64 MiB. High zoom renders visible areas as native-resolution tiles.
 The app and launcher use MIT; PDFium and dependencies retain their embedded license notices.
 Help > Open-source licenses displays them. These notices are not activation requirements.

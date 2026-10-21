@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0 — 2026-10-21
+
+- Add a native printing workspace with previews, ranges/parity/reverse, driver properties, paper/orientation, copies/collation/duplex, exact scaling, N-up, booklet and poster layouts.
+- Preserve PDF vector text/graphics through the native Windows print device context by default; offer 300/600/1200 DPI image-print fallback and prepare existing form appearances without changing the original.
+- Add visible draw/type/image signatures, reversible batch text/image watermarks, SHA-256 CMS certificate signing and separate integrity/current-file/offline-trust inspection.
+- Add a drag-and-drop combine workspace and current-document page organizer, multi-selection, cross-file page sorting, duplicate/rotate/delete and undo/redo.
+- Add quick Select/Hand/Highlight/Pages controls, V/H/Esc and temporary Space panning, selected-text highlighting with twelve colors and custom colors.
+- Preserve compact title tabs and English-first bilingual UI; update both guides and document certificate/printing limits.
+
 [English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
 
 ## v0.6.1 — 2026-10-20

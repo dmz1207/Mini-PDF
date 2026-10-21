@@ -17,7 +17,7 @@ namespace MiniPdf {
     }
     internal sealed class Bookmark { public string Title; public int Page; public List<Bookmark> Children=new List<Bookmark>(); }
     internal sealed class SearchHit { public int Page,Start,Count; public List<N.Rect> Rectangles; }
-    internal sealed class PdfDocument : IDisposable {
+    internal sealed partial class PdfDocument : IDisposable {
         internal IntPtr Handle,Page;
         IntPtr textPage;
         GCHandle inputPin;
@@ -63,6 +63,7 @@ namespace MiniPdf {
             uint permissions=N.FPDF_GetDocPermissions(Handle);
             bool unsecured=N.FPDF_GetSecurityHandlerRevision(Handle)<0;
             CanEdit=unsecured||(permissions&8)!=0;CanPrint=unsecured||(permissions&4)!=0;
+            if(SignatureCount>0)CanEdit=false;
             OpenPage(0);
         }
         internal static void Check(bool ok,string message){if(!ok)throw new InvalidOperationException(message);}
@@ -95,6 +96,7 @@ namespace MiniPdf {
             } finally {if(File.Exists(temp))File.Delete(temp);}
         }
         public void Save(string path){
+            if(SignatureCount>0){AtomicWrite(path,OriginalBytes,Password,Count);FilePath=Path.GetFullPath(path);savedRevision=revision;return;}
             var before=Capture();byte[] bytes;
             try{bytes=Serialize(true);using(var verify=FromBytes(bytes,Password))Check(verify.Count==Count,UiText.Get("保存校验失败。"));CloseHandles();Load(bytes);OpenPage(before.Page);}
             catch{Restore(before);throw;}
@@ -106,7 +108,7 @@ namespace MiniPdf {
         void Restore(State state){CloseHandles();Load(state.Data);OpenPage(state.Page);revision=state.Revision;}
         static void Trim(List<State> list){long size=0;foreach(var s in list)size+=s.Data.LongLength;while(list.Count>1&&(list.Count>12||size>64L*1024*1024)){size-=list[0].Data.LongLength;list.RemoveAt(0);}}
         public void Edit(Action change) {
-            Check(CanEdit,UiText.Get("此 PDF 限制内容修改，请使用具有编辑权限的密码打开。"));
+            Check(CanEdit,SignatureCount>0?UiText.Get("已签名的 PDF 以只读方式打开，以保留签名字节。"):UiText.Get("此 PDF 限制内容修改，请使用具有编辑权限的密码打开。"));
             var before=Capture();
             try {CloseText();change();if(Page==IntPtr.Zero)OpenPage(Index);Check(N.FPDFPage_GenerateContent(Page)!=0,UiText.Get("无法生成页面内容。"));CloseText();undo.Add(before);Trim(undo);redo.Clear();revision=++clock;}
             catch {Restore(before);throw;}
@@ -116,7 +118,7 @@ namespace MiniPdf {
         public Bitmap Render(int index,int width,int height,int rotation=0) {
             return RenderRegion(index,width,height,rotation,new Rectangle(0,0,width,height));
         }
-        internal Bitmap RenderRegion(int index,int pageWidth,int pageHeight,int rotation,Rectangle region) {
+        internal Bitmap RenderRegion(int index,int pageWidth,int pageHeight,int rotation,Rectangle region,int renderFlags=3) {
             int width=region.Width,height=region.Height;
             if(width<1||height<1||width>14000||height>14000||(long)width*height>24000000)throw new InvalidOperationException(UiText.Get("当前缩放超出显示内存限制，请减小缩放比例。"));
             Check(pageWidth>0&&pageHeight>0&&region.X>=0&&region.Y>=0&&(long)region.Right<=pageWidth&&(long)region.Bottom<=pageHeight,UiText.Get("页面显示范围无效。"));
@@ -124,7 +126,7 @@ namespace MiniPdf {
             try {
                 Check(page!=IntPtr.Zero,UiText.Get("无法读取页面。"));bitmap=N.FPDFBitmap_Create(width,height,1);Check(bitmap!=IntPtr.Zero,UiText.Get("无法分配页面图像。"));
                 N.FPDFBitmap_FillRect(bitmap,0,0,width,height,0xffffffff);
-                N.FPDF_RenderPageBitmap(bitmap,page,-region.X,-region.Y,pageWidth,pageHeight,rotation,1|2);
+                N.FPDF_RenderPageBitmap(bitmap,page,-region.X,-region.Y,pageWidth,pageHeight,rotation,renderFlags);
                 // GDI+ Clone can retain an external pixel buffer. Copy each row
                 // into an owned bitmap before releasing PDFium's native allocation.
                 var result=new Bitmap(width,height,PixelFormat.Format32bppArgb);

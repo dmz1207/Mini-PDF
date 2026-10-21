@@ -5,7 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace MiniPdf {
-    internal enum Tool { Read, Object, Text, Image, Highlight, Ink, Rectangle, Note, Underline, Strike }
+    internal enum Tool { Read, Object, Text, Image, Highlight, Ink, Rectangle, Note, Underline, Strike, Hand }
     internal enum PageLayout { Single, Double, Book, Grid }
     internal sealed class PdfCanvas : NativeViewport {
         readonly MainWindow owner;
@@ -24,7 +24,8 @@ namespace MiniPdf {
         public List<N.Rect> Markers=new List<N.Rect>();
         public int TextStart=-1,TextCount;
         int pixelWidth,pixelHeight;
-        bool down,resizing,panning;
+        bool down,resizing,panning,spacePan;
+        MouseButtons panButton;
         Point origin,current,scrollOrigin;
         N.Pt startPoint;
         int startChar=-1;
@@ -121,7 +122,7 @@ namespace MiniPdf {
         }
         protected override void OnMouseDown(MouseEventArgs e){base.OnMouseDown(e);Focus();if(Doc==null||pageRects.Length==0)return;
             int hitPage=HitPage(e.Location);if(hitPage>=0&&hitPage!=Doc.Index){owner.ActivatePageFromCanvas(hitPage);SyncPageSize();}
-            if(e.Button==MouseButtons.Middle){panning=true;origin=e.Location;scrollOrigin=AutoScrollPosition;Capture=true;Cursor=Cursors.SizeAll;return;}
+            if(e.Button==MouseButtons.Middle||e.Button==MouseButtons.Left&&(Mode==Tool.Hand||spacePan)){panButton=e.Button;panning=true;origin=e.Location;scrollOrigin=AutoScrollPosition;Capture=true;Cursor=Cursors.SizeAll;return;}
             if(e.Button==MouseButtons.Right){owner.ShowContext(e.Location);return;}
             if(e.Button!=MouseButtons.Left||!PageRectangle.Contains(e.Location))return;
             down=true;origin=current=e.Location;startPoint=PagePoint(e.Location);Capture=true;
@@ -134,9 +135,9 @@ namespace MiniPdf {
             if(panning){AutoScrollPosition=new Point(-scrollOrigin.X+origin.X-e.X,-scrollOrigin.Y+origin.Y-e.Y);return;}
             if(down){current=e.Location;if(Mode==Tool.Read&&startChar>=0){int end=Doc.CharAt(PagePoint(e.Location));if(end>=0){TextStart=Math.Min(startChar,end);TextCount=Math.Abs(end-startChar)+1;}}
                 if(Mode==Tool.Ink&&stroke.Count<20000&&(Math.Abs(e.X-screenStroke[screenStroke.Count-1].X)+Math.Abs(e.Y-screenStroke[screenStroke.Count-1].Y)>1)){stroke.Add(PagePoint(e.Location));screenStroke.Add(e.Location);}Invalidate();}
-            else {if(!PageRectangle.Contains(e.Location))Cursor=Cursors.Default;else if(Mode==Tool.Read)Cursor=Doc.CharAt(PagePoint(e.Location))>=0?Cursors.IBeam:Cursors.Default;else Cursor=Mode==Tool.Object?Cursors.Default:Cursors.Cross;}
+            else {if(Mode==Tool.Hand||spacePan)Cursor=Cursors.Hand;else if(!PageRectangle.Contains(e.Location))Cursor=Cursors.Default;else if(Mode==Tool.Read)Cursor=Doc.CharAt(PagePoint(e.Location))>=0?Cursors.IBeam:Cursors.Default;else Cursor=Mode==Tool.Object?Cursors.Default:Cursors.Cross;}
         }
-        protected override void OnMouseUp(MouseEventArgs e){base.OnMouseUp(e);if(panning){panning=false;Capture=false;Cursor=Cursors.Default;return;}if(!down||e.Button!=MouseButtons.Left||Doc==null)return;
+        protected override void OnMouseUp(MouseEventArgs e){base.OnMouseUp(e);if(panning){if(e.Button!=panButton)return;panning=false;Capture=false;Cursor=Mode==Tool.Hand||spacePan?Cursors.Hand:Cursors.Default;return;}if(!down||e.Button!=MouseButtons.Left||Doc==null)return;
             down=false;Capture=false;current=e.Location;var endPoint=PagePoint(e.Location);int distance=Math.Abs(current.X-origin.X)+Math.Abs(current.Y-origin.Y);
             if(Mode==Tool.Read){if(distance<5&&TextCount<=1)owner.OpenLink(startPoint);Invalidate();return;}
             if(Mode==Tool.Object){if(Selected!=null&&!Selected.IsAnnotation&&distance>3){var pick=Selected;if(resizing){float w=Math.Abs(endPoint.x-pick.Bounds.left),h=Math.Abs(pick.Bounds.top-endPoint.y);owner.Run(delegate{Doc.Resize(pick,w,h);});}else{float dx=endPoint.x-startPoint.x,dy=endPoint.y-startPoint.y;owner.Run(delegate{Doc.Move(pick,dx,dy);});}}Invalidate();return;}
@@ -147,7 +148,10 @@ namespace MiniPdf {
             else if(Mode==Tool.Rectangle)owner.Run(delegate{Doc.AddRectangle(rect,owner.Ink,owner.LineWidth);});
             else if(Mode==Tool.Highlight||Mode==Tool.Underline||Mode==Tool.Strike){int kind=Mode==Tool.Highlight?9:Mode==Tool.Underline?10:12;owner.Run(delegate{Doc.AddMarkup(new List<N.Rect>{rect},kind,owner.Ink);});}
         }
-        protected override void OnMouseCaptureChanged(EventArgs e){base.OnMouseCaptureChanged(e);if(!Capture&&(down||panning)){down=false;panning=false;Invalidate();}}
+        protected override void OnMouseCaptureChanged(EventArgs e){base.OnMouseCaptureChanged(e);if(!Capture&&(down||panning)){down=false;panning=false;Cursor=Mode==Tool.Hand||spacePan?Cursors.Hand:Cursors.Default;Invalidate();}}
+        protected override void OnKeyDown(KeyEventArgs e){base.OnKeyDown(e);if(e.KeyCode==Keys.Space&&!down){spacePan=true;Cursor=Cursors.Hand;e.Handled=true;e.SuppressKeyPress=true;}}
+        protected override void OnKeyUp(KeyEventArgs e){base.OnKeyUp(e);if(e.KeyCode==Keys.Space){spacePan=false;if(!panning)Cursor=Mode==Tool.Hand?Cursors.Hand:Cursors.Default;e.Handled=true;}}
+        protected override void OnLostFocus(EventArgs e){base.OnLostFocus(e);spacePan=false;if(panning){panning=false;Capture=false;}Cursor=Mode==Tool.Hand?Cursors.Hand:Cursors.Default;}
         protected override void OnMouseDoubleClick(MouseEventArgs e){base.OnMouseDoubleClick(e);if(LayoutMode==PageLayout.Grid&&Doc!=null&&Mode==Tool.Read){owner.SetLayout(PageLayout.Single);return;}if(Mode==Tool.Object&&Selected!=null)owner.EditSelected();}
         protected override void OnMouseWheel(MouseEventArgs e){if(Doc==null){base.OnMouseWheel(e);return;}if((ModifierKeys&Keys.Control)!=0){Fit=0;Zoom*=e.Delta>0?1.15f:1/1.15f;Rebuild(false);return;}
             if(Continuous){base.OnMouseWheel(e);return;}
