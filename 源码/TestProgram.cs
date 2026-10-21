@@ -17,6 +17,7 @@ namespace MiniPdf.Tests {
                 N.SetProcessDPIAware();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                if(args.Length>1&&args[1]=="--performance-only")return SelfTest.RunPerformance(directory);
                 if(args.Length>1&&args[1]=="--merge-only")return SelfTest.RunMergeDetails(directory);
                 if(args.Length>1&&args[1]=="--signature-fixes")return SelfTest.RunSignatureFixes(directory);
                 if(args.Length>1&&args[1]=="--features-only")return SelfTest.RunFeatures(directory);
@@ -24,7 +25,7 @@ namespace MiniPdf.Tests {
             } catch (Exception e) {
                 File.WriteAllText(Path.Combine(directory, "fatal.txt"), e.ToString());
                 return 1;
-            } finally { if (initialized) N.FPDF_DestroyLibrary(); }
+            } finally { RenderPool.Shutdown(); if (initialized) N.FPDF_DestroyLibrary(); }
         }
     }
 }

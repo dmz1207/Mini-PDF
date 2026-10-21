@@ -92,6 +92,6 @@ namespace MiniPdf {
     }
     internal sealed partial class PdfDocument {
         internal int SignatureCount {get{return Handle==IntPtr.Zero?0:Math.Max(0,N.FPDF_GetSignatureCount(Handle));}}
-        internal byte[] OriginalBytes {get{return inputPin.IsAllocated?(byte[])inputPin.Target:null;}}
+        internal byte[] OriginalBytes {get{return inputSource!=null?inputSource.ReadAll():null;}}
     }
 }

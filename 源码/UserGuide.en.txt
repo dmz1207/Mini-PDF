@@ -1,4 +1,4 @@
-Mini PDF 0.7.2 - User Guide
+Mini PDF 0.8.0 - User Guide
 Windows 10 / Windows 11 x64
 
 START AND LANGUAGE
@@ -10,6 +10,18 @@ English is listed first and Chinese second. The change applies immediately to th
 Each new independent window starts in English. No language configuration file is created.
 Windows-owned file, certificate and printer-driver dialogs follow your Windows display language.
 Help offers this English guide first and a complete Chinese guide second. F1 opens English help.
+
+PERFORMANCE
+Ordinary first pages use cooperative progressive rendering. Complex pages, visible tiles
+and thumbnails use up to two separate PDFium workers; each instance stays single threaded.
+Shared immutable input and raster mappings avoid large pinned arrays and explicit pixel copies.
+Page dimensions, visible-row indexes and a 64 MiB LRU canvas cache reduce repeated work.
+Batch imports reuse shared images and fonts. Duplicate pages use separate import batches
+to keep indirect annotations independently editable. The window reuses the launcher icon.
+Later opens forward to the existing window before extraction. Workers share its engine files,
+stop after idle time, and exit with the parent. Parallelism uses more memory than one process.
+The pinned PDFium DLL is unchanged in this build; see the source Performance.md for measured
+results, current native-build limitations and remaining optimization candidates.
 
 OPEN AND ORGANIZE DOCUMENTS
 Ctrl+O opens one or more PDFs. You can also drag files onto the window.
@@ -97,10 +109,16 @@ Ctrl+1: regroup by original source import order and original page number.
 Ctrl+2: A1, B1, A2, B2... for odd/even scans.
 Ctrl+3: B1, A1, B2, A2... to start with the second file.
 Ctrl+4: A1, B-last, A2, B-previous... if the second scan is reversed.
-Ctrl+5: alternate N-page blocks; enter 2 for A1, A2, B1, B2...
-The Arrange menu offers the same commands. Extra pages append at the end;
+Ctrl+5: alternate two-file N-page blocks; enter 2 for A1, A2, B1, B2...
+Ctrl+6: interleave ALL non-empty groups, one page each: A1, B1, C1, A2, B2...
+Ctrl+7: interleave ALL groups in N-page blocks: A1, A2, B1, B2, C1, C2...
+Ctrl+8: sort files by natural filename order (scan1, scan2, scan10), keeping page order.
+Ctrl+9: reverse pages within each current file group, keeping file order.
+The Arrange menu offers the same commands. Ctrl+6/7 include every non-empty group;
+exhausted inputs are skipped until all pages are included. Ctrl+2-5 use the first two groups.
+Extra pages append at the end;
 later groups keep their relative order. Source names, original page numbers and rotations survive.
-The two input groups become one expanded group. Ctrl+1 regroups them before another arrangement;
+Interleaved input groups become one expanded group. Ctrl+1 regroups them before another arrangement;
 it retains duplicate pages and does not recreate removed pages. Ctrl+Z/Y undo/redo each operation.
 These shortcuts apply only in Combine Files / Organize Pages. Ctrl+2 still fits width in the reader.
 

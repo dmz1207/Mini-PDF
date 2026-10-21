@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.0 — 2026-10-21
+
+- Add bounded background raster workers with immutable shared inputs, mapped pixel buffers, visible-page priority, adjacent-page prefetch, cancellation and process recovery.
+- Render directly into owned output buffers; use cooperative progressive rendering for ordinary first pages without worker startup delay.
+- Cache page sizes and visible rows; retain dimension/rotation keyed LRU images across unchanged layouts and zoom revisits. Render only viewport tiles for larger pages.
+- Batch merge imports by source, reuse shared resources and restore exact page order once; isolate repeated pages so indirect annotations and content remain independently editable.
+- Move sidebar and Combine Files thumbnails off the UI thread. Reuse immutable bytes for undo snapshots and a bounded PDF serialization buffer.
+- Forward subsequent opens before single-EXE extraction. Stop workers at idle/exit and dispose canceled, posted and cached images deterministically.
+- Add all-file page/block interleaving (Ctrl+6/7), natural filename sorting (Ctrl+8), and reversal within each file (Ctrl+9), preserving unequal inputs, rotations and undo.
+- Separate and format input, raster scheduling, thumbnail cache and open-request modules; remove obsolete native imports. Keep the pinned PDFium DLL and rendering-quality flags unchanged.
+- Store the application icon once in the launcher and reuse it for the native window.
+- Add reproducible performance tools and worker/pixel/lifetime/multi-file regression coverage; update English and Chinese documentation.
+
 ## 0.7.2 — 2026-10-21
 
 - Increase page spacing and darken file boundaries. Prompt to save/discard/cancel changed merge workspaces; retain edits after canceled or failed saves. Offer Apply when closing the page organizer.

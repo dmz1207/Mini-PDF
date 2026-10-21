@@ -6,11 +6,21 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.7.2 preview** is one approximately **2.87 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.8.0 preview** is one approximately **2.87 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-## Refined in v0.7.2
+## Refined in v0.8.0
+
+- Use a bounded raster pool (up to two independent PDFium processes) for complex pages, viewport tiles and thumbnails. Immutable shared input and raster mappings avoid per-worker PDF copies and explicit pixel-buffer copying.
+- A cooperative progressive-render fast path handles ordinary first pages; expensive rendering continues in workers. Visible requests take priority over neighboring-page prefetch.
+- Reuse dimension/rotation keyed LRU images across unchanged layouts and zoom revisits. Cache page dimensions and index visible rows for long documents.
+- Batch merged pages by source so shared images/fonts are imported once, then restore the requested page order in one permutation. Repeated pages use separate batches to preserve independent content and annotation editing.
+- Reuse immutable bytes for undo snapshots and a bounded serialization buffer. Forward later opens directly to the running window before unpacking another engine.
+- Add Ctrl+6–9 inside the page workspace: all-file page interleave, all-file N-page blocks, natural filename sort and reversal within each file. Unequal lengths, original rotations and undo are preserved.
+- Separate input, scheduling, thumbnail caching and open-request handling into readable source modules; remove obsolete native bindings. See the measured results and native-engine status in [Performance](源码/Performance.md).
+
+### Existing merge refinements
 
 - File stacks use a dedicated + / - control. Expanding replaces the stack with its real pages; the first page is never duplicated as an extra cover.
 - Permanent file dividers and a separate blue insertion line make file boundaries and the exact drop position visible. Drag hints show the target file and original page number.
@@ -93,9 +103,13 @@ The + / - square expands or collapses a file without adding a separate cover. Th
 | Ctrl+2 | A1, B1, A2, B2... (odd scan first) |
 | Ctrl+3 | B1, A1, B2, A2... (even scan first) |
 | Ctrl+4 | A1, B-last, A2, B-previous... (second scan in reverse order) |
-| Ctrl+5 | Alternate N-page blocks; for N=2: A1, A2, B1, B2... |
+| Ctrl+5 | Alternate two-file N-page blocks; for N=2: A1, A2, B1, B2... |
+| Ctrl+6 | Interleave every non-empty file group, one page each: A1, B1, C1, A2, B2... |
+| Ctrl+7 | Interleave every file in blocks of N pages: A1, A2, B1, B2, C1, C2... |
+| Ctrl+8 | Natural filename order: scan1, scan2, scan10; keep each file's page order |
+| Ctrl+9 | Reverse pages inside each current file group; keep the file order |
 
-Use the Arrange menu for the same commands. Shorter inputs append their partner's remaining pages; later file groups keep their relative order. The two inputs become one expanded group with each page's original source details intact. Press Ctrl+1 before choosing another interleave mode, or Ctrl+Z to undo. Regrouping does not recreate deleted pages. These shortcuts apply only in Combine Files / Organize Pages; Ctrl+2 still means Fit Width in the reader.
+Use the Arrange menu for the same commands. Ctrl+2–5 operate on the first two non-empty groups and retain later groups. Ctrl+6–7 include all non-empty groups in their current order, skipping exhausted inputs until every remaining page is included. Interleaved inputs become one expanded group with each page's original source details intact. Press Ctrl+1 before choosing another interleave mode, or Ctrl+Z to undo. Regrouping does not recreate deleted pages. These shortcuts apply only in Combine Files / Organize Pages; Ctrl+2 still means Fit Width in the reader.
 
 Closing a changed Combine Files workspace asks whether to save the current arrangement as a PDF. Yes opens native Save As; No discards; Cancel keeps editing. Canceling Save As or a failed export keeps the workspace intact. View-only expansion and unchanged page order do not trigger a prompt. Closing changed Organize Pages offers to apply the changes instead; application remains one undoable document operation. Save As requires a separate filename if the destination is already open in the reader.
 
@@ -157,7 +171,9 @@ Menu > Language lists English first and 简体中文 second. Changes apply immed
 
 ## Portable operation and size
 
-The EXE uses Windows LZMS compression with no additional decompression library. On startup it extracts its engine, guides and open-source notices into a hidden .MiniPDF-runtime-* directory beside itself, and directs its TEMP/TMP there. Normal exit removes generated files; the next launch cleans stale runtime directories after an unexpected exit. Active instances and unrelated files created by the user in a runtime directory are protected.
+The EXE uses Windows LZMS compression with no additional decompression library. The first window extracts its engine, guides and open-source notices into a hidden .MiniPDF-runtime-* directory beside itself, and directs its TEMP/TMP there. Normal exit removes generated files; the next launch cleans stale runtime directories after an unexpected exit. Active instances and unrelated files created by the user in a runtime directory are protected.
+
+Later opens are sent to the existing window before extraction. Rendering workers use the already extracted engine and create no additional engine copies; worker state is released after idle time or application exit.
 
 The portable folder must be writable. Save documents outside the runtime directory. The program source remains readable; removing whitespace does not reduce the compiled application. Test programs, Python dependencies, debug symbols and build tools are excluded from the EXE.
 
@@ -175,7 +191,7 @@ powershell -ExecutionPolicy Bypass -File .\源码\build.ps1
 
 The script uses the Windows .NET Framework C# compiler, downloads pinned PDFium **158.0.8111.0 x64** without V8/XFA and verifies SHA-256. Downloads, builds and tests stay in the project's work directory. Output is Mini PDF.exe in the root.
 
-Basic program tests run with build.ps1 -Test. Full external-fixture coverage additionally needs development-only Python packages pypdf, reportlab, pymupdf and cryptography, plus OpenSSL for independent CMS verification:
+Basic program tests run with build.ps1 -Test. Full external-fixture coverage additionally needs development-only Python packages pypdf, reportlab, Pillow, pymupdf and cryptography, plus OpenSSL for independent CMS verification:
 
 ~~~powershell
 python .\源码\verify_pdf.py fixtures .\work\tests

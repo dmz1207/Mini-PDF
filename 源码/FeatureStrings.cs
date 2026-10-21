@@ -4,7 +4,13 @@ namespace MiniPdf {
     internal static partial class UiText {
         static void AddFeatureTranslations(Dictionary<string,string> strings){
             // One entry per line keeps the optional feature vocabulary separate.
-            const string pairs=@"合并页面缩略图|Merge page thumbnails
+            const string pairs=@"全部文件逐页交错|Interleave all files, one page each
+全部文件每 N 页交错…|Interleave all files in blocks of N…
+按文件名自然排序|Sort files by name (natural order)
+各文件内部倒序|Reverse pages within each file
+交错：全部 {0} 个文件|Interleaved: all {0} files
+每份连续取几页？例如 2：A1、A2、B1、B2、C1、C2…|Pages per file in each round? For 2: A1, A2, B1, B2, C1, C2…
+合并页面缩略图|Merge page thumbnails
 页面已清空，放弃调整并关闭吗？|No pages remain. Discard the changes and close?
 应用当前页面调整吗？\n是：应用；否：放弃；取消：继续编辑。|Apply the current page changes?\nYes: apply; No: discard; Cancel: keep editing.
 将当前排列保存为 PDF 吗？\n是：保存；否：不保存；取消：继续编辑。|Save the current arrangement as a PDF?\nYes: save; No: discard; Cancel: keep editing.

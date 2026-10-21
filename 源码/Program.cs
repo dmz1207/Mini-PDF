@@ -8,6 +8,8 @@ namespace MiniPdf {
         [STAThread] static int Main(string[] args) {
             bool initialized=false;SingleInstance instance=null;
             try {
+                bool renderer=args.Length==3&&args[0]=="--render-worker";
+                if(renderer){N.SetDefaultDllDirectories(0x00000a00);if(N.LoadLibraryEx(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"pdfium.dll"),IntPtr.Zero,0x00000900)==IntPtr.Zero)return 1;N.FPDF_InitLibrary();initialized=true;N.SetProcessDPIAware();return RasterWorker.Run(args[1],Int32.Parse(args[2],System.Globalization.CultureInfo.InvariantCulture));}
                 bool separate=false;var files=new List<string>();foreach(string arg in args){if(arg=="--new-window")separate=true;else files.Add(Path.GetFullPath(arg));}
                 if(!separate){instance=new SingleInstance();if(instance.Forward(files.ToArray()))return 0;}
                 N.SetDefaultDllDirectories(0x00000a00);
@@ -19,7 +21,7 @@ namespace MiniPdf {
                 return 0;
             } catch(Exception e) {
                 MessageBox.Show(e.Message,"Mini PDF",MessageBoxButtons.OK,MessageBoxIcon.Error);return 1;
-            } finally {if(instance!=null)instance.Dispose();if(initialized)N.FPDF_DestroyLibrary();}
+            } finally {RenderPool.Shutdown();if(instance!=null)instance.Dispose();if(initialized)N.FPDF_DestroyLibrary();}
         }
     }
 }

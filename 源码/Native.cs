@@ -33,10 +33,12 @@ namespace MiniPdf {
         [DllImport(D)] internal static extern int FPDF_PageToDevice(IntPtr page,int x,int y,int w,int h,int rotation,double px,double py,out int dx,out int dy);
         [DllImport(D)] internal static extern IntPtr FPDFBitmap_Create(int w,int h,int alpha);
         [DllImport(D)] internal static extern IntPtr FPDFBitmap_CreateEx(int w,int h,int format,IntPtr buffer,int stride);
-        [DllImport(D)] internal static extern IntPtr FPDFBitmap_GetBuffer(IntPtr bitmap);
-        [DllImport(D)] internal static extern int FPDFBitmap_GetStride(IntPtr bitmap);
         [DllImport(D)] internal static extern void FPDFBitmap_FillRect(IntPtr bitmap,int x,int y,int w,int h,uint color);
         [DllImport(D)] internal static extern void FPDFBitmap_Destroy(IntPtr bitmap);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]internal delegate int NeedPause(IntPtr self);
+        [StructLayout(LayoutKind.Sequential)]internal struct Pause {internal int version;internal NeedPause callback;internal IntPtr user;}
+        [DllImport(D)]internal static extern int FPDF_RenderPageBitmap_Start(IntPtr bitmap,IntPtr page,int x,int y,int w,int h,int rotation,int flags,ref Pause pause);
+        [DllImport(D)]internal static extern void FPDF_RenderPage_Close(IntPtr page);
         [DllImport(D)] internal static extern void FPDF_RenderPageBitmap(IntPtr bitmap,IntPtr page,int x,int y,int w,int h,int rotate,int flags);
         [DllImport(D)] internal static extern IntPtr FPDF_CreateNewDocument();
         [DllImport(D)] internal static extern IntPtr FPDFPage_New(IntPtr doc,int index,double w,double h);
@@ -64,7 +66,6 @@ namespace MiniPdf {
         [DllImport(D)] internal static extern IntPtr FPDFPageObj_CreateNewRect(float x,float y,float w,float h);
         [DllImport(D)] internal static extern int FPDFPath_SetDrawMode(IntPtr obj,int fill,int stroke);
         [DllImport(D)] internal static extern IntPtr FPDFText_LoadStandardFont(IntPtr doc,[MarshalAs(UnmanagedType.LPStr)] string name);
-        [DllImport(D)] internal static extern IntPtr FPDFText_LoadFont(IntPtr doc,byte[] data,uint size,int type,int cid);
         [DllImport(D)] internal static extern IntPtr FPDFText_LoadCidType2Font(IntPtr doc,byte[] data,uint size,[MarshalAs(UnmanagedType.LPStr)] string cmap,byte[] cidToGid,uint mapSize);
         [DllImport(D)] internal static extern void FPDFFont_Close(IntPtr font);
         [DllImport(D)] internal static extern IntPtr FPDFPageObj_CreateTextObj(IntPtr doc,IntPtr font,float size);

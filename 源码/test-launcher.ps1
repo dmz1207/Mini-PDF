@@ -8,13 +8,23 @@ $env:TMP = $testRoot
 if (-not $SingleExePath) { $SingleExePath = Join-Path $projectDir 'Mini PDF.exe' }
 $isolatedExe = Join-Path $testRoot 'Mini PDF.exe'
 Copy-Item -LiteralPath $SingleExePath -Destination $isolatedExe -Force
-$sourcePdf = Join-Path $projectDir 'work\tests\baseline.pdf'
+$sourcePdf = Join-Path $testRoot 'baseline.pdf'
+Copy-Item -LiteralPath (Join-Path $projectDir 'work\tests\external.pdf') -Destination $sourcePdf -Force
 $spacedPdf = Join-Path $testRoot '中文 测试文件 with spaces.pdf'
 Copy-Item -LiteralPath $sourcePdf -Destination $spacedPdf -Force
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.IO;
+using System.Threading;
+public sealed class MiniPdfRuntimeWatch : IDisposable {
+    readonly FileSystemWatcher watcher;
+    int count;
+    public int Created { get { return Volatile.Read(ref count); } }
+    public MiniPdfRuntimeWatch(string directory){watcher=new FileSystemWatcher(directory,".MiniPDF-runtime-*"){NotifyFilter=NotifyFilters.DirectoryName};watcher.Created+=delegate{Interlocked.Increment(ref count);};watcher.EnableRaisingEvents=true;}
+    public void Dispose(){watcher.Dispose();}
+}
 public static class MiniPdfWindowProbe {
     [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr window, StringBuilder text, int length);
     public delegate bool ChildCallback(IntPtr window, IntPtr value);
@@ -85,6 +95,23 @@ try {
     if (Test-Path -LiteralPath (Join-Path $testRoot 'pdfium.dll')) { throw '独立测试目录不应含有额外 DLL。' }
     $first = Start-CheckedWindow '' 'Mini PDF'
     $checks.Add('Single EXE starts normally without adjacent DLL or runtime installation')
+    Add-Type -AssemblyName System.Drawing
+    $iconHandle = [MiniPdfWindowProbe]::SendMessage($first.Child.MainWindowHandle,0x7f,[IntPtr]1,[IntPtr]::Zero)
+    if ($iconHandle -eq [IntPtr]::Zero) { throw '单文件窗口缺少图标。' }
+    $expectedIcon = [Drawing.Icon]::ExtractAssociatedIcon($isolatedExe)
+    $actualIcon = [Drawing.Icon]::FromHandle($iconHandle).Clone()
+    $expectedBitmap = $expectedIcon.ToBitmap()
+    $actualBitmap = $actualIcon.ToBitmap()
+    try {
+        if ($expectedBitmap.Size -ne $actualBitmap.Size) { throw '单文件窗口图标尺寸错误。' }
+        for ($y=0; $y -lt $actualBitmap.Height; $y++) {
+            for ($x=0; $x -lt $actualBitmap.Width; $x++) {
+                if ($actualBitmap.GetPixel($x,$y).ToArgb() -ne $expectedBitmap.GetPixel($x,$y).ToArgb()) { throw '窗口图标没有正确沿用启动器图标。' }
+            }
+        }
+    } finally { $expectedBitmap.Dispose(); $actualBitmap.Dispose(); $expectedIcon.Dispose(); $actualIcon.Dispose() }
+    $checks.Add('Window icon exactly matches the launcher while the core omits its duplicate icon resource')
+
     if (-not [MiniPdfWindowProbe]::SingleTitleRow($first.Child.MainWindowHandle)) { throw '最终单 EXE 在非最大化窗口仍保留系统标题栏，出现双层窗口按钮。' }
     $checks.Add('Actual single-EXE normal window has no native caption style or extra title-row reservation')
     [void][MiniPdfWindowProbe]::SendMessage($first.Child.MainWindowHandle,0x112,[IntPtr]0xf030,[IntPtr]::Zero)
@@ -99,6 +126,9 @@ try {
     Close-CheckedWindow $second
     $secondRuntimes = @(Get-ChildItem -LiteralPath $testRoot -Force -Directory | Where-Object Name -like ('.MiniPDF-runtime-' + $second.Wrapper.Id + '-*'))
     if ($secondRuntimes.Count -ne 0) { throw '正常退出后没有清理运行目录。' }
+    $children = @(Get-CimInstance Win32_Process -Filter ("ParentProcessId = " + $second.Child.Id) | Where-Object Name -eq 'MiniPDF.Core.exe')
+    if ($children.Count -ne 0) { throw '退出后仍有渲染工作进程。' }
+    $checks.Add('Normal exit stops workers from a multipage PDF before removing the extracted engine')
     $checks.Add('Normal exit cleans extracted runtime files')
     $firstRuntime = Get-ChildItem -LiteralPath $testRoot -Force -Directory | Where-Object Name -like ('.MiniPDF-runtime-' + $first.Wrapper.Id + '-*') | Select-Object -First 1
     $keepFile = Join-Path $firstRuntime.FullName '用户自己创建的文件.txt'
@@ -113,6 +143,7 @@ try {
     if ($remaining.Count -ne 0) { throw '再次启动没有清理遗留运行目录。' }
     $checks.Add('Next launch removes stale runtime files safely')
     $primary = Start-CheckedWindow $sourcePdf 'baseline.pdf' $false
+    $runtimeWatch = [MiniPdfRuntimeWatch]::new($testRoot)
     Forward-Checked ('"' + $spacedPdf + '"')
     Wait-TabCount $primary 2 '中文 测试文件 with spaces.pdf'
     $checks.Add('Subsequent double-click forwards Chinese filename to existing window as a new tab')
@@ -122,6 +153,10 @@ try {
     Forward-Checked ''
     Wait-TabCount $primary 2
     $checks.Add('Starting without a filename focuses existing window without a new document')
+    Start-Sleep -Milliseconds 150
+    if ($runtimeWatch.Created -ne 0) { throw '后续打开不应重新建立内核解包目录。' }
+    $runtimeWatch.Dispose()
+    $checks.Add('Warm opens forward before extraction without creating any temporary engine directory')
     $extra = Start-CheckedWindow '中文 测试文件 with spaces.pdf' 'baseline.pdf' $true $sourcePdf
     Wait-TabCount $extra 2 'baseline.pdf'
     $primary.Child.Refresh()

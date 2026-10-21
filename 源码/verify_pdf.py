@@ -90,6 +90,24 @@ def fixtures(root):
     layered.save()
 
 
+    # Distinct pages share one image/font; this detects per-page exporter duplication.
+    import random
+    from PIL import Image
+    from reportlab.lib.utils import ImageReader
+    image = Image.frombytes("RGB", (128, 128), random.Random(17).randbytes(128 * 128 * 3))
+    shared = canvas.Canvas(str(root / "shared-resources.pdf"), pagesize=(400, 600))
+    for i in range(12):
+        shared.drawImage(ImageReader(image), 40, 160, width=300, height=300)
+        shared.drawString(40, 500, f"SHARED RESOURCE PAGE {i + 1}")
+        shared.showPage()
+    shared.save()
+    note = canvas.Canvas(str(root / "indirect-note.pdf"), pagesize=(400, 600))
+    note.drawString(40, 500, "INDEPENDENT INDIRECT NOTE")
+    note.textAnnotation("ORIGINAL_NOTE", (40, 350, 70, 380), relative=0)
+    note.showPage()
+    note.save()
+
+
 def verify(root):
     from pypdf import PdfReader
     import pymupdf
