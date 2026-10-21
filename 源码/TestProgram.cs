@@ -17,6 +17,7 @@ namespace MiniPdf.Tests {
                 N.SetProcessDPIAware();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                if(args.Length>1&&args[1]=="--merge-only")return SelfTest.RunMergeDetails(directory);
                 if(args.Length>1&&args[1]=="--signature-fixes")return SelfTest.RunSignatureFixes(directory);
                 if(args.Length>1&&args[1]=="--features-only")return SelfTest.RunFeatures(directory);
                 return args.Length>1&&args[1]=="--header-only"?SelfTest.RunHeader(directory):SelfTest.Run(directory);

@@ -104,7 +104,7 @@ namespace MiniPdf {
             SetTool(readingMode||slideShow?Tool.Read:tab.Tool);if(!readingMode&&!fullScreen){editbar.Visible=tab.Editor;editToggle.Checked=tab.Editor;}UpdateDocument(true);canvas.AutoScrollPosition=tab.Scroll;canvas.Focus();
         }
         void NextTab(int direction){if(documents.Count>1)ActivateTab(documents[(documents.IndexOf(activeTab)+direction+documents.Count)%documents.Count]);}
-        bool CanSaveToPath(string path){string full=Path.GetFullPath(path);foreach(var tab in documents)if(tab!=activeTab&&!String.IsNullOrEmpty(tab.Document.FilePath)&&String.Equals(full,tab.Document.FilePath,StringComparison.OrdinalIgnoreCase))return false;return true;}
+        internal bool CanSaveToPath(string path,bool includeCurrent=false){string full=Path.GetFullPath(path);foreach(var tab in documents)if((includeCurrent||tab!=activeTab)&&!String.IsNullOrEmpty(tab.Document.FilePath)&&String.Equals(full,tab.Document.FilePath,StringComparison.OrdinalIgnoreCase))return false;return true;}
         bool CloseTab(int index){
             CancelTabDrag();
             if(index<0||index>=documents.Count)return false;var tab=documents[index];

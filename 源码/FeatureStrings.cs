@@ -4,7 +4,36 @@ namespace MiniPdf {
     internal static partial class UiText {
         static void AddFeatureTranslations(Dictionary<string,string> strings){
             // One entry per line keeps the optional feature vocabulary separate.
-            const string pairs=@"签名方式|Signature mode
+            const string pairs=@"合并页面缩略图|Merge page thumbnails
+页面已清空，放弃调整并关闭吗？|No pages remain. Discard the changes and close?
+应用当前页面调整吗？\n是：应用；否：放弃；取消：继续编辑。|Apply the current page changes?\nYes: apply; No: discard; Cancel: keep editing.
+将当前排列保存为 PDF 吗？\n是：保存；否：不保存；取消：继续编辑。|Save the current arrangement as a PDF?\nYes: save; No: discard; Cancel: keep editing.
+保存合并的 PDF|Save combined PDF
+合并文档.pdf|Combined.pdf
+原第 {0} 页|Original page {0}
+页面 {0}|Page {0}
+所在文件组：{0}|File group: {0}
+移动文件到 {0} 之后|Move file after {0}
+移动文件到 {0} 之前|Move file before {0}
+在 {0} 之前|before {0}
+插入到 {0}：{1}|Insert into {0}: {1}
+末尾|end
+停留可展开|hover to expand
+拖动文件名可移动整个文件；＋/－展开或收起。|Drag the file title to move the whole file; +/- expands or collapses it.
+排列参数无效。|Invalid ordering parameters.
+请先添加两份非空文档。|Add two non-empty documents first.
+交错：{0} + {1}|Interleaved: {0} + {1}
+自动排列 ▾|Arrange ▾
+自动排列|Arrange pages
+按来源和原页码归组|Group by source and original page number
+逐页交错：A 在前|Alternate pages: A first
+逐页交错：B 在前|Alternate pages: B first
+第二份倒序后交错|Alternate with second file reversed
+每 N 页交错…|Alternate every N pages...
+每 N 页交错|Alternate every N pages
+每份连续取几页？例如 2：A1、A2、B1、B2…|Pages per block? For example 2: A1, A2, B1, B2...
+请输入 1–10000 的整数。|Enter an integer from 1 to 10,000.
+签名方式|Signature mode
 姓名（输入后立即预览）|Name (live preview)
 页面上的宽度 (mm)|Page width (mm)
 高 {0:0.#} mm · 保持比例|Height {0:0.#} mm · aspect ratio locked

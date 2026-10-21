@@ -6,16 +6,17 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.7.1 preview** is one approximately **2.87 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.7.2 preview** is one approximately **2.87 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-## Refined in v0.7.1
+## Refined in v0.7.2
 
-- Typing a Chinese or English name immediately switches to a live, readable signature preview, including after importing an image.
-- Set signature width in millimeters; the preview changes with it and height stays proportional. Typed/drawn artwork is exported at a higher resolution appropriate to placement size.
-- Click once to place, or drag a rectangle. The inserted signature is immediately selected; drag to move or use its bottom-right handle to resize proportionally, including rotated views. Esc cancels placement.
-- Remove third-party watermark text, images, whole Form groups and stamp annotations through a checked-object list and before/after preview. Match selected content and position across a page range; identical wording at a different size/location is kept.
+- File stacks use a dedicated + / - control. Expanding replaces the stack with its real pages; the first page is never duplicated as an extra cover.
+- Permanent file dividers and a separate blue insertion line make file boundaries and the exact drop position visible. Drag hints show the target file and original page number.
+- Drag an expanded file's title to move the entire file; drag its page image to move a page. Hover to expand a collapsed destination, or drag near the edge to scroll. Esc, capture loss and release outside the board cancel safely.
+- Alternate odd/even scans, start with either file, reverse the second scan, or alternate blocks of N pages. Each arrangement is undoable and keeps original page provenance and rotations.
+- Ctrl+1 regroups by source and original page number; Ctrl+2 through Ctrl+5 choose interleave modes inside the workspace. Reading shortcuts retain their usual behavior outside it.
 
 ## Included tools
 
@@ -81,6 +82,22 @@ Select text in Select mode, then choose a color from Highlight or the right-clic
 Open Pages or press Ctrl+Shift+P to manage the active document. Expand a file group to see its individual pages. Ctrl-click selects multiple pages; Shift-click selects a range. Hold the left mouse button to drag selected pages to another position. Rotate, duplicate, remove, undo and redo are available. Apply commits the whole operation to the active document; its normal undo restores the previous state. Destinations attached to retained original pages are preserved during reorder/delete; links to deleted pages may no longer resolve.
 
 Combine Files accepts dropped or selected PDF, PNG, JPEG and BMP files. Drag collapsed groups to change file order, or expand groups and drag pages across them. Images are placed on A4 pages. Combining creates a new unsaved document and preserves the original files. Word/Excel import is not provided. Source outlines and document-level form structures are not combined into a unified outline or interactive form. Each workspace supports up to 10,000 pages and twenty workspace undo steps.
+
+The + / - square expands or collapses a file without adding a separate cover. The file title above its first page is the handle for moving the whole file; the image below selects and moves that page. Other thumbnails retain their source filename and original page number. Hover for the full filename. Wider thumbnail gaps and darker gray dividers separate files; the blue capped line marks the actual insertion point, with a destination hint. Hover over a collapsed destination to expand it; edge dragging scrolls. Releasing outside the board or pressing Esc cancels the move.
+
+**Arrange scans:** A and B below mean the first two non-empty file groups in the current workspace order.
+
+| Workspace shortcut | Arrangement |
+| --- | --- |
+| Ctrl+1 | Regroup by source, using original import order and page numbers; retain duplicates and rotations |
+| Ctrl+2 | A1, B1, A2, B2... (odd scan first) |
+| Ctrl+3 | B1, A1, B2, A2... (even scan first) |
+| Ctrl+4 | A1, B-last, A2, B-previous... (second scan in reverse order) |
+| Ctrl+5 | Alternate N-page blocks; for N=2: A1, A2, B1, B2... |
+
+Use the Arrange menu for the same commands. Shorter inputs append their partner's remaining pages; later file groups keep their relative order. The two inputs become one expanded group with each page's original source details intact. Press Ctrl+1 before choosing another interleave mode, or Ctrl+Z to undo. Regrouping does not recreate deleted pages. These shortcuts apply only in Combine Files / Organize Pages; Ctrl+2 still means Fit Width in the reader.
+
+Closing a changed Combine Files workspace asks whether to save the current arrangement as a PDF. Yes opens native Save As; No discards; Cancel keeps editing. Canceling Save As or a failed export keeps the workspace intact. View-only expansion and unchanged page order do not trigger a prompt. Closing changed Organize Pages offers to apply the changes instead; application remains one undoable document operation. Save As requires a separate filename if the destination is already open in the reader.
 
 ### Scanned PDFs with a text layer
 
@@ -168,6 +185,7 @@ powershell -ExecutionPolicy Bypass -File .\源码\build.ps1 -Test
 python .\源码\verify_pdf.py verify .\work\tests
 python .\源码\verify_features.py verify .\work\tests
 python .\源码\verify_fixes.py verify .\work\tests
+python .\源码\verify_merge.py verify .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 ~~~
 

@@ -1,4 +1,4 @@
-Mini PDF 0.7.1 - User Guide
+Mini PDF 0.7.2 - User Guide
 Windows 10 / Windows 11 x64
 
 START AND LANGUAGE
@@ -82,6 +82,34 @@ Word/Excel import and unified source outlines/interactive forms are not provided
 Export supports current-page PNG and all-document TXT. Ctrl+P opens the native print workspace.
 Select text, then choose Highlight on the toolbar or right-click menu: twelve presets plus Custom.
 Ctrl+Alt+H uses the most recent highlight color; with no text selected, draw a highlight area.
+
+MERGE LAYOUT AND SCAN INTERLEAVING
+Click + / - beside the file title to expand/collapse. Expanded files show real pages only,
+without a duplicate first-page cover. Drag the file title to move the entire file;
+drag the page image to select and move that page. Ctrl-click/Shift-click select multiple pages.
+Original source names and page numbers remain available; hover for the complete filename.
+Gray lines separate files. The blue capped line is the exact insertion position.
+The drag hint identifies the destination file and page. Hover to expand collapsed files;
+drag near the top/bottom edge to scroll. Esc or release outside the board cancels the move.
+
+Arrange scans uses the first two non-empty groups in their current order (A and B):
+Ctrl+1: regroup by original source import order and original page number.
+Ctrl+2: A1, B1, A2, B2... for odd/even scans.
+Ctrl+3: B1, A1, B2, A2... to start with the second file.
+Ctrl+4: A1, B-last, A2, B-previous... if the second scan is reversed.
+Ctrl+5: alternate N-page blocks; enter 2 for A1, A2, B1, B2...
+The Arrange menu offers the same commands. Extra pages append at the end;
+later groups keep their relative order. Source names, original page numbers and rotations survive.
+The two input groups become one expanded group. Ctrl+1 regroups them before another arrangement;
+it retains duplicate pages and does not recreate removed pages. Ctrl+Z/Y undo/redo each operation.
+These shortcuts apply only in Combine Files / Organize Pages. Ctrl+2 still fits width in the reader.
+
+CLOSING A MERGE WORKSPACE
+A changed arrangement prompts on Close or Cancel: Yes saves a PDF, No discards, Cancel keeps editing.
+Canceling native Save As or an export failure keeps your pages and their current order.
+Unchanged arrangements and view-only expansion do not prompt. Organize Pages offers Apply instead;
+its changes remain undoable in the original document. Save to a separate filename if already open.
+Thumbnail gaps are wider, with darker file dividers and a separate blue insertion marker.
 
 PRINTING
 Ctrl+P opens Mini PDF's print workspace. Printer Properties and Page Setup use Windows/driver UI.

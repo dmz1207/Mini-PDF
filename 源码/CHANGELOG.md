@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.2 — 2026-10-21
+
+- Increase page spacing and darken file boundaries. Prompt to save/discard/cancel changed merge workspaces; retain edits after canceled or failed saves. Offer Apply when closing the page organizer.
+- Replace expanded file covers with real pages and a dedicated +/- toggle; keep the first page exactly once.
+- Add permanent file dividers, accurate before/after insertion lines, full source/page tooltips and drag destination hints.
+- Keep file-title dragging distinct from page dragging; support hover expansion, edge scrolling, cancellation and layout changes during a drag.
+- Add A-first, B-first, second-file-reversed and N-page-block interleaving, with original-source regrouping and Ctrl+1 through Ctrl+5 inside the workspace.
+- Preserve original scan files, page provenance, rotations, later file groups and one-step undo/redo. Keep English and Chinese guides synchronized.
+
 ## 0.7.1 — 2026-10-21
 
 - Fix name entry in visible signatures: input is always available, typing switches to a live CJK/Latin preview.
