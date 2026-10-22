@@ -66,22 +66,28 @@ namespace MiniPdf
             internal Action<RenderFrame, Exception> Complete;
             internal RenderFrame Result;
         }
+        sealed class NativeRasterFailure : IOException
+        {
+            internal NativeRasterFailure(Exception cause) : base("PDFium raster worker stopped.", cause) { }
+        }
         sealed class Worker
         {
             internal Job Active;
             internal Thread Thread;
             internal Process Process;
             internal NamedPipeServerStream Pipe;
+            ProcessBudget budget;
             BinaryReader reader;
             BinaryWriter writer;
             readonly object connection = new object();
-            void Connect()
+            bool systemBackend;
+            void Connect(bool system)
             {
                 NamedPipeServerStream pipe;
                 IAsyncResult connected;
                 lock (connection)
                 {
-                    if (Process != null && !Process.HasExited && Pipe != null && Pipe.IsConnected)
+                    if (Process != null && !Process.HasExited && Pipe != null && Pipe.IsConnected && systemBackend == system)
                         return;
                     Stop();
                     string name = "MiniPDF-render-" + Guid.NewGuid().ToString("N");
@@ -92,11 +98,14 @@ namespace MiniPdf
                                                             PipeOptions.Asynchronous, 4096, 4096, security);
                     var start = new ProcessStartInfo(
                         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MiniPDF.Core.exe"),
-                        "--render-worker " + name + " " + System.Diagnostics.Process.GetCurrentProcess().Id) {
+                        (system ? "--system-render-worker " : "--render-worker ") + name + " " + System.Diagnostics.Process.GetCurrentProcess().Id) {
                         UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden,
                         WorkingDirectory = Environment.CurrentDirectory
                     };
+                    systemBackend = system;
                     Process = System.Diagnostics.Process.Start(start);
+                    try { budget = new ProcessBudget(Process); }
+                    catch { Stop(); throw; }
                     connected = pipe.BeginWaitForConnection(null, null);
                 }
                 try
@@ -117,15 +126,15 @@ namespace MiniPdf
                     writer = new BinaryWriter(pipe, Encoding.UTF8, true);
                 }
             }
-            internal RenderFrame Render(Job job)
+            internal RenderFrame Render(Job job, bool system)
             {
-                Connect();
+                Connect(system);
                 if (job.Canceled)
                     return null;
                 var elapsed = Stopwatch.StartNew();
                 var process = Process;
                 using (var watchdog = new System.Threading.Timer(delegate(object ignored) {
-                    if (job.Canceled || elapsed.ElapsedMilliseconds > 120000)
+                    if (job.Canceled || elapsed.ElapsedMilliseconds > (system ? 45000 : 30000))
                     {
                         lock (connection)
                         {
@@ -136,6 +145,7 @@ namespace MiniPdf
                 }, null, 200, 200))
                 {
                     var frame = new RenderFrame(job.Region.Width, job.Region.Height);
+                    bool reported = false;
                     try
                     {
                         writer.Write(job.Source.Name);
@@ -153,13 +163,14 @@ namespace MiniPdf
                         writer.Flush();
                         string error = reader.ReadString();
                         if (error.Length != 0)
-                            throw new IOException(error);
+                        { reported = true; throw new IOException(error); }
                         return frame;
                     }
-                    catch
+                    catch (Exception error)
                     {
                         Stop();
                         frame.Dispose();
+                        if (!reported && !job.Canceled) throw new NativeRasterFailure(error);
                         throw;
                     }
                 }
@@ -194,6 +205,7 @@ namespace MiniPdf
                         Process.Dispose();
                         Process = null;
                     }
+                    if (budget != null) { budget.Dispose(); budget = null; }
                 }
             }
             internal void Loop()
@@ -227,7 +239,20 @@ namespace MiniPdf
                     try
                     {
                         if (!job.Canceled)
-                            frame = Render(job);
+                        {
+                            bool system = UsesWindows(job.Source, job.Page);
+                            try { frame = Render(job, system); }
+                            catch (NativeRasterFailure)
+                            {
+                                if (system || job.Canceled) throw;
+                                frame = Render(job, true);
+                                lock (gate)
+                                {
+                                    if (systemPages.Count >= 256) systemPages.Clear();
+                                    systemPages.Add(job.Source.Name + ":" + job.Page);
+                                }
+                            }
+                        }
                     }
                     catch (Exception e)
                     {
@@ -309,6 +334,21 @@ namespace MiniPdf
                 }
             foreach (var job in remove)
                 delivered.Remove(job);
+        }
+        static readonly HashSet<string> systemPages = new HashSet<string>();
+        internal static bool HasCompatibilitySource(PdfSource source)
+        {
+            if(source==null) return false;
+            lock(gate)
+            {
+                string prefix=source.Name+":";
+                foreach(string key in systemPages) if(key.StartsWith(prefix,StringComparison.Ordinal)) return true;
+                return false;
+            }
+        }
+        internal static bool UsesWindows(PdfSource source, int page)
+        {
+            lock (gate) return systemPages.Contains(source.Name + ":" + page);
         }
         static readonly object gate = new object();
         static readonly List<Job> queue = new List<Job>();
@@ -405,13 +445,14 @@ namespace MiniPdf
             lock (gate)
             {
                 workers.Clear();
+                systemPages.Clear();
                 stopping = false;
             }
         }
     }
     internal static class RasterWorker
     {
-        internal static int Run(string name, int parent)
+        internal static int Run(string name, int parent, bool systemBackend)
         {
             Process supervisor;
             try
@@ -435,6 +476,7 @@ namespace MiniPdf
                         var writer = new BinaryWriter(pipe, Encoding.UTF8, true))
                     {
                         PdfDocument document = null;
+                        WindowsRaster systemDocument = null;
                         string sourceName = null;
                         try
                         {
@@ -457,20 +499,25 @@ namespace MiniPdf
                                         (long)region.X + region.Width > width ||
                                         (long)region.Y + region.Height > height)
                                         throw new IOException("Invalid raster bounds.");
-                                    if (document == null || source != sourceName)
+                                    if (source != sourceName)
                                     {
                                         if (document != null)
                                         {
                                             document.Dispose();
                                             document = null;
                                         }
-                                        document =
-                                            PdfDocument.FromShared(PdfSource.OpenShared(source, length), password);
+                                        if (systemDocument != null) { systemDocument.Dispose(); systemDocument = null; }
+                                        if (systemBackend)
+                                        {
+                                            using (var shared = PdfSource.OpenShared(source, length))
+                                                systemDocument = WindowsRaster.Open(shared, password);
+                                        }
+                                        else document = PdfDocument.FromShared(PdfSource.OpenShared(source, length), password);
                                         sourceName = source;
                                     }
-                                    if (index < 0 || index >= document.Count)
+                                    if (index < 0 || index >= (systemBackend ? systemDocument.Count : document.Count))
                                         throw new IOException("Invalid raster page.");
-                                    document.OpenPage(index);
+                                    if (!systemBackend) document.OpenPage(index);
                                     using (var map = MemoryMappedFile.OpenExisting(
                                                output,
                                                MemoryMappedFileRights.ReadWrite)) using (var view =
@@ -478,9 +525,11 @@ namespace MiniPdf
                                                                                                  0, (long)region.Width *
                                                                                                         region.Height *
                                                                                                         4))
-                                        document.RenderInto(index, width, height, rotation, region,
-                                                            view.SafeMemoryMappedViewHandle.DangerousGetHandle(),
-                                                            region.Width * 4);
+                                    {
+                                        IntPtr pixels = view.SafeMemoryMappedViewHandle.DangerousGetHandle();
+                                        if (systemBackend) systemDocument.RenderInto(index, width, height, rotation, region, pixels);
+                                        else document.RenderInto(index, width, height, rotation, region, pixels, region.Width * 4);
+                                    }
                                 }
                                 catch (Exception e)
                                 {
@@ -494,6 +543,7 @@ namespace MiniPdf
                         {
                             if (document != null)
                                 document.Dispose();
+                            if (systemDocument != null) systemDocument.Dispose();
                         }
                     }
                     return 0;

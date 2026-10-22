@@ -47,7 +47,7 @@ namespace MiniPdf
         internal IntPtr Handle, Page;
         IntPtr textPage;
         PdfSource inputSource, renderSource;
-        bool bytesCurrent = true;
+        bool bytesCurrent = true, hasImportedFonts;
         readonly Dictionary<int, SizeF> pageSizes = new Dictionary<int, SizeF>();
         internal int RenderEpoch { get; private set; }
         internal PdfSource GetRenderSource()
@@ -80,8 +80,16 @@ namespace MiniPdf
         int revision, savedRevision, clock;
         public string FilePath = "", Password = "";
         public int Index { get; private set; }
-        public bool CanEdit { get; private set; }
-        public bool CanPrint { get; private set; }
+        bool compatibilityPreview, canEdit, canPrint;
+        internal bool CompatibilityPreview
+        {
+            get { return compatibilityPreview || RenderPool.HasCompatibilitySource(renderSource ?? inputSource); }
+            private set { compatibilityPreview=value; }
+        }
+        internal void RestrictCompatibilityPreview()
+        { CompatibilityPreview=true; CanEdit=CanPrint=false; }
+        public bool CanEdit { get { return canEdit && !CompatibilityPreview; } private set { canEdit=value; } }
+        public bool CanPrint { get { return canPrint && !CompatibilityPreview; } private set { canPrint=value; } }
         public int Count
         {
             get {
@@ -177,6 +185,7 @@ namespace MiniPdf
         {
             inputSource = source;
             bytesCurrent = true;
+            hasImportedFonts = false;
             pageSizes.Clear();
             RenderEpoch++;
             Handle = N.FPDF_LoadMemDocument64(source.Pointer, new UIntPtr((ulong)source.Length),
@@ -201,6 +210,7 @@ namespace MiniPdf
             CanPrint = unsecured || (permissions & 4) != 0;
             if (SignatureCount > 0)
                 CanEdit = false;
+            if (CompatibilityPreview) CanEdit=CanPrint=false;
             OpenPage(0);
         }
         internal static void Check(bool ok, string message)
@@ -210,6 +220,7 @@ namespace MiniPdf
         }
         void CloseText()
         {
+            ClearSelectionPages();
             if (textPage != IntPtr.Zero)
             {
                 N.FPDFText_ClosePage(textPage);
@@ -265,7 +276,8 @@ namespace MiniPdf
             Page = N.FPDF_LoadPage(Handle, Index);
             Check(Page != IntPtr.Zero, UiText.Get("无法读取第 ") + (Index + 1) + UiText.Get(" 页。"));
         }
-        public byte[] Serialize(bool subsetFonts)
+        public byte[] Serialize(bool subsetFonts) { return Serialize(subsetFonts, false); }
+        internal byte[] Serialize(bool subsetFonts, bool removeSecurity)
         {
             using (var stream = new MemoryStream())
             {
@@ -295,7 +307,10 @@ namespace MiniPdf
                     }
                 };
                 var writer = new N.Writer { version = 1, write = callback };
-                int ok = N.FPDF_SaveAsCopy(Handle, ref writer, subsetFonts ? 10u : 2u);
+                // Preserve imported font programs. Only request subsetting for fonts created here.
+                uint flags = subsetFonts && fonts.Count > 0 && !hasImportedFonts ? 10u : 2u;
+                if (removeSecurity) flags |= 4u;
+                int ok = N.FPDF_SaveAsCopy(Handle, ref writer, flags);
                 GC.KeepAlive(callback);
                 if (failure != null)
                     throw new IOException(UiText.Get("写入 PDF 失败。"), failure);
@@ -434,6 +449,7 @@ namespace MiniPdf
         internal Bitmap RenderRegion(int index, int pageWidth, int pageHeight, int rotation, Rectangle region,
                                      int renderFlags = 3)
         {
+            Check(!CompatibilityPreview, UiText.English ? "This file is in compatibility preview. Native image export is unavailable." : "此文件处于兼容预览，无法使用原生图片导出。" );
             int width = region.Width, height = region.Height;
             if (width < 1 || height < 1 || width > 14000 || height > 14000 || (long)width * height > 24000000)
                 throw new InvalidOperationException(UiText.Get("当前缩放超出显示内存限制，请减小缩放比例。"));
@@ -460,6 +476,15 @@ namespace MiniPdf
                 result.Dispose();
                 throw;
             }
+        }
+        internal bool CanRenderQuickly(int index)
+        {
+            if (index != Index || N.FPDFPage_GetAnnotCount(Page) > 32) return false;
+            int count = N.FPDFPage_CountObjects(Page);
+            if (count < 0 || count > 250) return false;
+            for (int i = 0; i < count; i++)
+                if (N.FPDFPageObj_GetType(N.FPDFPage_GetObject(Page, i)) != 1) return false;
+            return true;
         }
         internal bool RenderInto(int index, int pageWidth, int pageHeight, int rotation, Rectangle region,
                                  IntPtr pixels, int stride, int renderFlags = 3, int budget = 0)
@@ -960,37 +985,28 @@ namespace MiniPdf
         public void AddMarkup(List<N.Rect> rectangles, int subtype, Color color)
         {
             Check(rectangles.Count > 0, UiText.Get("请框选需要标记的位置。"));
-            Edit(delegate {
-                IntPtr a = N.FPDFPage_CreateAnnot(Page, subtype);
-                try
+            Edit(delegate { AppendMarkup(rectangles, subtype, color); });
+        }
+        void AppendMarkup(List<N.Rect> rectangles, int subtype, Color color)
+        {
+            IntPtr a = N.FPDFPage_CreateAnnot(Page, subtype);
+            try
+            {
+                var union = rectangles[0];
+                foreach (var r in rectangles)
                 {
-                    var union
-                    = rectangles[0];
-                    foreach (var r in rectangles)
-                    {
-                        union
-                        .left = Math.Min(union.left, r.left);
-                        union
-                        .right = Math.Max(union.right, r.right);
-                        union
-                        .top = Math.Max(union.top, r.top);
-                        union
-                        .bottom = Math.Min(union.bottom, r.bottom);
-                    }
-                    ConfigureAnnot(a, union, color);
-                    foreach (var r in rectangles)
-                    {
-                        var q = new N.Quad { x1 = r.left, y1 = r.top,    x2 = r.right, y2 = r.top,
-                                             x3 = r.left, y3 = r.bottom, x4 = r.right, y4 = r.bottom };
-                        Check(N.FPDFAnnot_AppendAttachmentPoints(a, ref q) != 0, UiText.Get("无法设置标记范围。"));
-                    }
+                    union.left = Math.Min(union.left, r.left); union.right = Math.Max(union.right, r.right);
+                    union.top = Math.Max(union.top, r.top); union.bottom = Math.Min(union.bottom, r.bottom);
                 }
-                finally
+                ConfigureAnnot(a, union, color);
+                foreach (var r in rectangles)
                 {
-                    if (a != IntPtr.Zero)
-                        N.FPDFPage_CloseAnnot(a);
+                    var q = new N.Quad { x1 = r.left, y1 = r.top, x2 = r.right, y2 = r.top,
+                                         x3 = r.left, y3 = r.bottom, x4 = r.right, y4 = r.bottom };
+                    Check(N.FPDFAnnot_AppendAttachmentPoints(a, ref q) != 0, UiText.Get("无法设置标记范围。"));
                 }
-            });
+            }
+            finally { if (a != IntPtr.Zero) N.FPDFPage_CloseAnnot(a); }
         }
         public void AddInk(List<N.Pt> points, Color color, float width)
         {
@@ -1079,12 +1095,16 @@ namespace MiniPdf
         public void DuplicatePage()
         {
             using (var source = FromBytes(Serialize(false), Password))
+            using (var layers = new LayerImport(new[] { this, source }))
             {
                 int index = Index;
                 Edit(delegate {
                     ClosePage();
-                    Check(N.FPDF_ImportPagesByIndex(Handle, source.Handle, new[] { index }, 1, index + 1) != 0,
+                    layers.BeginTarget(this);
+                    Check(N.FPDF_ImportPagesByIndex(Handle, layers.Prepared(source).Handle, new[] { index }, 1, index + 1) != 0,
                           UiText.Get("无法复制页面。"));
+                    hasImportedFonts = true;
+                    layers.EndTarget(this);
                     OpenPage(index + 1);
                 });
             }
@@ -1106,27 +1126,31 @@ namespace MiniPdf
             int[] pages = new int[source.Count];
             for (int i = 0; i < pages.Length; i++)
                 pages[i] = i;
+            using (var layers = new LayerImport(source == this ? new[] { this } : new[] { this, source }))
             Edit(delegate {
                 ClosePage();
-                Check(N.FPDF_ImportPagesByIndex(Handle, source.Handle, pages, (uint)pages.Length, destination) != 0,
+                layers.BeginTarget(this);
+                Check(N.FPDF_ImportPagesByIndex(Handle, layers.Prepared(source).Handle, pages, (uint)pages.Length, destination) != 0,
                       UiText.Get("无法合并页面。"));
+                hasImportedFonts = true;
+                layers.EndTarget(this);
                 OpenPage(destination);
             });
         }
         public void Extract(int[] indices, string path)
         {
-            using (var output = new PdfDocument())
-            {
-                output.Handle = N.FPDF_CreateNewDocument();
-                Check(output.Handle != IntPtr.Zero, UiText.Get("无法创建导出文件。"));
-                Check(N.FPDF_ImportPagesByIndex(output.Handle, Handle, indices, (uint)indices.Length, 0) != 0,
-                      UiText.Get("页面提取失败。"));
-                AtomicWrite(path, output.Serialize(true), "", indices.Length);
-            }
+            var pages = new List<MergePage>();
+            foreach(int index in indices) pages.Add(new MergePage { Source=this,Index=index });
+            using(var output=MergePages(pages)) AtomicWrite(path,output.Serialize(true),"",indices.Length);
+        }
+        internal void ReloadForLayerImport(byte[] bytes)
+        {
+            int active=Index;
+            CloseHandles(); Load(bytes); OpenPage(Math.Min(active,Count-1));
         }
         public int CharAt(N.Pt p)
         {
-            return N.FPDFText_GetCharIndexAtPos(TextPage, p.x, p.y, 5, 5);
+            return SelectionPage(Index).Hit(p, false);
         }
         public string SelectedText(int start, int count)
         {

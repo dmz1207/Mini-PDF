@@ -16,10 +16,12 @@ namespace MiniPdf {
         [StructLayout(LayoutKind.Sequential)] internal struct Quad { public float x1,y1,x2,y2,x3,y3,x4,y4; }
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] internal delegate int WriteBlock(IntPtr self,IntPtr data,uint size);
         [StructLayout(LayoutKind.Sequential)] internal struct Writer { public int version; public WriteBlock write; }
+        [DllImport("kernel32.dll")] internal static extern uint SetErrorMode(uint mode);
         [DllImport(D)] internal static extern void FPDF_InitLibrary();
         [DllImport(D)] internal static extern void FPDF_DestroyLibrary();
         [DllImport(D)] internal static extern IntPtr FPDF_LoadMemDocument64(IntPtr data,UIntPtr size,byte[] password);
         [DllImport(D)] internal static extern uint FPDF_GetLastError();
+        [DllImport(D)] internal static extern int FPDF_DocumentHasValidCrossReferenceTable(IntPtr document);
         [DllImport(D)] internal static extern void FPDF_CloseDocument(IntPtr doc);
         [DllImport(D)] internal static extern int FPDF_GetPageCount(IntPtr doc);
         [DllImport(D)] internal static extern uint FPDF_GetDocPermissions(IntPtr doc);
@@ -78,6 +80,8 @@ namespace MiniPdf {
         [DllImport(D)] internal static extern IntPtr FPDFText_LoadPage(IntPtr page);
         [DllImport(D)] internal static extern void FPDFText_ClosePage(IntPtr textPage);
         [DllImport(D)] internal static extern int FPDFText_CountChars(IntPtr textPage);
+        [DllImport(D)] internal static extern uint FPDFText_GetUnicode(IntPtr textPage,int index);
+        [DllImport(D)] internal static extern int FPDFText_GetLooseCharBox(IntPtr textPage,int index,out Rect box);
         [DllImport(D)] internal static extern int FPDFText_GetText(IntPtr textPage,int start,int count,[Out] byte[] buffer);
         [DllImport(D)] internal static extern int FPDFText_GetCharIndexAtPos(IntPtr textPage,double x,double y,double xtol,double ytol);
         [DllImport(D)] internal static extern int FPDFText_CountRects(IntPtr textPage,int start,int count);

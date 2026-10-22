@@ -4,6 +4,10 @@
 
 This build improves how Mini PDF uses PDFium. The pinned native PDFium DLL is byte-for-byte unchanged; this is not a new PDFium C++ build. Rendering settings and output resolution are retained.
 
+## v0.9.0 compatibility follow-up
+
+The measurements below belong to v0.8.0 and have not been remeasured as v0.9.0 speed claims. v0.9.0 limits the cooperative UI path to small text-only pages, preserves existing/imported font programs and serializes/reloads merged documents before later edits. That extra normalization can cost merge time and memory; preserving fonts can make some output PDFs larger. It fixes observed compatibility failures without replacing or reducing raster quality. Private import copies also preserve layer defaults and repair invalid Contents-array references. On-demand raster workers have a 768 MiB process commit limit, a 30-second native watchdog and a 45-second Windows compatibility watchdog. The fallback uses the installed Windows renderer, adds no bundled engine, and is restricted to read-only preview because the tested malformed JPX has color differences. These bounds do not isolate or cap every main-process operation. See [Compatibility](Compatibility.md).
+
 ## Measured results
 
 Windows 10 Home Chinese x64, build 19045, eight logical CPUs, system .NET Framework. Compare v0.7.2 with v0.8.0 on the same machine and the same deterministic fixtures. The table is one sequential baseline/current run, with one warm-up and the median of seven iterations (five for serialization). Timings describe these fixtures, not all PDFs or cold disk startup.
@@ -38,7 +42,7 @@ Full-page and tile pixel SHA-256 values match the old version exactly at all fou
 - Reuse immutable bytes for undo snapshots and a 64 KiB serialization callback buffer. Batch unique source pages and restore the exact requested order with one page-tree permutation.
 - Forward later opens before unpacking another engine. Store the application icon once in the launcher and reuse it for the window.
 
-Parallelism uses more private PDFium/CLR memory than one process. Inputs and image buffers are shared, but parser caches are not. Two workers are an intentional bound, not a claim that two is best on every computer. Worker render timeout is two minutes; unusually expensive pages can report a render error. Search, editing, printing and serialization still use the UI-owned PDFium instance and are not all background operations.
+Parallelism uses more private PDFium/CLR memory than one process. Inputs and image buffers are shared, but parser caches are not. Two workers are an intentional bound, not a claim that two is best on every computer. The v0.8.0 worker timeout was two minutes; v0.9.0 uses the tighter watchdogs described above. Unusually expensive pages can still report a render error. Search, editing, printing and serialization still use the UI-owned PDFium instance and are not all background operations.
 
 ## Compression measurements
 

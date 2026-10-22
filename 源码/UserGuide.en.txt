@@ -1,4 +1,4 @@
-Mini PDF 0.8.0 - User Guide
+Mini PDF 0.9.0 - User Guide
 Windows 10 / Windows 11 x64
 
 START AND LANGUAGE
@@ -12,7 +12,7 @@ Windows-owned file, certificate and printer-driver dialogs follow your Windows d
 Help offers this English guide first and a complete Chinese guide second. F1 opens English help.
 
 PERFORMANCE
-Ordinary first pages use cooperative progressive rendering. Complex pages, visible tiles
+Small text-only first pages use cooperative progressive rendering. Complex pages, visible tiles
 and thumbnails use up to two separate PDFium workers; each instance stays single threaded.
 Shared immutable input and raster mappings avoid large pinned arrays and explicit pixel copies.
 Page dimensions, visible-row indexes and a 64 MiB LRU canvas cache reduce repeated work.
@@ -38,6 +38,13 @@ Ctrl+Tab / Ctrl+Shift+Tab switch tabs. Ctrl+W or Ctrl+F4 closes the current tab.
 A tab's X or a middle click also closes it. Modified files prompt you to save.
 Opening the same file again selects its existing tab. Later Explorer opens enter the existing window.
 Ctrl+Shift+N opens an independent window. --new-window is the equivalent command-line option.
+
+TEXT SELECTION
+In Select mode, hold the left button and drag across pages in continuous or facing-page views.
+Hold near the top or bottom edge to scroll while extending the selection. Copy follows document
+order, including reverse drags. Highlight applies to every selected page in one undoable action.
+Existing hidden OCR layers can be selected; image-only scans still need external OCR.
+Sidebar page numbers have their own space below the thumbnails.
 
 READING AND ZOOM
 Ctrl+1 fits the page; Ctrl+2 fits width; Ctrl+0 selects actual size.
@@ -72,6 +79,12 @@ Image lets you choose an image and drag its placement area, retaining the aspect
 Auto selects suitable standard or system fonts. System fonts are not bundled in the app.
 Text entered in dialogs, searches, notes and PDFs is never translated by the interface language switch.
 
+COMPATIBILITY PREVIEW
+If a native raster worker crashes or times out, the app can retry with the built-in Windows PDF renderer.
+Some malformed images still have color differences. An amber notice marks compatibility preview;
+editing, image export and printing are unavailable for that document. Saving a copy preserves its data.
+This is not a guarantee that every malformed file will render correctly.
+
 SCANNED PDF AND OCR LAYERS
 Existing OCR text can be read, selected, copied and searched, including hidden text over a scan.
 Editing top-level OCR text preserves its invisible or transparent state and the original scan image.
@@ -91,6 +104,8 @@ Duplicate, rotate, remove, undo and redo are available. Apply commits one undoab
 Merge PDF files opens Combine Files; drop PDFs, PNG/JPEG/BMP images, reorder groups or pages,
 then combine into a new unsaved document. Original files stay intact. Images use A4 pages.
 Word/Excel import and unified source outlines/interactive forms are not provided.
+Tested layer default/view/print states survive import; arbitrary named alternatives are not all retained.
+Layered imports into encrypted targets cancel safely; encrypted sources can merge into new unencrypted PDFs.
 Export supports current-page PNG and all-document TXT. Ctrl+P opens the native print workspace.
 Select text, then choose Highlight on the toolbar or right-click menu: twelve presets plus Custom.
 Ctrl+Alt+H uses the most recent highlight color; with no text selected, draw a highlight area.
@@ -205,3 +220,9 @@ The app does not change your default PDF association.
 
 Project and English documentation: https://github.com/dmz1207/Mini-PDF
 Complete Chinese documentation: README.zh-CN.md in the repository and source folder.
+
+COMPATIBILITY TESTING
+The source Compatibility.md records 4,211 public PDF paths (4,206 distinct contents), exact test
+scope and remaining engine/import limitations. Optional-content layer configurations are not
+fully preserved by page importing. Malformed image/page-tree and extreme-complexity cases
+remain; passing these fixtures does not guarantee every PDF is free of defects.

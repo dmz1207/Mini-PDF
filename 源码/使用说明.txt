@@ -1,17 +1,24 @@
-Mini PDF 0.8.0 使用说明
+Mini PDF 0.9.0 使用说明
 
 English (README.md) | 简体中文 (README.zh-CN.md)
 
 轻量、原生的 Windows PDF 阅读器与编辑器。
 
-v0.8.0 预览版，单 EXE 约 2.87 MiB，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
+v0.9.0 预览版，单 EXE 约 2.88 MiB，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
 下载 Mini PDF.exe (https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · 源代码 (.) · 测试记录 (测试记录.md) · 反馈问题 (https://github.com/dmz1207/Mini-PDF/issues)
 
 本版打磨
 
+- 连续、双页视图支持跨页拖选、复制和高亮，上下边缘自动滚动，跨页高亮一次撤销。
+- 修复隐藏 OCR 命中、侧栏缩略图页码重叠，以及导入字体后编辑保存的四类公开崩溃。
+- 保留合并、插入、复制、提取和页面管理中的图层默认、视图及打印状态；同名但独立的图层不会混淆，页面文字和矢量保持原有形式。
+- 在私有导入副本中剔除异常 Contents 数组里缺失或非流引用，保留有效正文和原文件。
+- 异常 JPX 原生渲染崩溃时尝试 Windows 内置 PDF 渲染器；该样本颜色仍有偏差，因此明确显示只读兼容预览提示并限制编辑和打印。后台渲染进程有时间及内存上限。
+- 已测试 4,211 个公开 PDF 路径，去重 4,206 份；具体范围和仍有问题的特殊文件见源代码 Compatibility.md。
+
 - 复杂页面、可见区域分块、侧栏与合并缩略图使用后台渲染，最多按需启动两个独立 PDFium 工作进程；共享只读文档和图像缓冲区。
-- 普通首屏先使用短时渐进渲染，复杂页面交给后台。可见页面优先，空闲时预取相邻页。
+- 少量纯文字对象的首屏先使用短时渐进渲染，复杂页面交给后台。可见页面优先，空闲时预取相邻页。
 - 页面尺寸缓存、可见行索引和按尺寸/旋转区分的 LRU 图像缓存，减少缩放、切页和重复布局开销；画布缓存目标 64 MiB。
 - 合并按来源批量复用图片、字体，再一次恢复指定页序，兼顾生成速度和输出文件大小。
 - 重复页使用独立导入批次，避免间接批注随其他副本联动；图标只在启动器保留一份，窗口复用。
@@ -176,3 +183,5 @@ powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 应用和启动器采用 MIT，PDFium 及其依赖保留 third-party-licenses 中的许可证，已内置于帮助。这些是开源归属说明，不是激活或付费许可证，重新分发需保留。
 
 阅读界面及标签交互参考 SumatraPDF (https://github.com/sumatrapdfreader/sumatrapdf)，功能参考 PDF Looker Pro (https://github.com/dongfangxy/pdf-looker-pro) 和 Adobe 的打印/页面操作。应用代码独立实现，没有链接 SumatraPDF、MuPDF、Electron 或 Adobe SDK；MuPDF 仅用于开发中的独立结果验证。
+
+兼容性说明：源代码内 Compatibility.md 记录 4,211 个公开样本路径的实测结果。图层默认、视图及打印状态已覆盖测试，但任意命名的备用配置并非全部保留。向加密目标导入带图层页面会取消并回滚；加密源可合并为新建未加密文件。异常 JPX 会尝试 Windows 内置只读兼容预览，颜色仍可能偏差，禁止编辑、图片导出和打印；另存副本保留原有数据。仍有 3 份原生合并比较差异、部分页树及极端复杂文件限制，未承诺所有 PDF、打印机或系统环境均无缺陷。

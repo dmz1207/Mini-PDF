@@ -26,6 +26,7 @@ public sealed class MiniPdfRuntimeWatch : IDisposable {
     public void Dispose(){watcher.Dispose();}
 }
 public static class MiniPdfWindowProbe {
+    [DllImport("user32.dll")] public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
     [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr window, StringBuilder text, int length);
     public delegate bool ChildCallback(IntPtr window, IntPtr value);
     [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr window, ChildCallback callback, IntPtr value);
@@ -98,12 +99,15 @@ try {
     Add-Type -AssemblyName System.Drawing
     $iconHandle = [MiniPdfWindowProbe]::SendMessage($first.Child.MainWindowHandle,0x7f,[IntPtr]1,[IntPtr]::Zero)
     if ($iconHandle -eq [IntPtr]::Zero) { throw '单文件窗口缺少图标。' }
-    $expectedIcon = [Drawing.Icon]::ExtractAssociatedIcon($isolatedExe)
+    # Match the application manifest: system-DPI-aware extraction can select 48px while the shell host selects 32px.
+    $previousDpi = [MiniPdfWindowProbe]::SetThreadDpiAwarenessContext([IntPtr](-2))
+    try { $expectedIcon = [Drawing.Icon]::ExtractAssociatedIcon($isolatedExe) }
+    finally { if ($previousDpi -ne [IntPtr]::Zero) { [void][MiniPdfWindowProbe]::SetThreadDpiAwarenessContext($previousDpi) } }
     $actualIcon = [Drawing.Icon]::FromHandle($iconHandle).Clone()
     $expectedBitmap = $expectedIcon.ToBitmap()
     $actualBitmap = $actualIcon.ToBitmap()
     try {
-        if ($expectedBitmap.Size -ne $actualBitmap.Size) { throw '单文件窗口图标尺寸错误。' }
+        if ($expectedBitmap.Size -ne $actualBitmap.Size) { throw ('单文件窗口图标尺寸错误：预期 ' + $expectedBitmap.Size + '，实际 ' + $actualBitmap.Size) }
         for ($y=0; $y -lt $actualBitmap.Height; $y++) {
             for ($x=0; $x -lt $actualBitmap.Width; $x++) {
                 if ($actualBitmap.GetPixel($x,$y).ToArgb() -ne $expectedBitmap.GetPixel($x,$y).ToArgb()) { throw '窗口图标没有正确沿用启动器图标。' }

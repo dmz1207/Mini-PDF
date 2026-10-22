@@ -1,0 +1,82 @@
+{
+  "logical_pdfs": 4211,
+  "unique_pdfs": 4206,
+  "statuses": {
+    "ok": 4136,
+    "page_error": 7,
+    "open_error": 37,
+    "error": 11,
+    "ok_signed": 15,
+    "roundtrip_difference": 1,
+    "crash": 1,
+    "timeout": 3
+  },
+  "elapsed_seconds": 888.266,
+  "workers": 4,
+  "render_max_dimension": 600,
+  "timeout_seconds_per_pdf": 45,
+  "process_commit_limit_mib": 768,
+  "probe_build": {
+    "probe_sha256": "e745f946f6117e5beb2375bd04d38f3cd980486d1ff27b5f6fd63d729d3af898",
+    "core_sha256": "e35ba630181ed7227bdb769f30bb6cd88028d06f642d34307bbd8a5ebf46b26e",
+    "pdfium_sha256": "a318c39c137482dc4687c2973b7ec1c27fc1c20253cf2dc31928f922eab89e8f",
+    "render_max_dimension": 600,
+    "timeout_seconds_per_pdf": 45,
+    "process_commit_limit_mib": 768
+  },
+  "classification": {
+    "applicable_checks_pass": 4133,
+    "engine_open_or_page_difference": 14,
+    "password_required": 11,
+    "reference_also_cannot_complete": 21,
+    "no_displayable_pages": 7,
+    "engine_only_merge_difference": 3,
+    "signed_preservation_pass": 15,
+    "xfa_only_unsupported": 2,
+    "engine_only_roundtrip_difference": 1,
+    "native_process_failure": 1,
+    "probe_time_limit": 3
+  },
+  "merge_mismatches": 3,
+  "signed_checks_do_not_edit": true,
+  "permission_skipped_edit_checks": 10,
+  "sources": [
+    {
+      "key": "pdfium",
+      "repo": "chromium/pdfium",
+      "commit": "a84323421e94f484faca52dd9d027934eba42ab8",
+      "route": "direct",
+      "archive_bytes": 8951427,
+      "extracted_bytes": 6109660
+    },
+    {
+      "key": "pdfjs",
+      "repo": "mozilla/pdf.js",
+      "commit": "d213fafd7b43212b93788c910d5cdc9e30d0dd8c",
+      "route": "direct",
+      "archive_bytes": 104909909,
+      "extracted_bytes": 124645065
+    },
+    {
+      "key": "verapdf",
+      "repo": "veraPDF/veraPDF-corpus",
+      "commit": "bb75f4f0073d9350dfd058c0162a367e6fadf25e",
+      "route": "direct",
+      "archive_bytes": 140980346,
+      "extracted_bytes": 167346059
+    }
+  ],
+  "baseline": {
+    "statuses": {
+      "ok": 4132,
+      "page_error": 7,
+      "open_error": 37,
+      "error": 11,
+      "ok_signed": 15,
+      "crash": 5,
+      "roundtrip_difference": 1,
+      "timeout": 3
+    },
+    "merge_mismatches": 143
+  }
+}

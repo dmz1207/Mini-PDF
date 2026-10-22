@@ -137,7 +137,7 @@ namespace MiniPdf {
                     form.SetLayout(PageLayout.Single);view.Continuous=true;view.Rebuild(true);r=view.LayoutRectangles;Assert(r[1].Y>=r[0].Bottom,"continuous view arranges pages vertically");form.Navigate(12);form.ApplyZoom("100%");Application.DoEvents();Assert(form.Document.Index==12&&view.PageRectangle.IntersectsWith(view.ClientRectangle),"zoom preserves current page in long continuous document");form.Navigate(5);view.Continuous=false;view.Rebuild(true);Assert(view.LayoutRectangles[0].IsEmpty&&!view.LayoutRectangles[5].IsEmpty,"noncontinuous view keeps selected page");
                     form.Close();Application.DoEvents();
                 }
-                NativeUiEditing(directory);InteropAndFailures(directory);LayeredAndTiles(directory);TabsAndFit(directory);HeaderDragging(directory);TitleFrame(directory);Features(directory);LanguageUi(directory);Performance(directory);
+                NativeUiEditing(directory);InteropAndFailures(directory);LayeredAndTiles(directory);TabsAndFit(directory);HeaderDragging(directory);TitleFrame(directory);Features(directory);LanguageUi(directory);Performance(directory);SelectionCoverage(directory);
                 log.AppendLine("TOTAL: "+assertions+" assertions, 0 failures");File.WriteAllText(Path.Combine(directory,"self-test.txt"),log.ToString(),new UTF8Encoding(true));return 0;
             }catch(Exception e){log.AppendLine(e.ToString());File.WriteAllText(Path.Combine(directory,"self-test.txt"),log.ToString(),new UTF8Encoding(true));return 1;}
         }

@@ -642,6 +642,7 @@ namespace MiniPdf
         internal static PdfDocument MergePages(IList<MergePage> pages)
         {
             var output = new PdfDocument();
+            LayerImport layerMetadata = null;
             try
             {
                 output.Handle = N.FPDF_CreateNewDocument();
@@ -668,6 +669,7 @@ namespace MiniPdf
                     }
                     list.Add(i);
                 }
+                layerMetadata = new LayerImport(sources);
                 var order = new int[pages.Count];
                 int at = 0;
                 bool reordered = false;
@@ -694,7 +696,7 @@ namespace MiniPdf
                             if (selected[i] != at + i)
                                 reordered = true;
                         }
-                        Check(N.FPDF_ImportPagesByIndex(output.Handle, source.Handle, indices, (uint)indices.Length,
+                        Check(N.FPDF_ImportPagesByIndex(output.Handle, layerMetadata.Prepared(source).Handle, indices, (uint)indices.Length,
                                                         at) != 0,
                               UiText.Get("无法合并页面。"));
                         at += indices.Length;
@@ -720,6 +722,11 @@ namespace MiniPdf
                             N.FPDF_ClosePage(page);
                     }
                 }
+                // Reload the unmodified-font serialization so imported fonts are no longer
+                // marked as newly created by PDFium when later text is added.
+                byte[] imported = layerMetadata.Restore(output.Serialize(false));
+                output.CloseHandles();
+                output.Load(imported);
                 output.CanEdit = output.CanPrint = true;
                 output.revision = output.clock = 1;
                 output.OpenPage(0);
@@ -730,6 +737,7 @@ namespace MiniPdf
                 output.Dispose();
                 throw;
             }
+            finally { if (layerMetadata != null) layerMetadata.Dispose(); }
         }
     }
 }

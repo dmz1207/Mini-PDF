@@ -1,0 +1,1885 @@
+[
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bad_page_type.pdf",
+    "git_sha": "a6aae03ab978340caec5dc93ebfa4bc1cf75cba4",
+    "status": "page_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": 2,
+    "rendered_pages": 1,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": 100.8927,
+    "peak_commit_bytes": 22560768,
+    "baseline_status": "page_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 2,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          300,
+          600,
+          "11a0e943ccf6c090cb7cee2a5869ab019c5555033d7be976a084611af6e1b984"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          600,
+          300,
+          "b28a15bcba0fc1ca70b1578d2af26030857d02a32aa75721628d1d32d0225f17"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_1124998.pdf",
+    "git_sha": "4368222efc9ea6604b87478e090056a09209b307",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 52.8954,
+    "peak_commit_bytes": 21450752,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 1
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_1324189.pdf",
+    "git_sha": "9652398837f3e6149e8ae41897467ae805d570cb",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 50.386900000000004,
+    "peak_commit_bytes": 21540864,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_1324503.pdf",
+    "git_sha": "2ce7425991fc42f8d0afd29cf149d89aa21521e2",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 50.9294,
+    "peak_commit_bytes": 21430272,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_216.pdf",
+    "git_sha": "2d5987277f19ef2117a02719d90ee8ddb3f717d7",
+    "status": "error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 56.181900000000006,
+    "peak_commit_bytes": 21491712,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FzErrorFormat: code=7: malformed page tree"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_298.pdf",
+    "git_sha": "5b195597fd0e094e5aa5579f32cf128de13530e4",
+    "status": "open_error",
+    "classification": "no_displayable_pages",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 56.782500000000006,
+    "peak_commit_bytes": 21430272,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_325_a.pdf",
+    "git_sha": "1d0fae702b10b33fab232e5d41b900be474cb60a",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 64.5057,
+    "peak_commit_bytes": 21512192,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FileDataError: Failed to open file '<source.pdf>' as type pdf."
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_325_b.pdf",
+    "git_sha": "943a36831aacdb14d92b6b27bc810856cdf4bbc2",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 51.6143,
+    "peak_commit_bytes": 21491712,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FileDataError: Failed to open file '<source.pdf>' as type pdf."
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_343.pdf",
+    "git_sha": "1ad838708a895fb9741ea82909dc3ed53e8aa4fe",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 49.2881,
+    "peak_commit_bytes": 21524480,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_344.pdf",
+    "git_sha": "c015c66791bead957eaa6b6a14a57506144c76ef",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 54.5734,
+    "peak_commit_bytes": 21475328,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FileDataError: Failed to open file '<source.pdf>' as type pdf."
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_355.pdf",
+    "git_sha": "0fc53b050e67c1daa5ceddab843d6fd99e68bce6",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 53.623000000000005,
+    "peak_commit_bytes": 21430272,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_360.pdf",
+    "git_sha": "6e69c7bfedf5caede8aeeb118c0d79da55c18eb5",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 45.3536,
+    "peak_commit_bytes": 21495808,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_424613308.pdf",
+    "git_sha": "75d01c5e3137b3742564fe09a69378060dd8621a",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 61.942400000000006,
+    "peak_commit_bytes": 21516288,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FileDataError: Failed to open file '<source.pdf>' as type pdf."
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_451830.pdf",
+    "git_sha": "f209bb3ed10f6eb2ddc26f3672da98de1fcfdd01",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 60.7838,
+    "peak_commit_bytes": 21454848,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_454695.pdf",
+    "git_sha": "382194f9e87e8f7c277c939bdcae668829841fe0",
+    "status": "open_error",
+    "classification": "no_displayable_pages",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 51.151700000000005,
+    "peak_commit_bytes": 21499904,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_544880.pdf",
+    "git_sha": "687ea321ccf9d50b29db0a8a68061e0d69797610",
+    "status": "error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 52.717600000000004,
+    "peak_commit_bytes": 21483520,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FzErrorFormat: code=7: cycle in page tree"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_644.pdf",
+    "git_sha": "59d6ad2357b31187096c759fbc0f5401c436f68b",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 53.6907,
+    "peak_commit_bytes": 21458944,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 1
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/bug_664284.pdf",
+    "git_sha": "126938a4c8367407154a16d4754d7c242f18e951",
+    "status": "ok",
+    "classification": "engine_only_merge_difference",
+    "pages": 1,
+    "rendered_pages": 1,
+    "merge_preserved": false,
+    "annotation_preserved": true,
+    "native_error": null,
+    "phase": "done",
+    "elapsed_ms": 291.5833,
+    "peak_commit_bytes": 25464832,
+    "baseline_status": "ok",
+    "baseline_merge_preserved": false,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "first_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6",
+        "last_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "last_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6"
+      },
+      "roundtrip": {
+        "pages": 1,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "first_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6",
+        "last_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "last_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6"
+      },
+      "roundtrip_visual_equal": true,
+      "roundtrip_text_equal": true,
+      "merged": {
+        "pages": 2,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "first_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6",
+        "last_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "last_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6"
+      },
+      "merged_visual_equal": true,
+      "merged_text_equal": true
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/circular_viewer_ref.pdf",
+    "git_sha": "f97d068a068516c2e49172028609c662a9d8d869",
+    "status": "error",
+    "classification": "no_displayable_pages",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 172.51000000000002,
+    "peak_commit_bytes": 21491712,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/cropped_no_overlap.pdf",
+    "git_sha": "35bf792663492d491ae61877fed8564dfa71d561",
+    "status": "page_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": 1,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": 76.3998,
+    "peak_commit_bytes": 21659648,
+    "baseline_status": "page_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/document_aactions.pdf",
+    "git_sha": "b921772672e0f5014de9c9e2402a9021d0fa48fd",
+    "status": "page_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": 3,
+    "rendered_pages": 1,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": 97.4548,
+    "peak_commit_bytes": 22953984,
+    "baseline_status": "page_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 3,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/encrypted.pdf",
+    "git_sha": "b489d56ff24b18ab09a51835e02fd8ac29cb53ad",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 65.50370000000001,
+    "peak_commit_bytes": 21553152,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 0
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/encrypted_hello_world_r2.pdf",
+    "git_sha": "79ebbdc3705e56e714bde2091870b544b63a1fe2",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 64.8664,
+    "peak_commit_bytes": 21512192,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 1
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/encrypted_hello_world_r2_bad_okey.pdf",
+    "git_sha": "637812bbda2106a777f7d328b4ba7c5fedc498e8",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 59.804,
+    "peak_commit_bytes": 21463040,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FileDataError: Failed to open file '<source.pdf>' as type pdf."
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/encrypted_hello_world_r3.pdf",
+    "git_sha": "d74f05e71f209cbf22ecd4b18c7e4636803e9992",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 67.7063,
+    "peak_commit_bytes": 21495808,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 1
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/encrypted_hello_world_r3_bad_okey.pdf",
+    "git_sha": "721c20b6e21c0c518a2fc7abb6866994126b6b48",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 59.2282,
+    "peak_commit_bytes": 21495808,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FileDataError: Failed to open file '<source.pdf>' as type pdf."
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/encrypted_hello_world_r5.pdf",
+    "git_sha": "82c550e4324e75cfa578a3219b5eabe8c477e496",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 49.892700000000005,
+    "peak_commit_bytes": 21512192,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 1
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/encrypted_hello_world_r6.pdf",
+    "git_sha": "b507a151f778ee83040340d652bf048f247b5cda",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 64.547,
+    "peak_commit_bytes": 21467136,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 1
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/javascript/xfa_specific/bug_1042915.pdf",
+    "git_sha": "36a2c8bd2c2e77c21adfa31fbc51a806e156b390",
+    "status": "error",
+    "classification": "xfa_only_unsupported",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 77.17840000000001,
+    "peak_commit_bytes": 21557248,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": true
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/javascript/xfa_specific/bug_1043510.pdf",
+    "git_sha": "24a3cf10c0b4ed1b40ffc84e6e3b45d45742d646",
+    "status": "error",
+    "classification": "xfa_only_unsupported",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 63.398500000000006,
+    "peak_commit_bytes": 21475328,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": true
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/named_dests_old_style.pdf",
+    "git_sha": "df7f04a63aa74ce0b57d8a0982ad3f2c819801f9",
+    "status": "page_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": 2,
+    "rendered_pages": 1,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": 138.0859,
+    "peak_commit_bytes": 23048192,
+    "baseline_status": "page_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 2,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "first_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6",
+        "last_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "last_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6"
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/parser_rebuildxref_error_notrailer.pdf",
+    "git_sha": "93f56fba9b2d4f78c8350ec496fbff4db72fd2de",
+    "status": "open_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 73.1033,
+    "peak_commit_bytes": 21467136,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          600,
+          "bd0a89aa5ecf36261696825d98162d07ddb08e9398fc2c6872f33baf943de838"
+        ],
+        "first_text": "42694c44a5d70e7018a16156ebcf40c1fe33a9222fdb9e2bca4b7cfd2d9078f6",
+        "last_pixels": [
+          600,
+          600,
+          "bd0a89aa5ecf36261696825d98162d07ddb08e9398fc2c6872f33baf943de838"
+        ],
+        "last_text": "42694c44a5d70e7018a16156ebcf40c1fe33a9222fdb9e2bca4b7cfd2d9078f6"
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/repeat_viewer_ref.pdf",
+    "git_sha": "72bd7e484761c4565c79b8831079d1f15c68879e",
+    "status": "error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 59.2716,
+    "peak_commit_bytes": 21561344,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FzErrorSyntax: code=8: invalid key in dict"
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/trailer_as_hexstring.pdf",
+    "git_sha": "bd94c4779d318fa6e68d819fffba8bc62079e569",
+    "status": "open_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 54.9361,
+    "peak_commit_bytes": 21483520,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/trailer_unterminated.pdf",
+    "git_sha": "be59202db4531c0fef85f5940ca59ebed3192e31",
+    "status": "open_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 89.28840000000001,
+    "peak_commit_bytes": 21475328,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/unsupported_feature.pdf",
+    "git_sha": "eb7ee08fa4eca9e27b2f9b17fa97883feea599e2",
+    "status": "page_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": 3,
+    "rendered_pages": 1,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": 143.68630000000002,
+    "peak_commit_bytes": 22863872,
+    "baseline_status": "page_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 3,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfium",
+    "source": "testing/resources/viewer_ref.pdf",
+    "git_sha": "ca53771694468b32c0b21b0d3825deeb4b0f2cc8",
+    "status": "ok",
+    "classification": "engine_only_merge_difference",
+    "pages": 5,
+    "rendered_pages": 5,
+    "merge_preserved": false,
+    "annotation_preserved": true,
+    "native_error": null,
+    "phase": "done",
+    "elapsed_ms": 401.4467,
+    "peak_commit_bytes": 26136576,
+    "baseline_status": "ok",
+    "baseline_merge_preserved": false,
+    "reference": {
+      "source": {
+        "pages": 5,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "first_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6",
+        "last_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "last_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6"
+      },
+      "roundtrip": {
+        "pages": 5,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "first_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6",
+        "last_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "last_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6"
+      },
+      "roundtrip_visual_equal": true,
+      "roundtrip_text_equal": true,
+      "merged": {
+        "pages": 2,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "first_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6",
+        "last_pixels": [
+          464,
+          600,
+          "1dc3cc7c9cb66ae2541460909dc35d0d5ebbb08b4489dcedbaaf6e736fc36d89"
+        ],
+        "last_text": "7e2a7c7ebd8382f0166cd785f31547b12ba6da364f23552ffa42c8d2686e70e6"
+      },
+      "merged_visual_equal": true,
+      "merged_text_equal": true
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/Brotli-Prototype-FileA.pdf",
+    "git_sha": "a341672dea2f2325749d175a76fa62a704e3fd9b",
+    "status": "error",
+    "classification": "engine_open_or_page_difference",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 86.22710000000001,
+    "peak_commit_bytes": 21450752,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 25,
+        "repaired": false,
+        "optional_content": true,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          389,
+          "58409195ded569e86a59dd7f60e6865c56d8934822ef76e244d68d7715993e4c"
+        ],
+        "first_text": "8c228cb8e0839ec78b0df524597089befc5cc95d52e7929d630d18560a8250bb",
+        "last_pixels": [
+          600,
+          389,
+          "a26f1422ab3ff6d4fd6440205ac3be0dd44d85a298a6f2cab21a4013137e0bb8"
+        ],
+        "last_text": "efe1eabc9e88a495ed0b26801611eb79b3a5a18ed3fb4f7bd49cee009000b0c8"
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/Pages-tree-refs.pdf",
+    "git_sha": "106de472c250ec1a77932a5f45e926942df49964",
+    "status": "page_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": 2,
+    "rendered_pages": 1,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": 143.86020000000002,
+    "peak_commit_bytes": 23355392,
+    "baseline_status": "page_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FzErrorFormat: code=7: cycle in page tree"
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/REDHAT-1531897-0.pdf",
+    "git_sha": "8978e307c506d65172a1614122592e5a18fd0a98",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 66.49940000000001,
+    "peak_commit_bytes": 21479424,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/ThuluthFeatures.pdf",
+    "git_sha": "95e6b74191e565a1b63f3456559086363e915db2",
+    "status": "ok",
+    "classification": "engine_only_merge_difference",
+    "pages": 1,
+    "rendered_pages": 1,
+    "merge_preserved": false,
+    "annotation_preserved": true,
+    "native_error": null,
+    "phase": "done",
+    "elapsed_ms": 737.1618000000001,
+    "peak_commit_bytes": 30294016,
+    "baseline_status": "ok",
+    "baseline_merge_preserved": false,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          425,
+          "8854a98e12809460578ec6efb05d3fcbcf22bac088c86988687c4f2d6f0dec26"
+        ],
+        "first_text": "e6a28bb9c7ace8df504d18ad929a567119584e861c60aab53ef1403ae198b8d9",
+        "last_pixels": [
+          600,
+          425,
+          "8854a98e12809460578ec6efb05d3fcbcf22bac088c86988687c4f2d6f0dec26"
+        ],
+        "last_text": "e6a28bb9c7ace8df504d18ad929a567119584e861c60aab53ef1403ae198b8d9"
+      },
+      "roundtrip": {
+        "pages": 1,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          425,
+          "8854a98e12809460578ec6efb05d3fcbcf22bac088c86988687c4f2d6f0dec26"
+        ],
+        "first_text": "e6a28bb9c7ace8df504d18ad929a567119584e861c60aab53ef1403ae198b8d9",
+        "last_pixels": [
+          600,
+          425,
+          "8854a98e12809460578ec6efb05d3fcbcf22bac088c86988687c4f2d6f0dec26"
+        ],
+        "last_text": "e6a28bb9c7ace8df504d18ad929a567119584e861c60aab53ef1403ae198b8d9"
+      },
+      "roundtrip_visual_equal": true,
+      "roundtrip_text_equal": true,
+      "merged": {
+        "pages": 2,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          425,
+          "8854a98e12809460578ec6efb05d3fcbcf22bac088c86988687c4f2d6f0dec26"
+        ],
+        "first_text": "e6a28bb9c7ace8df504d18ad929a567119584e861c60aab53ef1403ae198b8d9",
+        "last_pixels": [
+          600,
+          425,
+          "8854a98e12809460578ec6efb05d3fcbcf22bac088c86988687c4f2d6f0dec26"
+        ],
+        "last_text": "e6a28bb9c7ace8df504d18ad929a567119584e861c60aab53ef1403ae198b8d9"
+      },
+      "merged_visual_equal": true,
+      "merged_text_equal": true
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/boundingBox_invalid.pdf",
+    "git_sha": "f02c3a4c94f1c4aa51e4ed15ea3ff3ed5c218c61",
+    "status": "page_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": 3,
+    "rendered_pages": 2,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": 144.6301,
+    "peak_commit_bytes": 24309760,
+    "baseline_status": "page_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 3,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          464,
+          600,
+          "07caaf99ef096a2e985358b9f96127799dae64710345c99d627ddef6276a7deb"
+        ],
+        "first_text": "29f165f92a0b12decc550ef16a3cb5c6a16034c78ac80c021f7b67e12594fc5e",
+        "last_pixels": [
+          464,
+          600,
+          "c807c8788b08016e7c0c8d188e9dfb4a96824c1652b5da034281c7515f5719fd"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/bug1020226.pdf",
+    "git_sha": "655b4fa7f9e42bd1e5e76e3615930c27f928504e",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 57.550900000000006,
+    "peak_commit_bytes": 21471232,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/bug1250079.pdf",
+    "git_sha": "f8825753ada0f4f1cc90c6055b13ba9cc9170471",
+    "status": "open_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 60.7475,
+    "peak_commit_bytes": 21520384,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          150,
+          "4ddd82db9389642d8cbef312e31c4ce326577abc64755d6213fe2ca183ab0e16"
+        ],
+        "first_text": "0f34c5719f0e1a66094d16c384a6e0a28195442417c37617f827e2644aada385",
+        "last_pixels": [
+          600,
+          150,
+          "4ddd82db9389642d8cbef312e31c4ce326577abc64755d6213fe2ca183ab0e16"
+        ],
+        "last_text": "0f34c5719f0e1a66094d16c384a6e0a28195442417c37617f827e2644aada385"
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/bug1606566.pdf",
+    "git_sha": "cc22ca288712c23a92b7e4c579fdff7a8383df96",
+    "status": "open_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 49.993100000000005,
+    "peak_commit_bytes": 21458944,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          150,
+          "6e6f0404934cf8f095ff0747e3f8d477835422efa63131787bdf0b3f7ddbec8a"
+        ],
+        "first_text": "4b29dc516764f50584b737716d5fdecd4a8040f59b4a53327bae3c05e7580bd9",
+        "last_pixels": [
+          600,
+          150,
+          "6e6f0404934cf8f095ff0747e3f8d477835422efa63131787bdf0b3f7ddbec8a"
+        ],
+        "last_text": "4b29dc516764f50584b737716d5fdecd4a8040f59b4a53327bae3c05e7580bd9"
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/bug1782186.pdf",
+    "git_sha": "450b715a9b13a9cf9e596cbe817a0de441175bef",
+    "status": "open_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 53.250600000000006,
+    "peak_commit_bytes": 21479424,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": false,
+        "optional_content": true,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          425,
+          "27e46aee37febe38e9485a99cc344f5481ba510411cab62f4978667b1bad1f8b"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          600,
+          425,
+          "27e46aee37febe38e9485a99cc344f5481ba510411cab62f4978667b1bad1f8b"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/bug1980958.pdf",
+    "git_sha": "9470dcd44dfd6ec7f192adddc4e250f922421f0a",
+    "status": "open_error",
+    "classification": "engine_open_or_page_difference",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 46.9217,
+    "peak_commit_bytes": 21479424,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          600,
+          "ecbc9c6a8ce5483b759d5f8f640f5af587ae63113ab58abaf95ed4f288203311"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          600,
+          600,
+          "ecbc9c6a8ce5483b759d5f8f640f5af587ae63113ab58abaf95ed4f288203311"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/crypt_filters.pdf",
+    "git_sha": "818aac2a17513cdc41f521c21fa918cbed9bf0ca",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 48.7104,
+    "peak_commit_bytes": 21475328,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FileDataError: Failed to open file '<source.pdf>' as type pdf."
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/issue19484_1.pdf",
+    "git_sha": "2e8a37de01e6b62ca19ce9ff72985eee0f5ebc3b",
+    "status": "error",
+    "classification": "no_displayable_pages",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 45.316900000000004,
+    "peak_commit_bytes": 21565440,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": false,
+        "optional_content": true,
+        "tagged": false,
+        "xfa": false
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/issue19484_2.pdf",
+    "git_sha": "4a8caeb74cfffb503bf331312cdfaed07e346695",
+    "status": "error",
+    "classification": "no_displayable_pages",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 48.8217,
+    "peak_commit_bytes": 21422080,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": false,
+        "optional_content": true,
+        "tagged": false,
+        "xfa": false
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/issue2391-2.pdf",
+    "git_sha": "e3683e5fd82090315bced29f4fe87723e8db5624",
+    "status": "roundtrip_difference",
+    "classification": "engine_only_roundtrip_difference",
+    "pages": 1,
+    "rendered_pages": 1,
+    "merge_preserved": true,
+    "annotation_preserved": true,
+    "native_error": null,
+    "phase": "done",
+    "elapsed_ms": 317.1249,
+    "peak_commit_bytes": 24657920,
+    "baseline_status": "roundtrip_difference",
+    "baseline_merge_preserved": true,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          424,
+          600,
+          "0e8147f2bf630e5c1604e87c4003e24ffd4a2f4d21de182a33103b8fb48c6f68"
+        ],
+        "first_text": "141f317f3d160a0f8fba5706238c9c1d2f25227a093ac81b07f25810105cfcd7",
+        "last_pixels": [
+          424,
+          600,
+          "0e8147f2bf630e5c1604e87c4003e24ffd4a2f4d21de182a33103b8fb48c6f68"
+        ],
+        "last_text": "141f317f3d160a0f8fba5706238c9c1d2f25227a093ac81b07f25810105cfcd7"
+      },
+      "roundtrip": {
+        "pages": 1,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          424,
+          600,
+          "0e8147f2bf630e5c1604e87c4003e24ffd4a2f4d21de182a33103b8fb48c6f68"
+        ],
+        "first_text": "141f317f3d160a0f8fba5706238c9c1d2f25227a093ac81b07f25810105cfcd7",
+        "last_pixels": [
+          424,
+          600,
+          "0e8147f2bf630e5c1604e87c4003e24ffd4a2f4d21de182a33103b8fb48c6f68"
+        ],
+        "last_text": "141f317f3d160a0f8fba5706238c9c1d2f25227a093ac81b07f25810105cfcd7"
+      },
+      "roundtrip_visual_equal": true,
+      "roundtrip_text_equal": true,
+      "merged": {
+        "pages": 2,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          424,
+          600,
+          "0e8147f2bf630e5c1604e87c4003e24ffd4a2f4d21de182a33103b8fb48c6f68"
+        ],
+        "first_text": "141f317f3d160a0f8fba5706238c9c1d2f25227a093ac81b07f25810105cfcd7",
+        "last_pixels": [
+          424,
+          600,
+          "0e8147f2bf630e5c1604e87c4003e24ffd4a2f4d21de182a33103b8fb48c6f68"
+        ],
+        "last_text": "141f317f3d160a0f8fba5706238c9c1d2f25227a093ac81b07f25810105cfcd7"
+      },
+      "merged_visual_equal": true,
+      "merged_text_equal": true
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/issue9105_other.pdf",
+    "git_sha": "513713df9ff246f37abb134cdf0d1db4bd74f9f3",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 65.5921,
+    "peak_commit_bytes": 21446656,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "ValueError: bad xref"
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/jpx_numcomps.pdf",
+    "git_sha": "b80ce99946bd9ec260ab24fd17ee0ae9b83a4c29",
+    "status": "crash",
+    "classification": "native_process_failure",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": null,
+    "peak_commit_bytes": 20037632,
+    "baseline_status": "crash",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 1,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          600,
+          413,
+          "e86cc15a14d4d3d8e8f93123be5f36650121bd888ece8b5a83b37fa978e78a0d"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          600,
+          413,
+          "e86cc15a14d4d3d8e8f93123be5f36650121bd888ece8b5a83b37fa978e78a0d"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/poppler-395-0-fuzzed.pdf",
+    "git_sha": "24f5fff609c51fad464f20dbdf64061846b2a486",
+    "status": "error",
+    "classification": "no_displayable_pages",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 77.0177,
+    "peak_commit_bytes": 21504000,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/poppler-742-0-fuzzed.pdf",
+    "git_sha": "cc9758b35d55bd15768e8ebaf17048455880feee",
+    "status": "open_error",
+    "classification": "reference_also_cannot_complete",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 3,
+    "phase": "open",
+    "elapsed_ms": 73.9323,
+    "peak_commit_bytes": 21487616,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source_error": "FileDataError: Failed to open file '<source.pdf>' as type pdf."
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/poppler-937-0-fuzzed.pdf",
+    "git_sha": "fe47fd57dc440d0982d95c5bb0312de2e34f023d",
+    "status": "error",
+    "classification": "no_displayable_pages",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "open",
+    "elapsed_ms": 78.5691,
+    "peak_commit_bytes": 21536768,
+    "baseline_status": "error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 0,
+        "repaired": true,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/pr6531_1.pdf",
+    "git_sha": "b1f905f59f6117d9289f2b3384d36c472502329e",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 63.1745,
+    "peak_commit_bytes": 21483520,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 0
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/pr6531_2.pdf",
+    "git_sha": "396e18b1fd9bd491c318bc49c0fac3d95c33ca2a",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 58.1139,
+    "peak_commit_bytes": 21458944,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 1
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/print_protection.pdf",
+    "git_sha": "e40bd77d7a91beff93d2a867c7495339b0a7121b",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 70.7576,
+    "peak_commit_bytes": 21524480,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 0
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/saslprep-r6.pdf",
+    "git_sha": "26ea1dedd35704f2426cd50d03cee0f91f8fd826",
+    "status": "open_error",
+    "classification": "password_required",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": 4,
+    "phase": "open",
+    "elapsed_ms": 83.9006,
+    "peak_commit_bytes": 21659648,
+    "baseline_status": "open_error",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "password_required": true,
+        "pages": 1
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/tiling-pattern-tiny-steps-large.pdf",
+    "git_sha": "17c54bc531910368814b2683bae68440c5e93422",
+    "status": "timeout",
+    "classification": "probe_time_limit",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": null,
+    "peak_commit_bytes": 21749760,
+    "baseline_status": "timeout",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "reference_process": {
+        "exit_code": 1,
+        "timed_out": true,
+        "peak_commit_bytes": 48668672
+      }
+    }
+  },
+  {
+    "corpus": "pdfjs",
+    "source": "test/pdfs/tiling-pattern-tiny-steps.pdf",
+    "git_sha": "45d87b5d5e767ec759ad672395976226ed0c1b8f",
+    "status": "timeout",
+    "classification": "probe_time_limit",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:0",
+    "elapsed_ms": null,
+    "peak_commit_bytes": 20283392,
+    "baseline_status": "timeout",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "reference_process": {
+        "exit_code": 1,
+        "timed_out": true,
+        "peak_commit_bytes": 47058944
+      }
+    }
+  },
+  {
+    "corpus": "verapdf",
+    "source": "Isartor test files/PDFA-1b/6.1 File structure/6.1.12 Implementation Limits/isartor-6-1-12-t01-fail-a.pdf",
+    "git_sha": "8b489ef211f6af7d382bc60586cd72dcedb927ec",
+    "status": "timeout",
+    "classification": "probe_time_limit",
+    "pages": null,
+    "rendered_pages": 0,
+    "merge_preserved": null,
+    "annotation_preserved": null,
+    "native_error": null,
+    "phase": "render:3450",
+    "elapsed_ms": null,
+    "peak_commit_bytes": 38809600,
+    "baseline_status": "timeout",
+    "baseline_merge_preserved": null,
+    "reference": {
+      "source": {
+        "pages": 10000,
+        "repaired": false,
+        "optional_content": false,
+        "tagged": false,
+        "xfa": false,
+        "first_pixels": [
+          424,
+          600,
+          "57943fc74b3eb2260f834563720f11e5c9edc9a6393755af82d421aa73d634e9"
+        ],
+        "first_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "last_pixels": [
+          424,
+          600,
+          "57943fc74b3eb2260f834563720f11e5c9edc9a6393755af82d421aa73d634e9"
+        ],
+        "last_text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  }
+]

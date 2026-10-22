@@ -64,7 +64,7 @@ namespace MiniPdf {
             var tools=TopMenu(UiText.Get("工具(&T)"));Add(tools,UiText.Get("抓手 / 拖动页面"),Keys.None,delegate{SetTool(Tool.Hand);});Add(tools,UiText.Get("阅读与文字选择"),Keys.None,delegate{SetTool(Tool.Read);});Add(tools,UiText.Get("编辑页面对象"),Keys.None,delegate{SetTool(Tool.Object);});Add(tools,UiText.Get("添加文字"),Keys.None,delegate{SetTool(Tool.Text);});Add(tools,UiText.Get("插入图片…"),Keys.None,ChooseImage);Add(tools,UiText.Get("高亮所选文字"),Keys.Control|Keys.Alt|Keys.H,delegate{HighlightSelection(highlightInk);});Add(tools,UiText.Get("下划线"),Keys.None,delegate{SetTool(Tool.Underline);});Add(tools,UiText.Get("删除线"),Keys.None,delegate{SetTool(Tool.Strike);});Add(tools,UiText.Get("手写"),Keys.None,delegate{SetTool(Tool.Ink);});Add(tools,UiText.Get("矩形"),Keys.None,delegate{SetTool(Tool.Rectangle);});Add(tools,UiText.Get("便签"),Keys.None,delegate{SetTool(Tool.Note);});
             var signing=TopMenu(UiText.Get("签名与水印(&S)"));Add(signing,UiText.Get("放置可见签名…"),Keys.None,VisibleSignature);Add(signing,UiText.Get("添加水印…"),Keys.None,AddWatermark);Add(signing,UiText.Get("移除水印…"),Keys.None,RemoveWatermark);signing.DropDownItems.Add(new ToolStripSeparator());Add(signing,UiText.Get("证书数字签名…"),Keys.None,SignWithCertificate);Add(signing,UiText.Get("签名和证书…"),Keys.None,ShowSignatures);Add(signing,UiText.Get("查看证书文件…"),Keys.None,ViewCertificateFile);
             var language=TopMenu(UiText.Get("语言(&L)"));englishItem=new ToolStripMenuItem("English"){Checked=UiText.English};chineseItem=new ToolStripMenuItem("简体中文"){Checked=!UiText.English};englishItem.Click+=delegate{SetLanguage(true);};chineseItem.Click+=delegate{SetLanguage(false);};language.DropDownItems.Add(englishItem);language.DropDownItems.Add(chineseItem);
-            var help=TopMenu(UiText.Get("帮助(&H)"));Add(help,UiText.Get("使用说明（English）"),Keys.F1,delegate{ShowHelp(true);});Add(help,UiText.Get("使用说明（简体中文）"),Keys.None,delegate{ShowHelp(false);});Add(help,UiText.Get("开源许可"),Keys.None,ShowLicenses);Add(help,UiText.Get("关于"),Keys.None,delegate{MessageBox.Show(this,UiText.Get("Mini PDF 0.7\n\nWindows 10 / 11 x64\nWindows 系统控件 + PDFium 158.0.8111\n源码采用 MIT 许可证；PDFium 及其依赖遵循随附许可证。\n\n离线运行，无广告、无遥测。"),UiText.Get("关于Mini PDF"),MessageBoxButtons.OK,MessageBoxIcon.Information);});
+            var help=TopMenu(UiText.Get("帮助(&H)"));Add(help,UiText.Get("使用说明（English）"),Keys.F1,delegate{ShowHelp(true);});Add(help,UiText.Get("使用说明（简体中文）"),Keys.None,delegate{ShowHelp(false);});Add(help,UiText.Get("开源许可"),Keys.None,ShowLicenses);Add(help,UiText.Get("关于"),Keys.None,delegate{MessageBox.Show(this,UiText.Get("Mini PDF 0.9.0\n\nWindows 10 / 11 x64\nWindows 系统控件 + PDFium 158.0.8111\n源码采用 MIT 许可证；PDFium 及其依赖遵循随附许可证。\n\n离线运行，无广告、无遥测。"),UiText.Get("关于Mini PDF"),MessageBoxButtons.OK,MessageBoxIcon.Information);});
             toolbar=Bar();mainMenuButton=new ToolStripDropDownButton{Image=Glyph("menu"),DisplayStyle=ToolStripItemDisplayStyle.Image,ShowDropDownArrow=false,ToolTipText=UiText.Get("菜单（F10）"),AccessibleName=UiText.Get("菜单"),ImageScaling=ToolStripItemImageScaling.None,AutoSize=false,Size=new Size(36,28),Padding=new Padding(4,0,4,0),Margin=Padding.Empty,Overflow=ToolStripItemOverflow.Never};while(menu.Items.Count>0){var item=menu.Items[0];menu.Items.Remove(item);mainMenuButton.DropDownItems.Add(item);}mainMenuButton.DropDown.Font=Font;mainMenuButton.DropDown.Renderer=flatRenderer;toolbar.Items.Add(mainMenuButton);sidebarButton=Button(toolbar,UiText.Get("侧栏"),ToggleSidebar,UiText.Get("显示 / 隐藏侧边栏（F12；兼容 F9）"),"sidebar");sidebarButton.Checked=true;sidebarButton.Overflow=ToolStripItemOverflow.Never;Button(toolbar,UiText.Get("打开"),ChooseOpen,UiText.Get("打开 PDF (Ctrl+O)"),"open");Button(toolbar,UiText.Get("保存"),delegate{Save(false);},UiText.Get("保存 (Ctrl+S)"),"save");Button(toolbar,"",ToggleReadingMode,UiText.Get("以阅读模式查看文件（Ctrl+H；Esc 退出）"),"read");toolbar.Items.Add(new ToolStripSeparator());
             undoButton=Button(toolbar,UiText.Get("撤销"),delegate{Run(delegate{Document.Undo();});},UiText.Get("撤销 (Ctrl+Z)"),"undo");redoButton=Button(toolbar,UiText.Get("重做"),delegate{Run(delegate{Document.Redo();});},UiText.Get("重做 (Ctrl+Y)"),"redo");toolbar.Items.Add(new ToolStripSeparator());
             Button(toolbar,"‹",delegate{TurnPage(-1);},UiText.Get("上一页"),null);pageNumber=new ToolStripTextBox{BorderStyle=BorderStyle.FixedSingle,AutoSize=false,Width=36,TextBoxTextAlign=HorizontalAlignment.Center,Text="—"};pageNumber.KeyDown+=delegate(object sender,KeyEventArgs e){if(e.KeyCode==Keys.Enter&&Document!=null){int p;if(int.TryParse(pageNumber.Text,out p))Navigate(p-1);e.SuppressKeyPress=true;canvas.Focus();}};toolbar.Items.Add(pageNumber);pageTotal=new ToolStripLabel("/ —");toolbar.Items.Add(pageTotal);Button(toolbar,"›",delegate{TurnPage(1);},UiText.Get("下一页"),null);toolbar.Items.Add(new ToolStripSeparator());
@@ -103,7 +103,40 @@ namespace MiniPdf {
         public void UpdateZoom(float value){string text=(value*100).ToString("0.###",System.Globalization.CultureInfo.InvariantCulture)+"%";if(zoomStatus!=null)zoomStatus.Text=text;if(zoomBox!=null){syncingZoom=true;zoomBox.Text=text;syncingZoom=false;zoomEdited=false;}}
         internal bool ApplyZoom(string input){if(Document==null||canvas==null)return false;string value=(input??"").Trim().Replace("%","").Replace("％","");double percent;if(!double.TryParse(value,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out percent)||Double.IsNaN(percent)||Double.IsInfinity(percent)||percent<1||percent>6400){UpdateZoom(canvas.Zoom);Report(UiText.Get("请输入 1% 到 6400% 之间的缩放比例，可带小数。"));return false;}canvas.Fit=0;canvas.Zoom=(float)(percent/100);zoomEdited=false;canvas.Rebuild(false);return true;}
         void ClearThumbnails(){if(thumbs!=null)thumbs.Clear();}
-        void DrawPage(object sender,DrawItemEventArgs e){if(e.Index<0)return;e.DrawBackground();if(Document==null||e.Index>=Document.Count)return;try{var sz=Document.PageSize(e.Index);int w=84,h=Math.Max(1,(int)(w*sz.Height/sz.Width));if(h>108){h=108;w=Math.Max(1,(int)(h*sz.Width/sz.Height));}if(thumbs==null)thumbs=new ThumbnailCache(pages,24);Bitmap bmp=thumbs.Get(Document,e.Index,w,h,0);int x=e.Bounds.X+(e.Bounds.Width-w)/2,y=e.Bounds.Y+3;if(bmp!=null)e.Graphics.DrawImageUnscaled(bmp,x,y);else e.Graphics.FillRectangle(Brushes.White,x,y,w,h);using(var pen=new Pen((e.State&DrawItemState.Selected)!=0?Color.FromArgb(24,117,152):Color.FromArgb(210,216,222),(e.State&DrawItemState.Selected)!=0?2:1))e.Graphics.DrawRectangle(pen,x-1,y-1,w+1,h+1);TextRenderer.DrawText(e.Graphics,(e.Index+1).ToString(),Font,new Rectangle(e.Bounds.X,e.Bounds.Bottom-24,e.Bounds.Width,20),e.ForeColor,TextFormatFlags.HorizontalCenter);}catch(Exception ex){Report(ex.Message);}}
+        internal static void ThumbnailLayout(Rectangle row, SizeF size, Font font, float scale,
+                                             out Rectangle picture, out Rectangle number)
+        {
+            int pad = Math.Max(3, (int)Math.Round(3 * scale));
+            int label = Math.Max(font.Height + 4, (int)Math.Round(20 * scale));
+            number = new Rectangle(row.X, Math.Max(row.Top, row.Bottom - label - pad), row.Width, label);
+            int availableWidth = Math.Max(1, Math.Min(row.Width - 2 * pad - 2, (int)Math.Round(84 * scale)));
+            int availableHeight = Math.Max(1, number.Top - row.Top - 2 * pad - 2);
+            double factor = Math.Min(availableWidth / Math.Max(1.0, size.Width), availableHeight / Math.Max(1.0, size.Height));
+            int width = Math.Max(1, (int)Math.Floor(size.Width * factor));
+            int height = Math.Max(1, (int)Math.Floor(size.Height * factor));
+            picture = new Rectangle(row.X + (row.Width - width) / 2, row.Y + pad, width, height);
+        }
+        void DrawPage(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            e.DrawBackground();
+            if (Document == null || e.Index >= Document.Count) return;
+            try
+            {
+                Rectangle picture, number;
+                ThumbnailLayout(e.Bounds, Document.PageSize(e.Index), Font, e.Graphics.DpiY / 96f, out picture, out number);
+                if (thumbs == null) thumbs = new ThumbnailCache(pages, 24);
+                Bitmap bitmap = thumbs.Get(Document, e.Index, picture.Width, picture.Height, 0);
+                if (bitmap != null) e.Graphics.DrawImageUnscaled(bitmap, picture.Location);
+                else e.Graphics.FillRectangle(Brushes.White, picture);
+                bool selected = (e.State & DrawItemState.Selected) != 0;
+                using (var pen = new Pen(selected ? Color.FromArgb(24,117,152) : Color.FromArgb(210,216,222), selected ? 2 : 1))
+                    e.Graphics.DrawRectangle(pen, picture.X - 1, picture.Y - 1, picture.Width + 1, picture.Height + 1);
+                TextRenderer.DrawText(e.Graphics, (e.Index + 1).ToString(), Font, number, e.ForeColor,
+                                      TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+            }
+            catch (Exception error) { Report(error.Message); }
+        }
         void PopulateOutline(){outline.BeginUpdate();outline.Nodes.Clear();if(Document!=null){foreach(var b in Document.Bookmarks())outline.Nodes.Add(BookmarkNode(b));if(outline.Nodes.Count==0)outline.Nodes.Add(new TreeNode(UiText.Get("此文档没有目录")));}outline.EndUpdate();}
         static TreeNode BookmarkNode(Bookmark b){var n=new TreeNode(b.Title){Tag=b.Page};foreach(var c in b.Children)n.Nodes.Add(BookmarkNode(c));return n;}
         sealed class NoteItem {public int Index;public string Contents,Label;public override string ToString(){return Label;}}
@@ -119,7 +152,7 @@ namespace MiniPdf {
         }
         public void Run(Action action){if(Document==null)return;int index=Document.Index,count=Document.Count;try{UseWaitCursor=true;action();lastHit=null;UpdateDocument(true,Document.Index==index&&Document.Count==count);}catch(Exception e){MessageBox.Show(this,e.Message,UiText.Get("操作未完成"),MessageBoxButtons.OK,MessageBoxIcon.Warning);UpdateDocument(true,true);}finally{UseWaitCursor=false;canvas.Focus();}}
         public void Navigate(int index){if(Document==null||index<0||index>=Document.Count||index==Document.Index)return;try{Document.OpenPage(index);building=true;pages.SelectedIndex=index;pageNumber.Text=(index+1).ToString();PopulateAnnotations();building=false;canvas.ClearSelection();canvas.Rebuild(true);}catch(Exception e){building=false;Report(e.Message);}}
-        public void ActivatePageFromCanvas(int index){if(Document==null||index<0||index>=Document.Count||index==Document.Index)return;try{Document.OpenPage(index);building=true;pages.SelectedIndex=index;pageNumber.Text=(index+1).ToString();PopulateAnnotations();canvas.ClearSelection();}catch(Exception e){Report(e.Message);}finally{building=false;}}
+        public void ActivatePageFromCanvas(int index,bool keepSelection=false){if(Document==null||index<0||index>=Document.Count||index==Document.Index)return;try{bool preserved=keepSelection&&canvas.PreserveTextSelection();Document.OpenPage(index);building=true;pages.SelectedIndex=index;pageNumber.Text=(index+1).ToString();PopulateAnnotations();if(!preserved)canvas.ClearSelection();}catch(Exception e){Report(e.Message);}finally{building=false;}}
         public void TurnPage(int direction){if(Document!=null)Navigate(canvas.PageTurnTarget(direction));}
         internal void RotateView(int amount){canvas.ViewRotation=(canvas.ViewRotation+amount+4)%4;canvas.ClearSelection();canvas.Rebuild(true);}
         void NewDocument(){TrackDocument(PdfDocument.New());}
@@ -141,7 +174,7 @@ namespace MiniPdf {
         void DeleteSelection(){var pick=canvas.Selected;if(pick!=null)Run(delegate{Document.Remove(pick);});}
         void ResizeSelection(){var pick=canvas.Selected;if(Document==null||pick==null||pick.IsAnnotation)return;string value=Dialogs.Ask(this,UiText.Get("调整对象大小"),UiText.Get("输入缩放百分比，例如 120 表示放大到 120%："),"100",false);if(value==null)return;float ratio;if(!float.TryParse(value,out ratio)||ratio<=0||ratio>10000){Report(UiText.Get("请输入 0 到 10000 之间的百分比。"));return;}Run(delegate{Document.Resize(pick,(pick.Bounds.right-pick.Bounds.left)*ratio/100,(pick.Bounds.top-pick.Bounds.bottom)*ratio/100);});canvas.Selected=Document.PickIndex(pick.ObjectIndex);SetTool(Tool.Object);SelectionChanged();canvas.Invalidate();}
         void Copy(){if(Document==null)return;string text=canvas.CopiedText();if(!String.IsNullOrEmpty(text)){try{Clipboard.SetText(text);Report(UiText.Get("已复制文字"));}catch(Exception e){Report(e.Message);}}}
-        void SelectAll(){if(Document==null)return;SetTool(Tool.Read);canvas.TextStart=0;canvas.TextCount=N.FPDFText_CountChars(Document.TextPage);canvas.Invalidate();}
+        void SelectAll(){if(Document==null)return;SetTool(Tool.Read);canvas.ClearSelection();canvas.TextStart=0;canvas.TextCount=N.FPDFText_CountChars(Document.TextPage);canvas.Invalidate();}
         void Fit(int mode){if(Document==null)return;canvas.Fit=mode;canvas.Rebuild(true);}
         internal void SetLayout(PageLayout mode){canvas.UseLayout(mode);singleItem.Checked=mode==PageLayout.Single;doubleItem.Checked=mode==PageLayout.Double;bookItem.Checked=mode==PageLayout.Book;gridItem.Checked=mode==PageLayout.Grid;continuousItem.Checked=canvas.Continuous;Report(mode==PageLayout.Grid?UiText.Get("多页网格 · Ctrl+滚轮调整大小和列数 · 双击页面返回单页阅读"):ToolHint(canvas.Mode));}
         void ZoomBy(float factor){if(Document==null)return;canvas.Fit=0;canvas.Zoom*=factor;canvas.Rebuild(false);}

@@ -1,0 +1,47 @@
+name: PDF compatibility or application bug
+description: Report a reproducible Mini PDF issue.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please describe one reproducible problem. A public sample is helpful; do not post private, confidential, or copyrighted files without permission.
+        报告一个可以复现的问题即可；样本可选，请勿公开隐私、机密或无权分发的文件。
+  - type: input
+    id: version
+    attributes:
+      label: Mini PDF version / 软件版本
+      placeholder: "For example: 0.9.0.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and display scaling / 系统及显示缩放
+      placeholder: "Windows 10 22H2, x64, 125%"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area / 功能
+      options:
+        - Opening or rendering / 打开与渲染
+        - Text selection or OCR layer / 文字选择与双层 PDF
+        - Editing, annotations or save / 编辑批注与保存
+        - Merge or page management / 合并与页面管理
+        - Printing / 打印
+        - Signatures or watermarks / 签名与水印
+        - Portable startup or window controls / 启动与窗口
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and actual versus expected behavior / 复现步骤及预期
+      description: Include the page number, zoom/layout, selected tool, and whether the original file opens in another reader.
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Optional public sample, screenshots, or error / 可选样本与报错
+      description: A link to a public PDF or a minimal reproduction is enough. Keep your original file and remove sensitive information before sharing.

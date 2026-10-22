@@ -81,7 +81,7 @@ namespace MiniPdf {
             {"开源许可","Open-source licenses"},
             {"关于","About"},
             {"关于Mini PDF","About Mini PDF"},
-            {"Mini PDF 0.7\n\nWindows 10 / 11 x64\nWindows 系统控件 + PDFium 158.0.8111\n源码采用 MIT 许可证；PDFium 及其依赖遵循随附许可证。\n\n离线运行，无广告、无遥测。","Mini PDF 0.7\n\nWindows 10 / 11 x64\nNative Windows controls + PDFium 158.0.8111\nApplication source: MIT. PDFium and its dependencies retain their included licenses.\n\nOffline, no advertising or telemetry."},
+            {"Mini PDF 0.9.0\n\nWindows 10 / 11 x64\nWindows 系统控件 + PDFium 158.0.8111\n源码采用 MIT 许可证；PDFium 及其依赖遵循随附许可证。\n\n离线运行，无广告、无遥测。","Mini PDF 0.9.0\n\nWindows 10 / 11 x64\nNative Windows controls + PDFium 158.0.8111\nApplication source: MIT. PDFium and its dependencies retain their included licenses.\n\nOffline, no advertising or telemetry."},
             {"菜单（F10）","Menu (F10)"},
             {"菜单","Menu"},
             {"侧栏","Sidebar"},

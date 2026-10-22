@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.0 — 2026-10-22
+
+- Add cross-page text selection, reverse/document-order copying, edge scrolling and one-step multi-page highlighting.
+- Improve hidden OCR hit testing and separate thumbnail/page-number layout at multiple display scales.
+- Preserve imported/existing font programs and normalize merged font state; fix four public font crash cases after merge/insert/duplicate plus text editing.
+- Restrict the UI quick raster path to small text-only pages; isolate malformed image failures in background workers and suppress worker crash dialogs.
+- Preserve default/view/print optional-content group states across merge, insert, duplicate, extract and page organization; keep unrelated groups with identical names distinct. Imported pages remain vectors and text.
+- Repair missing/non-stream references in malformed Contents arrays on private import copies, retaining valid content and the original file.
+- Retry the tested crashing JPX page with Windows’ built-in PDF renderer. Its colors are not equivalent, so compatibility preview is clearly marked read-only and cannot be printed; each owned raster worker has time and memory bounds.
+- Add pinned, hash-verified public-corpus download/probe/reference tools and per-file compatibility results for 4,211 PDF paths. Reduce baseline merge comparison differences from 143 to 3 and native failures from 5 to 1. Retain unresolved cases and independent evidence.
+- Keep PDFium unchanged and exclude test corpora/development tools from the single portable EXE.
+
 ## 0.8.0 — 2026-10-21
 
 - Add bounded background raster workers with immutable shared inputs, mapped pixel buffers, visible-page priority, adjacent-page prefetch, cancellation and process recovery.

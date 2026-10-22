@@ -28,7 +28,7 @@ namespace MiniPdf
         Book,
         Grid
     }
-    internal sealed class PdfCanvas : NativeViewport
+    internal sealed partial class PdfCanvas : NativeViewport
     {
         readonly MainWindow owner;
         sealed class CachedFrame
@@ -192,7 +192,7 @@ namespace MiniPdf
                 return null;
             // Ordinary first pages can finish before a worker would start. The
             // progressive callback yields complex pages back to the background pool.
-            if (!prefetch && !quickTried && images.Count == 0 && (long)region.Width * region.Height <= 1200000)
+            if (!prefetch && !quickTried && images.Count == 0 && (long)region.Width * region.Height <= 1200000 && Doc.CanRenderQuickly(index))
             {
                 quickTried = true;
                 var first = new RenderFrame(region.Width, region.Height);
@@ -238,6 +238,7 @@ namespace MiniPdf
                                                frame.Dispose();
                                                return;
                                            }
+                                           if (RenderPool.UsesWindows(Doc.GetRenderSource(), index)) Doc.RestrictCompatibilityPreview();
                                            StoreFrame(key, frame);
                                            Invalidate();
                                        });
@@ -356,6 +357,8 @@ namespace MiniPdf
             Selected = null;
             TextStart = -1;
             TextCount = 0;
+            textAnchorPage = textEndPage = textEndChar = -1;
+            StopSelectionScroll();
             Markers.Clear();
             down = false;
             Invalidate();
@@ -553,7 +556,10 @@ namespace MiniPdf
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
                 ClearImages();
+                if (selectionScroll != null) selectionScroll.Dispose();
+            }
             base.Dispose(disposing);
         }
         public Rectangle DeviceRect(N.Rect r)
@@ -687,14 +693,16 @@ namespace MiniPdf
                         CachedImage(next, rect, new Rectangle(0, 0, rect.Width, rect.Height), true);
                 }
             }
+            if (Doc.CompatibilityPreview)
+            {
+                string notice=UiText.English ? "Compatibility preview: verify colors. Editing and printing are unavailable." : "兼容预览：颜色可能不同，请核对；编辑和打印不可用。";
+                var box=new Rectangle(8,Math.Max(8,ClientSize.Height-30),Math.Max(1,Math.Min(ClientSize.Width-16,650)),24);
+                using(var background=new SolidBrush(Color.FromArgb(255,246,212))) g.FillRectangle(background,box);
+                TextRenderer.DrawText(g,notice,Font,box,Color.FromArgb(103,69,0),TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis);
+            }
             using (var highlight = new SolidBrush(Color.FromArgb(95, 255, 211, 73))) foreach (var r in Markers)
                 g.FillRectangle(highlight, DeviceRect(r));
-            if (TextStart >= 0 && TextCount > 0)
-            {
-                using (var brush = new SolidBrush(Color.FromArgb(75, 48, 129, 220))) foreach (var r in Doc.TextRects(
-                                                                                                  TextStart, TextCount))
-                    g.FillRectangle(brush, DeviceRect(r));
-            }
+            PaintTextSelection(g);
             if (Selected != null)
             {
                 Rectangle r = DeviceRect(Selected.Bounds);
@@ -804,9 +812,7 @@ namespace MiniPdf
             {
                 Selected = null;
                 Markers.Clear();
-                startChar = Doc.CharAt(startPoint);
-                TextStart = startChar;
-                TextCount = startChar < 0 ? 0 : 1;
+                BeginTextSelection();
             }
             else if (Mode == Tool.Ink)
             {
@@ -830,15 +836,7 @@ namespace MiniPdf
             if (down)
             {
                 current = e.Location;
-                if (Mode == Tool.Read && startChar >= 0)
-                {
-                    int end = Doc.CharAt(PagePoint(e.Location));
-                    if (end >= 0)
-                    {
-                        TextStart = Math.Min(startChar, end);
-                        TextCount = Math.Abs(end - startChar) + 1;
-                    }
-                }
+                if (Mode == Tool.Read) UpdateTextSelection(e.Location);
                 if (Mode == Tool.Ink && stroke.Count < 20000 &&
                     (Math.Abs(e.X - screenStroke[screenStroke.Count - 1].X) +
                          Math.Abs(e.Y - screenStroke[screenStroke.Count - 1].Y) >
@@ -880,7 +878,9 @@ namespace MiniPdf
             }
             if (!down || e.Button != MouseButtons.Left || Doc == null)
                 return;
+            if (Mode == Tool.Read) UpdateTextSelection(e.Location);
             down = false;
+            StopSelectionScroll();
             Capture = false;
             current = e.Location;
             var endPoint = PagePoint(e.Location);
@@ -889,6 +889,8 @@ namespace MiniPdf
             {
                 if (distance < 5 && TextCount <= 1)
                     owner.OpenLink(startPoint);
+                else if (textEndPage >= 0 && textEndPage != Doc.Index)
+                { owner.ActivatePageFromCanvas(textEndPage,true); SyncPageSize(); }
                 Invalidate();
                 return;
             }
@@ -967,6 +969,7 @@ namespace MiniPdf
         protected override void OnMouseCaptureChanged(EventArgs e)
         {
             base.OnMouseCaptureChanged(e);
+            StopSelectionScroll();
             if (!Capture && (down || panning))
             {
                 down = false;
@@ -1078,7 +1081,7 @@ namespace MiniPdf
             }
             if (best != Doc.Index && bestArea > 0 && activeArea < bestArea * 0.8)
             {
-                owner.ActivatePageFromCanvas(best);
+                owner.ActivatePageFromCanvas(best,true);
                 SyncPageSize();
                 if (Fit != 0)
                     Rebuild(false);
@@ -1100,7 +1103,7 @@ namespace MiniPdf
         {
             if (Selected != null && Selected.Type == 1)
                 return Selected.Text;
-            return Doc == null ? "" : Doc.SelectedText(TextStart, TextCount);
+            return SelectionText();
         }
         internal long CacheBytesForTest
         {

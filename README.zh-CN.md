@@ -4,14 +4,26 @@
 
 **轻量、原生的 Windows PDF 阅读器与编辑器。**
 
-v0.8.0 预览版，单 EXE 约 **2.87 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
+v0.9.0 预览版，单 EXE 约 **2.88 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](源码) · [测试记录](源码/测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
-## 本版打磨
+## v0.9.0 更新
+
+- 支持连续、双页视图跨页拖选，反向拖选仍按文档顺序复制；靠近上下边缘自动滚动，跨页高亮可一次撤销。
+- 改善隐藏 OCR 文字层命中，覆盖透明文字、嵌套 Form、扫描图上下方文字层和旋转页。使用公开扫描 PDF 与六种中文样本验证；纯图片文件仍需外部 OCR。
+- 缩略图与页码分别预留空间，验证 100%、125%、150%、200% 显示缩放，避免重叠。
+- 保存时保留原有、导入字体，只在安全情况下压缩新字体；合并后重新载入字体状态，修复四种公开字体样本在合并、插入、复制后加文字保存时崩溃。
+- 界面线程的快速渲染仅用于少量纯文字对象，图片和 Form 交给后台进程；实测异常 JPX 图片不会终止阅读进程，后续正常渲染可恢复。
+- 保留合并、插入、复制、提取和页面管理中的图层默认、视图及打印状态；同名但独立的图层不会混淆，页面文字和矢量保持原有形式。
+- 在私有导入副本中剔除异常 Contents 数组里缺失或非流引用，保留有效正文和原文件。
+- 异常 JPX 原生渲染崩溃时尝试 Windows 内置 PDF 渲染器；该样本颜色仍有偏差，因此明确显示只读兼容预览提示并限制编辑和打印。后台渲染进程有时间及内存上限。
+- 已测试 4,211 个公开 PDF 路径，按内容去重后为 4,206 份，来自固定版本的 PDFium、PDF.js、veraPDF。通过、密码、损坏文件、超时及尚存问题见 [兼容性报告](源码/Compatibility.md)。测试库不放入软件。
+
+## 之前的 v0.8.0 优化
 
 - 复杂页面、可见区域分块、侧栏与合并缩略图使用后台渲染，最多按需启动两个独立 PDFium 工作进程；共享只读文档和图像缓冲区。
-- 普通首屏先使用短时渐进渲染，复杂页面交给后台。可见页面优先，空闲时预取相邻页。
+- 少量纯文字对象的首屏先使用短时渐进渲染，复杂页面交给后台。可见页面优先，空闲时预取相邻页。
 - 页面尺寸缓存、可见行索引和按尺寸/旋转区分的 LRU 图像缓存，减少缩放、切页和重复布局开销；画布缓存目标 64 MiB。
 - 合并按来源批量复用图片、字体，再一次恢复指定页序，兼顾生成速度和输出文件大小。
 - 重复页使用独立导入批次，避免间接批注随其他副本联动；图标只在启动器保留一份，窗口复用。
@@ -35,7 +47,7 @@ v0.8.0 预览版，单 EXE 约 **2.87 MiB**，面向 Windows 10 / 11 x64。使�
 - 合并工作区可拖入 PDF 或图片，展开每个文件的页面缩略图，拖动文件组或多选页面跨文件排序，生成新文档。
 - 页面管理支持多选、拖动排序、复制、旋转、删除、撤销/重做；整次调整可应用到当前文档并一次撤销。
 - 顶部增加选择、抓手、高亮、页面快捷入口；V 回到选择，H 进入抓手，Esc 退出抓手，按住空格临时平移。
-- 选中文字后直接高亮，十二种预设颜色及自定义颜色，支持右键菜单。
+- 连续或双页视图可按住左键跨页选择，靠近上下边缘自动滚动；复制按文档顺序，跨页高亮一次撤销。选中文字后直接高亮，十二种预设颜色及自定义颜色，支持右键菜单。
 
 ## 使用方法
 
@@ -159,17 +171,20 @@ powershell -ExecutionPolicy Bypass -File .\源码\build.ps1
 
 首次构建下载固定 PDFium 158.0.8111.0 x64 并检查 SHA-256。下载、编译和测试均位于项目 work 目录，输出根目录 Mini PDF.exe。
 
-完整测试需要开发用 pypdf、reportlab、Pillow、pymupdf、cryptography 和 OpenSSL，不随应用分发：
+完整测试先按 [兼容性报告](源码/Compatibility.md) 下载固定版本公开样本。开发依赖见 requirements-dev.txt，另需 OpenSSL；均不随应用分发：
 
 ~~~powershell
 python .\源码\verify_pdf.py fixtures .\work\tests
 python .\源码\verify_features.py fixtures .\work\tests
 python .\源码\verify_fixes.py fixtures .\work\tests
+python .\源码\selection_fixtures.py .\work\tests .\work\compatibility
 powershell -ExecutionPolicy Bypass -File .\源码\build.ps1 -Test
 python .\源码\verify_pdf.py verify .\work\tests
 python .\源码\verify_features.py verify .\work\tests
 python .\源码\verify_fixes.py verify .\work\tests
 python .\源码\verify_merge.py verify .\work\tests
+python .\源码\verify_selection.py .\work\tests
+python .\源码\verify_compatibility.py .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 ~~~
 
@@ -180,3 +195,5 @@ powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 应用和启动器采用 MIT，PDFium 及其依赖保留 third-party-licenses 中的许可证，已内置于帮助。这些是开源归属说明，不是激活或付费许可证，重新分发需保留。
 
 阅读界面及标签交互参考 [SumatraPDF](https://github.com/sumatrapdfreader/sumatrapdf)，功能参考 [PDF Looker Pro](https://github.com/dongfangxy/pdf-looker-pro) 和 Adobe 的打印/页面操作。应用代码独立实现，没有链接 SumatraPDF、MuPDF、Electron 或 Adobe SDK；MuPDF 仅用于开发中的独立结果验证。
+
+公开兼容性测试的范围与剩余内核异常，见 [兼容性报告](源码/Compatibility.md)。已验证的图层默认、视图及打印状态会保留，但任意命名的备用配置并非全部保留。向已加密目标导入带图层的页面会取消并回滚，以保留目标加密；加密源合并到新建未加密文件可用。仍有 3 份原生合并比较差异待处理。

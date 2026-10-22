@@ -6,14 +6,26 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.8.0 preview** is one approximately **2.87 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.9.0 preview** is one approximately **2.88 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-## Refined in v0.8.0
+## Refined in v0.9.0
+
+- Drag text across pages in continuous and facing-page views; copy in document order and highlight the entire selection in one undoable action. Hold near the top or bottom edge to extend selection while scrolling.
+- Improve hit testing for hidden OCR layers, including transparent text and nested Forms. Verify a public scanned PDF and six Chinese scan/text-layer fixtures; image-only files still need external OCR.
+- Give sidebar thumbnails and page numbers separate space at 100%, 125%, 150% and 200% display scaling.
+- Preserve existing/imported font programs instead of applying new-font subsetting indiscriminately. Normalize merged font state before later text edits; fix four public CJK/font crash cases across merge, insert and duplicate workflows.
+- Restrict the cooperative UI render attempt to small text-only pages. Images and Forms render in background processes, which recover from the tested malformed JPX failure.
+- Preserve default/view/print optional-content group states across merge, insert, duplicate, extract and page organization; keep unrelated groups with identical names distinct. Imported pages remain vectors and text.
+- Repair missing/non-stream references in malformed Contents arrays on private import copies, retaining valid content and the original file.
+- Retry the tested crashing JPX page with Windows’ built-in PDF renderer. Its colors are not equivalent, so compatibility preview is clearly marked read-only and cannot be printed; each owned raster worker has time and memory bounds.
+- Test 4,211 public PDF paths from pinned PDFium, PDF.js and veraPDF corpora (4,206 distinct contents). Record actual passes, passwords, malformed files, time limits and remaining engine/import differences in [Compatibility](Compatibility.md); the test corpus is not bundled.
+
+## Earlier v0.8.0 improvements
 
 - Use a bounded raster pool (up to two independent PDFium processes) for complex pages, viewport tiles and thumbnails. Immutable shared input and raster mappings avoid per-worker PDF copies and explicit pixel-buffer copying.
-- A cooperative progressive-render fast path handles ordinary first pages; expensive rendering continues in workers. Visible requests take priority over neighboring-page prefetch.
+- A cooperative progressive-render fast path handles small text-only first pages; expensive rendering continues in workers. Visible requests take priority over neighboring-page prefetch.
 - Reuse dimension/rotation keyed LRU images across unchanged layouts and zoom revisits. Cache page dimensions and index visible rows for long documents.
 - Batch merged pages by source so shared images/fonts are imported once, then restore the requested page order in one permutation. Repeated pages use separate batches to preserve independent content and annotation editing.
 - Reuse immutable bytes for undo snapshots and a bounded serialization buffer. Forward later opens directly to the running window before unpacking another engine.
@@ -83,7 +95,9 @@ The collapsed menu, rounded draggable document tabs and window buttons share one
 | Navigation | Thumbnails, outline, current-page annotations, search, text selection/copy, internal and web links |
 | Export | Current-page PNG, document TXT and printing |
 | History | Per-document undo/redo, up to twelve steps with a 64 MiB target |
-| Save | Reload validation, atomic replacement, font subsetting and preservation of existing encryption |
+| Save | Reload validation, atomic replacement, safe new-font subsetting and preservation of existing encryption |
+
+In continuous or facing-page views, hold the left mouse button and drag across page boundaries. Drag near a vertical edge to scroll; copy keeps document order even when selecting backwards. Highlight applies to all selected pages and one undo removes the entire operation. Selection alone leaves the PDF unchanged.
 
 Select text in Select mode, then choose a color from Highlight or the right-click menu. Ctrl+Alt+H uses the most recent highlight color. With no text selected, the highlight tool supports a rectangular area. Highlights and other markup use standard PDF annotations.
 
@@ -91,7 +105,7 @@ Select text in Select mode, then choose a color from Highlight or the right-clic
 
 Open Pages or press Ctrl+Shift+P to manage the active document. Expand a file group to see its individual pages. Ctrl-click selects multiple pages; Shift-click selects a range. Hold the left mouse button to drag selected pages to another position. Rotate, duplicate, remove, undo and redo are available. Apply commits the whole operation to the active document; its normal undo restores the previous state. Destinations attached to retained original pages are preserved during reorder/delete; links to deleted pages may no longer resolve.
 
-Combine Files accepts dropped or selected PDF, PNG, JPEG and BMP files. Drag collapsed groups to change file order, or expand groups and drag pages across them. Images are placed on A4 pages. Combining creates a new unsaved document and preserves the original files. Word/Excel import is not provided. Source outlines and document-level form structures are not combined into a unified outline or interactive form. Each workspace supports up to 10,000 pages and twenty workspace undo steps.
+Combine Files accepts dropped or selected PDF, PNG, JPEG and BMP files. Drag collapsed groups to change file order, or expand groups and drag pages across them. Images are placed on A4 pages. Combining creates a new unsaved document and preserves the original files. Word/Excel import is not provided. Source outlines and document-level interactive form structures are not combined into unified structures. Default/view/print optional-content group states are preserved in the tested merge workflows, including distinct groups with identical names; arbitrary named alternative configurations are not all retained. Importing layered pages into an encrypted target is rejected without changing that target; combining an encrypted source into a new unencrypted output is supported. Three native merge comparisons remain unresolved; see [Compatibility](Compatibility.md). Each workspace supports up to 10,000 pages and twenty workspace undo steps.
 
 The + / - square expands or collapses a file without adding a separate cover. The file title above its first page is the handle for moving the whole file; the image below selects and moves that page. Other thumbnails retain their source filename and original page number. Hover for the full filename. Wider thumbnail gaps and darker gray dividers separate files; the blue capped line marks the actual insertion point, with a destination hint. Hover over a collapsed destination to expand it; edge dragging scrolls. Releasing outside the board or pressing Esc cancels the move.
 
@@ -115,7 +129,7 @@ Closing a changed Combine Files workspace asks whether to save the current arran
 
 ### Scanned PDFs with a text layer
 
-Existing OCR text can be read, selected, copied, searched and edited when it is a top-level text object. Editing preserves the text's invisibility/transparency and the original scan. Changing the recognition layer does not alter letters inside the scan image. Nested Form text remains readable/searchable but cannot be edited character by character. No OCR engine is bundled.
+Existing OCR text can be read, selected across pages, copied, searched and edited when it is a top-level text object. Editing preserves the text's invisibility/transparency and the original scan. Changing the recognition layer does not alter letters inside the scan image. Nested Form text remains readable/searchable but cannot be edited character by character. No OCR engine is bundled.
 
 ## Printing
 
@@ -179,7 +193,7 @@ The portable folder must be writable. Save documents outside the runtime directo
 
 ## Current limits
 
-This remains a preview. PDF text editing is object-based, not flowing paragraph editing; replacement fonts may change metrics. Outlined or nested Form text cannot be edited character by character. No built-in OCR, general interactive form filling, permanent redaction, measurement, paragraph reflow, annotation replies or Adobe cloud workflows are included. Existing links can be followed but new link creation is not provided. Very large PDFs can exceed the history/cache targets, especially with multiple tabs.
+This remains a preview. PDF text editing is object-based, not flowing paragraph editing; replacement fonts may change metrics. Outlined or nested Form text cannot be edited character by character. No built-in OCR, general interactive form filling, permanent redaction, measurement, paragraph reflow, annotation replies or Adobe cloud workflows are included. Existing links can be followed but new link creation is not provided. Very large PDFs can exceed the history/cache targets, especially with multiple tabs. Public adversarial tests still expose engine-level image, page-tree and layer-import limitations; see [Compatibility](Compatibility.md) for the exact scope and remaining cases.
 
 ## Build and verification
 
@@ -191,25 +205,30 @@ powershell -ExecutionPolicy Bypass -File .\源码\build.ps1
 
 The script uses the Windows .NET Framework C# compiler, downloads pinned PDFium **158.0.8111.0 x64** without V8/XFA and verifies SHA-256. Downloads, builds and tests stay in the project's work directory. Output is Mini PDF.exe in the root.
 
-Basic program tests run with build.ps1 -Test. Full external-fixture coverage additionally needs development-only Python packages pypdf, reportlab, Pillow, pymupdf and cryptography, plus OpenSSL for independent CMS verification:
+Basic program tests run with build.ps1 -Test. Full public-fixture coverage first needs the pinned download/run described in [Compatibility](Compatibility.md). Install development packages with python -m pip install -r .\源码\requirements-dev.txt, plus OpenSSL for independent CMS verification:
 
 ~~~powershell
 python .\源码\verify_pdf.py fixtures .\work\tests
 python .\源码\verify_features.py fixtures .\work\tests
 python .\源码\verify_fixes.py fixtures .\work\tests
+python .\源码\selection_fixtures.py .\work\tests .\work\compatibility
 powershell -ExecutionPolicy Bypass -File .\源码\build.ps1 -Test
 python .\源码\verify_pdf.py verify .\work\tests
 python .\源码\verify_features.py verify .\work\tests
 python .\源码\verify_fixes.py verify .\work\tests
 python .\源码\verify_merge.py verify .\work\tests
+python .\源码\verify_selection.py .\work\tests
+python .\源码\verify_compatibility.py .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 ~~~
+
+Run the pinned public corpus with test-corpus.ps1 as described in [Compatibility](Compatibility.md). Its archives, fixtures and probe executables stay in work and are excluded from the app.
 
 Missing external fixtures are explicitly skipped by the program runner. These packages and generated test certificates are not needed by the application. Tests inspect native controls and real mouse/key messages, persisted PDFs, page order/destinations, OCR image preservation, print geometry/vector records and form appearances, CMS signatures/tamper detection, and isolated EXE startup/cleanup. Printing tests use preview controllers and do not send physical print jobs. The detailed test record reports the verified build, counts and hash. Passing tests do not guarantee every PDF or printer configuration is free of defects.
 
 ## Technology, references and licenses
 
-C# 5 / Windows Forms and .NET Framework; PDFium for PDF processing; Windows GDI/EMF for printing; Windows Cryptographic APIs via System.Security for CMS and certificate chains; Windows Compression API for LZMS packaging.
+C# 5 / Windows Forms and .NET Framework; PDFium for PDF processing; the built-in Windows PDF renderer for explicitly restricted compatibility previews; Windows GDI/EMF for printing; Windows Cryptographic APIs via System.Security for CMS and certificate chains; Windows Compression API for LZMS packaging.
 
 Reading behavior and compact tabs are inspired by [SumatraPDF](https://github.com/sumatrapdfreader/sumatrapdf); feature references include [PDF Looker Pro](https://github.com/dongfangxy/pdf-looker-pro) and Adobe Acrobat's printing/page workflows. Mini PDF uses its own application code and does not bundle or link SumatraPDF, MuPDF, Electron or Adobe SDKs. MuPDF is used only as an independent development-test renderer.
 

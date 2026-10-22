@@ -1,0 +1,20 @@
+[
+  {
+    "key": "pdfium",
+    "repo": "chromium/pdfium",
+    "commit": "a84323421e94f484faca52dd9d027934eba42ab8",
+    "prefix": "testing/resources/"
+  },
+  {
+    "key": "pdfjs",
+    "repo": "mozilla/pdf.js",
+    "commit": "d213fafd7b43212b93788c910d5cdc9e30d0dd8c",
+    "prefix": "test/pdfs/"
+  },
+  {
+    "key": "verapdf",
+    "repo": "veraPDF/veraPDF-corpus",
+    "commit": "bb75f4f0073d9350dfd058c0162a367e6fadf25e",
+    "prefix": ""
+  }
+]
