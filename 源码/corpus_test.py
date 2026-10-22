@@ -153,11 +153,15 @@ def main():
             group, actual, outcome = future.result()
             completed += 1
             statistics[outcome['status']] = statistics.get(outcome['status'], 0) + len(group)
+            if outcome.get('roundtrip_diagnostics'):
+                print(json.dumps({'diagnostic_case': group[0]['source'],
+                                  'roundtrip_diagnostics': outcome['roundtrip_diagnostics']}), flush=True)
             for case in group:
                 row = {key: value for key, value in case.items() if key != 'password'}
                 row.update({'tested_id': actual, 'status': outcome['status'], 'phase': outcome.get('phase'),
                             'pages': outcome.get('pages'), 'rendered_pages': outcome.get('rendered_pages', 0),
                             'differences': outcome.get('roundtrip_differences', []),
+                            'roundtrip_diagnostics': outcome.get('roundtrip_diagnostics', []),
                             'merge_preserved': outcome.get('merge_preserved'),
                             'annotation_preserved': outcome.get('annotation_preserved'),
                             'native_error': outcome.get('native_error'), 'error': outcome.get('error'),

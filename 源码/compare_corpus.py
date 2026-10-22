@@ -23,7 +23,8 @@ def main():
         old=prior['status']
         reason=None
         if old in ('ok','ok_signed') and state!=old:
-            reason='Previously opened/saved case no longer completes'
+            reason=('Saved copy differs in rendering, text or page state' if state=='roundtrip_difference'
+                    else 'Previously opened/saved case no longer completes')
         elif state=='crash' and old!='crash':
             reason='New native process failure'
         elif prior['merge_preserved']=='True' and row.get('merge_preserved') is not True:

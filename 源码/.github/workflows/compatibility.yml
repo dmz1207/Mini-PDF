@@ -33,8 +33,8 @@ jobs:
       PYTHONDONTWRITEBYTECODE: '1'
       PIP_CACHE_DIR: ${{ github.workspace }}/work/pip-cache
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: '3.12'
       - name: Install development renderer
@@ -45,6 +45,18 @@ jobs:
           & '.\源码\test-corpus.ps1' -Python python -Name ci -Workers 4
       - name: Detect regressions against reviewed results
         run: python ".\源码\compare_corpus.py" ".\源码\compatibility-results.csv" ".\work\compatibility\runs\ci\results.jsonl"
+      - name: Retain compatibility diagnostics
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: pdf-compatibility-diagnostics
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            work/compatibility/reports/
+            work/compatibility/runs/ci/results.jsonl
+            work/compatibility/runs/ci/regression-comparison.json
+            work/compatibility/runs/ci/**/diagnostic-*.png
       - name: Summarize diagnostics
         if: always()
         shell: pwsh

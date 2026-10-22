@@ -46,7 +46,7 @@ internal static class CorpusProbe
         }
         finally { image.UnlockBits(bits); }
     }
-    static PageState Snapshot(PdfDocument document, int index)
+    static PageState Snapshot(PdfDocument document, int index, string diagnosticPng = null)
     {
         var page = new PageState { Index = index };
         document.OpenPage(index);
@@ -58,7 +58,11 @@ internal static class CorpusProbe
         double scale = 600 / (double)Math.Max(size.Width, size.Height);
         page.Width = Math.Max(1, Math.Min(600, (int)Math.Round(size.Width * scale)));
         page.Height = Math.Max(1, Math.Min(600, (int)Math.Round(size.Height * scale)));
-        using (var bitmap = document.Render(index, page.Width, page.Height)) page.Pixels = Pixels(bitmap);
+        using (var bitmap = document.Render(index, page.Width, page.Height))
+        {
+            page.Pixels = Pixels(bitmap);
+            if (diagnosticPng != null) bitmap.Save(Path.Combine(output, diagnosticPng), ImageFormat.Png);
+        }
         page.Characters = N.FPDFText_CountChars(document.TextPage);
         page.Text = Hash(Encoding.UTF8.GetBytes(document.SelectedText(0, Math.Min(1000000, page.Characters))));
         page.Annotations = N.FPDFPage_GetAnnotCount(document.Page);
@@ -109,6 +113,17 @@ internal static class CorpusProbe
             var differences = new List<int>();
             for (int i = 0; i < before.Count; i++) if (!Same(before[i], after[i])) differences.Add(i);
             result["roundtrip_differences"] = differences;
+            if (differences.Count > 0)
+            {
+                var diagnostics = new List<object>();
+                using (var original = PdfDocument.Open(input, password))
+                using (var saved = PdfDocument.Open(copy, password))
+                    foreach (int index in differences.GetRange(0, Math.Min(3, differences.Count)))
+                        diagnostics.Add(new { index, before = before[index], after = after[index],
+                            original_replay = Snapshot(original, index, "diagnostic-source-" + index + ".png"),
+                            saved_replay = Snapshot(saved, index, "diagnostic-saved-" + index + ".png") });
+                result["roundtrip_diagnostics"] = diagnostics;
+            }
             result["saved_pages"] = after;
             if (document.SignatureCount > 0)
             {
