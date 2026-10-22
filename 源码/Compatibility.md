@@ -4,6 +4,8 @@
 
 Recorded 2026-10-22 on Windows 10 Home Chinese x64, build 19045. This is an application smoke and preservation test using pinned public PDFs, with independent diagnosis of exceptions. It does not execute the complete upstream PDFium, PDF.js or veraPDF conformance harnesses.
 
+**CI follow-up:** the local bulk counts below are frozen. A later Windows Server run confirms the apparent save differences as process-state-dependent replay variance using exact independent snapshots. The new 4,211-path gate passes with zero new regressions, 4,134 applicable unsigned passes and 62 known exception paths. [Evidence and limits](CI-Verification.md).
+
 ## Sources
 
 | Corpus | Pinned snapshot | PDF paths |
@@ -27,7 +29,7 @@ Only PDFium testing/resources, PDF.js test/pdfs and the veraPDF corpus were extr
 
 This is not an all-feature test for every PDF, a high-resolution visual oracle, a physical-print fidelity proof or an estimate of real-world failure frequency. The corpus deliberately contains invalid, encrypted, empty, fuzzed and resource-exhaustion inputs. The bulk probe exercises direct native document rendering; the reader's restricted Windows fallback is tested separately.
 
-## Final bulk results
+## Original local bulk results (frozen)
 
 | Outcome | PDF paths |
 | --- | ---: |
@@ -61,7 +63,7 @@ The metadata helper only reads canonical, freshly serialized private copies usin
 ## Remaining cases
 
 - **Native-only merge differences:** bug_664284, viewer_ref and ThuluthFeatures still differ in PDFium state comparisons. Independent source/output text and first/last-page pixels match. This is evidence against obvious output loss, not grounds to relabel the native checks as passes.
-- **Native-only save difference:** issue2391-2 differs in native pixel replay while independent text/pixels match; corruption is not established.
+- **Historical save-replay difference:** issue2391-2 differs on same-process native reopen. A later exact fresh-process check matches source and saved pixels/text/page state to the first source; the original CSV stays frozen. See [CI investigation](CI-Verification.md).
 - **Malformed JPX:** jpx_numcomps still crashes the direct native probe. The reader isolates that raster attempt and retries using Windows' installed PDF renderer. Full-page and visible-region rendering at four rotations and subsequent normal-page recovery pass. However, grayscale/component panels differ from the independent reference: whole-page mean RGB difference is **34.20/255**. Therefore this is a visibly marked **read-only compatibility preview**, with editing, native image export and printing unavailable. It is not a color-accurate repair. [Difference evidence](windows-render-difference.json).
 - **Extreme work:** two tiling-pattern-tiny-steps inputs exceed both native and reference budgets. The 10,000-page Isartor input exceeds the whole-file sweep budget, which does not mean opening failed. bug1978317 (32,768 annotations), previously timed out, passes in the final bounded bulk run and a separate focused rerun.
 - **Open/page cases:** independent classification records 11 password requirements, 21 reference failures, seven no-displayable-page cases, two XFA-only cases and 14 native open/page differences. A reference failure alone does not prove invalid input. XFA, V8/JavaScript and OCR recognition are not bundled.
@@ -98,10 +100,12 @@ The corpus script uses direct-first download routing, verifies files, builds the
 
 ## 中文说明
 
-本轮共 4,211 个公开 PDF 路径，去重 4,206 份。三套库均直连下载并核对 Git 哈希；辅助头文件包直连超时后用了系统代理。下载、构建、缓存和测试均放在项目目录，交付时删除测试库，源代码保留复测工具和报告。
+后续 CI 更新：独立进程精确比较已确认保存误报来自重放状态差异，最新 4,211 路径回归检查通过，保留 62 个已知异常路径。[证据与范围](CI-Verification.md)。以下原始本地批测数字保持不变。
+
+原始本地批测共 4,211 个公开 PDF 路径，去重 4,206 份。三套库均直连下载并核对 Git 哈希；辅助头文件包直连超时后用了系统代理。下载、构建、缓存和测试均放在项目目录，交付时删除测试库，源代码保留复测工具和报告。
 
 4,133 份通过所有适用检查，其中 10 份受权限限制跳过编辑，4,123 份实际通过合并和添加批注；另 15 份通过签名只读保存。剩余 63 个异常路径按密码、页树、XFA、超时和渲染差异分类。合并比较差异从 143 降至 3，原生进程失败从 5 降至 1。公开图层默认状态丢失、异常 Contents 引用导致正文丢失、四种字体崩溃已修复并复测。
 
-异常 JPX 原生解码仍失败，Windows 内置渲染可作只读预览，但整页颜色与参考图仍有明显偏差。因此会提示并禁用该文档编辑、图片导出和打印。3 份原生合并比较、1 份原生保存比较仍保留待处理；独立渲染相同也没有算作原生通过。向加密目标导入带图层页面会取消回滚，任意命名的备用图层配置并非全部保留。
+异常 JPX 原生解码仍失败，Windows 内置渲染可作只读预览，但整页颜色与参考图仍有明显偏差。因此会提示并禁用该文档编辑、图片导出和打印。3 份原生合并比较仍保留待处理；历史保存差异经全新 PDFium 进程逐像素精确比较已确认属于重放状态差异，原始报告继续保留。向加密目标导入带图层页面会取消回滚，任意命名的备用图层配置并非全部保留。
 
 跨页选择、复制、高亮、自动滚动及侧栏页码分离通过实测。公开双层扫描文件和六种中文样本验证通过；没有截图原文件，不声称复现了那份文档。完整发布测试为 1,111 项，范围见测试记录。公开库测试只有应用层指定操作，600 像素渲染、45 秒单文件预算；外链及模板没有执行，不等于上游全套测试通过或所有环境无缺陷。

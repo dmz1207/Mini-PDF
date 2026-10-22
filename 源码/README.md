@@ -10,6 +10,8 @@ The **v0.9.0 preview** is one approximately **2.88 MiB executable** for **Window
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
+**CI verification update (2026-10-22):** the full 4,211-path regression check passes. Exact fresh-process comparisons distinguish PDFium replay variance from save damage; known baseline exceptions remain documented. [Investigation and results](CI-Verification.md). The application binary is unchanged.
+
 ## Refined in v0.9.0
 
 - Drag text across pages in continuous and facing-page views; copy in document order and highlight the entire selection in one undoable action. Hold near the top or bottom edge to extend selection while scrolling.

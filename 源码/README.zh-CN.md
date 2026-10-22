@@ -8,6 +8,8 @@ v0.9.0 预览版，单 EXE 约 **2.88 MiB**，面向 Windows 10 / 11 x64。使�
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](.) · [测试记录](测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
+**CI 验证更新（2026-10-22）：** 4,211 个路径的完整回归检查已通过。用独立进程精确比较，区分 PDFium 重放差异与保存损坏；已知异常继续保留。[调查和结果](CI-Verification.md)。此次应用 EXE 没有变化。
+
 ## v0.9.0 更新
 
 - 支持连续、双页视图跨页拖选，反向拖选仍按文档顺序复制；靠近上下边缘自动滚动，跨页高亮可一次撤销。

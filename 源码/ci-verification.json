@@ -1,0 +1,351 @@
+{
+  "date": "2026-10-22",
+  "scope": "Development-only corpus save-preservation probe; application and PDFium binaries unchanged",
+  "fix_commit": "14657beeafc850fc16379b19c71346a4119e8f6b",
+  "release_exe_sha256": "F098B91B2117E9B49C83020C8AC00B8F74E25867E57B0A950C63DFA8D522B083",
+  "local": {
+    "issue14438_repeats": 20,
+    "issue14438_all_ok": true,
+    "issue2391_2": {
+      "status": "ok",
+      "initial_differences": [
+        0
+      ],
+      "remaining_differences": [],
+      "cache_variance_pages": [
+        0
+      ],
+      "before": {
+        "Index": 0,
+        "Width": 424,
+        "Height": 600,
+        "Characters": 27,
+        "Annotations": 0,
+        "PointsWidth": 595,
+        "PointsHeight": 842,
+        "Pixels": "F4D3B183C0791F26345216B62805897069A71E65AA15952B262E0243316917E9",
+        "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+        "Error": null
+      },
+      "original_replay": {
+        "Index": 0,
+        "Width": 424,
+        "Height": 600,
+        "Characters": 27,
+        "Annotations": 0,
+        "PointsWidth": 595,
+        "PointsHeight": 842,
+        "Pixels": "FB1E9FD4A27CD54C3478C473A15CEDD82BBEC7DAE85FDEA27BF5323CFBB66403",
+        "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+        "Error": null
+      },
+      "fresh_source": {
+        "Index": 0,
+        "Width": 424,
+        "Height": 600,
+        "Characters": 27,
+        "Annotations": 0,
+        "PointsWidth": 595,
+        "PointsHeight": 842,
+        "Pixels": "F4D3B183C0791F26345216B62805897069A71E65AA15952B262E0243316917E9",
+        "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+        "Error": null
+      },
+      "fresh_saved": {
+        "Index": 0,
+        "Width": 424,
+        "Height": 600,
+        "Characters": 27,
+        "Annotations": 0,
+        "PointsWidth": 595,
+        "PointsHeight": 842,
+        "Pixels": "F4D3B183C0791F26345216B62805897069A71E65AA15952B262E0243316917E9",
+        "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+        "Error": null
+      },
+      "merge_preserved": true,
+      "annotation_preserved": true
+    },
+    "unicode_and_spaces": {
+      "status": "ok",
+      "differences": []
+    },
+    "changed_content_control": {
+      "source": {
+        "Index": 0,
+        "Width": 424,
+        "Height": 600,
+        "Characters": 27,
+        "Annotations": 0,
+        "PointsWidth": 595,
+        "PointsHeight": 842,
+        "Pixels": "F4D3B183C0791F26345216B62805897069A71E65AA15952B262E0243316917E9",
+        "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+        "Error": null
+      },
+      "modified": {
+        "Index": 0,
+        "Width": 424,
+        "Height": 600,
+        "Characters": 58,
+        "Annotations": 0,
+        "PointsWidth": 595,
+        "PointsHeight": 842,
+        "Pixels": "DEB9D64DD80A9ADF20041E56AC31A013C0920CF7DE9926663E9E14470386EC30",
+        "Text": "63FC77EF6DBFF104F61186A813F88E7180F9713802D19DF8FD4F7D91771DF020",
+        "Error": null
+      },
+      "pixels_differ": true,
+      "text_differs": true
+    },
+    "issue14438_semantic_differences": 0
+  },
+  "limitations": [
+    "Exact pixel checks are at maximum dimension 600, not a full-resolution visual oracle.",
+    "PDFium process-state-dependent replay differences remain; no C++ cache fix is claimed.",
+    "The historical compatibility CSV and release verification record are preserved.",
+    "Known native/open/password/format/time-limit exceptions are not relabeled as passes."
+  ],
+  "ci": {
+    "run_id": 39735564148,
+    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/39735564148",
+    "commit": "14657beeafc850fc16379b19c71346a4119e8f6b",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-22T06:41:51Z",
+    "completed_at": "2026-10-22T06:49:28Z",
+    "runner": "Microsoft Windows Server 2025, 10.0.26100",
+    "summary": {
+      "logical_pdfs": 4211,
+      "unique_pdfs": 4206,
+      "statuses": {
+        "ok": 4137,
+        "page_error": 7,
+        "open_error": 37,
+        "error": 11,
+        "ok_signed": 15,
+        "crash": 1,
+        "timeout": 3
+      },
+      "elapsed_seconds": 362.25,
+      "workers": 4,
+      "render_max_dimension": 600,
+      "timeout_seconds_per_pdf": 45,
+      "process_commit_limit_mib": 768
+    },
+    "classification": {
+      "paths": 4211,
+      "classification": {
+        "applicable_checks_pass": 4134,
+        "engine_open_or_page_difference": 14,
+        "password_required": 11,
+        "reference_also_cannot_complete": 21,
+        "no_displayable_pages": 7,
+        "engine_only_merge_difference": 3,
+        "signed_preservation_pass": 15,
+        "xfa_only_unsupported": 2,
+        "native_process_failure": 1,
+        "probe_time_limit": 3
+      },
+      "exceptions": 62
+    },
+    "regression_gate": {
+      "checked": 4211,
+      "regressions": []
+    },
+    "diagnostics": [
+      {
+        "diagnostic_case": "test/pdfs/issue14438.pdf",
+        "roundtrip_diagnostics": [
+          {
+            "index": 0,
+            "before": {
+              "Index": 0,
+              "Width": 464,
+              "Height": 600,
+              "Characters": 5087,
+              "Annotations": 30,
+              "PointsWidth": 612,
+              "PointsHeight": 792,
+              "Pixels": "0E09824163AE2475137DEF88BA64F4ACA609F94CB9ABF7A384BF438F21889033",
+              "Text": "9DD6E66A4A7BB934D244ABB345957E5439A1125D05B49355E8B15E52B757328C",
+              "Error": null
+            },
+            "after": {
+              "Index": 0,
+              "Width": 464,
+              "Height": 600,
+              "Characters": 5087,
+              "Annotations": 30,
+              "PointsWidth": 612,
+              "PointsHeight": 792,
+              "Pixels": "6ED3D9AF11318E1DD8AD1CE7316CE091C14EEADDA3D25F0F34C18D8945F28D15",
+              "Text": "9DD6E66A4A7BB934D244ABB345957E5439A1125D05B49355E8B15E52B757328C",
+              "Error": null
+            },
+            "original_replay": {
+              "Index": 0,
+              "Width": 464,
+              "Height": 600,
+              "Characters": 5087,
+              "Annotations": 30,
+              "PointsWidth": 612,
+              "PointsHeight": 792,
+              "Pixels": "6ED3D9AF11318E1DD8AD1CE7316CE091C14EEADDA3D25F0F34C18D8945F28D15",
+              "Text": "9DD6E66A4A7BB934D244ABB345957E5439A1125D05B49355E8B15E52B757328C",
+              "Error": null
+            },
+            "saved_replay": {
+              "Index": 0,
+              "Width": 464,
+              "Height": 600,
+              "Characters": 5087,
+              "Annotations": 30,
+              "PointsWidth": 612,
+              "PointsHeight": 792,
+              "Pixels": "6ED3D9AF11318E1DD8AD1CE7316CE091C14EEADDA3D25F0F34C18D8945F28D15",
+              "Text": "9DD6E66A4A7BB934D244ABB345957E5439A1125D05B49355E8B15E52B757328C",
+              "Error": null
+            }
+          }
+        ],
+        "render_cache_variance_pages": [
+          0
+        ],
+        "fresh_source": [
+          {
+            "Index": 0,
+            "Width": 464,
+            "Height": 600,
+            "Characters": 5087,
+            "Annotations": 30,
+            "PointsWidth": 612,
+            "PointsHeight": 792,
+            "Pixels": "0E09824163AE2475137DEF88BA64F4ACA609F94CB9ABF7A384BF438F21889033",
+            "Text": "9DD6E66A4A7BB934D244ABB345957E5439A1125D05B49355E8B15E52B757328C",
+            "Error": null
+          }
+        ],
+        "fresh_saved": [
+          {
+            "Index": 0,
+            "Width": 464,
+            "Height": 600,
+            "Characters": 5087,
+            "Annotations": 30,
+            "PointsWidth": 612,
+            "PointsHeight": 792,
+            "Pixels": "0E09824163AE2475137DEF88BA64F4ACA609F94CB9ABF7A384BF438F21889033",
+            "Text": "9DD6E66A4A7BB934D244ABB345957E5439A1125D05B49355E8B15E52B757328C",
+            "Error": null
+          }
+        ]
+      },
+      {
+        "diagnostic_case": "test/pdfs/issue2391-2.pdf",
+        "roundtrip_diagnostics": [
+          {
+            "index": 0,
+            "before": {
+              "Index": 0,
+              "Width": 424,
+              "Height": 600,
+              "Characters": 27,
+              "Annotations": 0,
+              "PointsWidth": 595,
+              "PointsHeight": 842,
+              "Pixels": "F4D3B183C0791F26345216B62805897069A71E65AA15952B262E0243316917E9",
+              "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+              "Error": null
+            },
+            "after": {
+              "Index": 0,
+              "Width": 424,
+              "Height": 600,
+              "Characters": 27,
+              "Annotations": 0,
+              "PointsWidth": 595,
+              "PointsHeight": 842,
+              "Pixels": "FB1E9FD4A27CD54C3478C473A15CEDD82BBEC7DAE85FDEA27BF5323CFBB66403",
+              "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+              "Error": null
+            },
+            "original_replay": {
+              "Index": 0,
+              "Width": 424,
+              "Height": 600,
+              "Characters": 27,
+              "Annotations": 0,
+              "PointsWidth": 595,
+              "PointsHeight": 842,
+              "Pixels": "FB1E9FD4A27CD54C3478C473A15CEDD82BBEC7DAE85FDEA27BF5323CFBB66403",
+              "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+              "Error": null
+            },
+            "saved_replay": {
+              "Index": 0,
+              "Width": 424,
+              "Height": 600,
+              "Characters": 27,
+              "Annotations": 0,
+              "PointsWidth": 595,
+              "PointsHeight": 842,
+              "Pixels": "FB1E9FD4A27CD54C3478C473A15CEDD82BBEC7DAE85FDEA27BF5323CFBB66403",
+              "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+              "Error": null
+            }
+          }
+        ],
+        "render_cache_variance_pages": [
+          0
+        ],
+        "fresh_source": [
+          {
+            "Index": 0,
+            "Width": 424,
+            "Height": 600,
+            "Characters": 27,
+            "Annotations": 0,
+            "PointsWidth": 595,
+            "PointsHeight": 842,
+            "Pixels": "F4D3B183C0791F26345216B62805897069A71E65AA15952B262E0243316917E9",
+            "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+            "Error": null
+          }
+        ],
+        "fresh_saved": [
+          {
+            "Index": 0,
+            "Width": 424,
+            "Height": 600,
+            "Characters": 27,
+            "Annotations": 0,
+            "PointsWidth": 595,
+            "PointsHeight": 842,
+            "Pixels": "F4D3B183C0791F26345216B62805897069A71E65AA15952B262E0243316917E9",
+            "Text": "26CA1CD962A9DACAB4794EB758AC7FC907916C326448197D9E0BB53DEF7409B3",
+            "Error": null
+          }
+        ]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 12406344898,
+        "name": "pdf-compatibility-diagnostics",
+        "size_in_bytes": 653066,
+        "digest": "sha256:33b3d199479d85d7ac02b6d9057798a60ba1e48fe1f4b0af44d4ce651832714a",
+        "expires_at": "2026-10-29T06:49:19Z"
+      }
+    ],
+    "action_warnings": []
+  },
+  "source_sha256": {
+    "CorpusProbe.cs": "bdfc0c6571bb283be6599f976742d83b58e3ca7660ca87b2cf0360749306a23c",
+    "corpus_test.py": "68abf561153c8129040d23cff12b60a1953754d942eb25259c7e1b09da0d3a35",
+    "compare_corpus.py": "bbbb78e38335a06a94ca557171a5f8418aee45e75127f9424867a37d1d708a77",
+    ".github/workflows/compatibility.yml": "b0ba09ecacc4d8e467f713fdba83e1f3c9e06f763b4954f791d2ef46d8420f98",
+    "compatibility-results.csv": "6cf2b4ccb682e3becfd1f23ec8946842c31c6f2bf300a572f54893b87d1a3219",
+    "compatibility-summary.json": "764f2dbdfe449aeb6a88e3470bada9af2f0c684ac17fa49365b2ead98714a873"
+  }
+}

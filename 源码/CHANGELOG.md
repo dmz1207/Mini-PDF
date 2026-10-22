@@ -2,6 +2,8 @@
 
 ## 0.9.0 — 2026-10-22
 
+- Verification follow-up: confirm apparent save regressions with exact independent PDFium snapshots, preserve replay diagnostics, retain CI artifacts and update pinned actions to Node 24. The full 4,211-path gate passes with zero new regressions. Application/PDFium binaries and the historical baseline remain unchanged. [Evidence](CI-Verification.md).
+
 - Add cross-page text selection, reverse/document-order copying, edge scrolling and one-step multi-page highlighting.
 - Improve hidden OCR hit testing and separate thumbnail/page-number layout at multiple display scales.
 - Preserve imported/existing font programs and normalize merged font state; fix four public font crash cases after merge/insert/duplicate plus text editing.
