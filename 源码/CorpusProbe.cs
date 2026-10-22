@@ -68,6 +68,34 @@ internal static class CorpusProbe
         page.Annotations = N.FPDFPage_GetAnnotCount(document.Page);
         return page;
     }
+    static string Quote(string value)
+    {
+        var text = new StringBuilder("\""); int slashes = 0;
+        foreach (char ch in value)
+        {
+            if (ch == '\\') { slashes++; continue; }
+            text.Append('\\', ch == '\"' ? slashes * 2 + 1 : slashes);
+            text.Append(ch); slashes = 0;
+        }
+        return text.Append('\\', slashes * 2).Append('\"').ToString();
+    }
+    static List<PageState> FreshSnapshot(string input, string password, string label)
+    {
+        string folder = Path.Combine(output, label);
+        var start = new ProcessStartInfo(Process.GetCurrentProcess().MainModule.FileName,
+            "--snapshot " + Quote(input) + " " + Quote(folder) + " " + Quote(password))
+        { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden,
+          WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory };
+        using (var child = Process.Start(start))
+        {
+            if (!child.WaitForExit(15000))
+            { try { child.Kill(); child.WaitForExit(2000); } catch { } throw new IOException("Fresh render timed out."); }
+            if (child.ExitCode != 0) throw new IOException("Fresh render did not complete.");
+        }
+        var json = new JavaScriptSerializer { MaxJsonLength = 32 * 1024 * 1024 };
+        var reply = json.Deserialize<Dictionary<string, object>>(File.ReadAllText(Path.Combine(folder, "result.json"), Encoding.UTF8));
+        return json.ConvertToType<List<PageState>>(reply["snapshot_pages"]);
+    }
     static bool Same(PageState a, PageState b)
     {
         return a.Pixels == b.Pixels && a.Text == b.Text && a.Characters == b.Characters &&
@@ -112,6 +140,7 @@ internal static class CorpusProbe
             }
             var differences = new List<int>();
             for (int i = 0; i < before.Count; i++) if (!Same(before[i], after[i])) differences.Add(i);
+            result["roundtrip_initial_differences"] = new List<int>(differences);
             result["roundtrip_differences"] = differences;
             if (differences.Count > 0)
             {
@@ -123,6 +152,25 @@ internal static class CorpusProbe
                             original_replay = Snapshot(original, index, "diagnostic-source-" + index + ".png"),
                             saved_replay = Snapshot(saved, index, "diagnostic-saved-" + index + ".png") });
                 result["roundtrip_diagnostics"] = diagnostics;
+                // A changed replay of the unchanged source is not evidence of save damage.
+                // Confirm both inputs in independent, cold PDFium instances; keep exact equality.
+                try
+                {
+                    var originalFresh = FreshSnapshot(input, password, "fresh-source");
+                    var savedFresh = FreshSnapshot(copy, password, "fresh-saved");
+                    result["roundtrip_fresh_source"] = originalFresh;
+                    result["roundtrip_fresh_saved"] = savedFresh;
+                    if (originalFresh.Count == before.Count && savedFresh.Count == before.Count)
+                    {
+                        var cacheVariance = new List<int>();
+                        foreach (int index in differences)
+                            if (Same(before[index], originalFresh[index]) && Same(originalFresh[index], savedFresh[index]))
+                                cacheVariance.Add(index);
+                        foreach (int index in cacheVariance) differences.Remove(index);
+                        result["render_cache_variance_pages"] = cacheVariance;
+                    }
+                }
+                catch (Exception error) { result["fresh_render_error"] = error.Message; }
             }
             result["saved_pages"] = after;
             if (document.SignatureCount > 0)
@@ -179,7 +227,8 @@ internal static class CorpusProbe
     [STAThread]
     static int Main(string[] args)
     {
-        output = args[1];
+        bool snapshot = args.Length > 0 && args[0] == "--snapshot";
+        output = snapshot ? args[2] : args[1];
         Directory.CreateDirectory(output);
         SetErrorMode(3);
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
@@ -191,7 +240,13 @@ internal static class CorpusProbe
             if (N.LoadLibraryEx(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "pdfium.dll"), IntPtr.Zero, 0x900) == IntPtr.Zero)
                 throw new IOException("Missing PDFium.");
             N.FPDF_InitLibrary(); initialized = true; N.SetProcessDPIAware();
-            Test(args[0], args.Length > 2 ? args[2] : "");
+            if (snapshot)
+            {
+                using (var document = PdfDocument.Open(args[1], args.Length > 3 ? args[3] : ""))
+                    result["snapshot_pages"] = ReadPages(document);
+                result["status"] = "snapshot";
+            }
+            else Test(args[0], args.Length > 2 ? args[2] : "");
             return 0;
         }
         catch (PdfException error) { result["status"] = "open_error"; result["native_error"] = error.Code; result["error"] = error.Message; return 1; }

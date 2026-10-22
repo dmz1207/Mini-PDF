@@ -155,13 +155,19 @@ def main():
             statistics[outcome['status']] = statistics.get(outcome['status'], 0) + len(group)
             if outcome.get('roundtrip_diagnostics'):
                 print(json.dumps({'diagnostic_case': group[0]['source'],
-                                  'roundtrip_diagnostics': outcome['roundtrip_diagnostics']}), flush=True)
+                                  'roundtrip_diagnostics': outcome['roundtrip_diagnostics'],
+                                  'render_cache_variance_pages': outcome.get('render_cache_variance_pages', []),
+                                  'fresh_source': outcome.get('roundtrip_fresh_source', []),
+                                  'fresh_saved': outcome.get('roundtrip_fresh_saved', [])}), flush=True)
             for case in group:
                 row = {key: value for key, value in case.items() if key != 'password'}
                 row.update({'tested_id': actual, 'status': outcome['status'], 'phase': outcome.get('phase'),
                             'pages': outcome.get('pages'), 'rendered_pages': outcome.get('rendered_pages', 0),
                             'differences': outcome.get('roundtrip_differences', []),
                             'roundtrip_diagnostics': outcome.get('roundtrip_diagnostics', []),
+                            'render_cache_variance_pages': outcome.get('render_cache_variance_pages', []),
+                            'roundtrip_fresh_source': outcome.get('roundtrip_fresh_source', []),
+                            'roundtrip_fresh_saved': outcome.get('roundtrip_fresh_saved', []),
                             'merge_preserved': outcome.get('merge_preserved'),
                             'annotation_preserved': outcome.get('annotation_preserved'),
                             'native_error': outcome.get('native_error'), 'error': outcome.get('error'),
