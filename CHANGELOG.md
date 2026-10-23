@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0 — 2026-10-23
+
+- Add Preserve layout and Continuous text Word export. Keep ordinary text editable at source positions or merge it into normal flowing Word paragraphs.
+- Fix effective font sizes, generated-space ordering, large intra-object gaps and simple two-column reading order.
+- Preserve complete complex-equation regions and numbering, along with figure labels, using bounded high-resolution PDFium images. Retain staggered source-column order before extraction and flow selected pages into one Word section.
+- Optionally infer simple equalities, subscripts/superscripts and uncomplicated fractions into OMML in continuous mode. Keep uncertain structures as artwork; adjustable local rules, no OCR/model/runtime addition.
+- Preserve pre-existing temporary-path files on failed exports and continue atomic destination replacement.
+- Document conversion boundaries and add native-worker, Unicode, formula-semantic, raster-fallback, repeated-page and failure-preservation checks.
+
 ## 0.10.1 — 2026-10-23
 
 - Select the exact text to edit, including multiple lines, mixed fonts and pages. Edit, Delete and percentage resize act on the entire supported selection; unselected text at either end stays in place.
@@ -74,7 +83,7 @@
 - Add quick Select/Hand/Highlight/Pages controls, V/H/Esc and temporary Space panning, selected-text highlighting with twelve colors and custom colors.
 - Preserve compact title tabs and English-first bilingual UI; update both guides and document certificate/printing limits.
 
-[English](源码/CHANGELOG.md) | [简体中文](源码/CHANGELOG.zh-CN.md)
+[English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
 
 ## v0.6.1 — 2026-10-20
 

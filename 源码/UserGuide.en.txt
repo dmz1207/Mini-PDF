@@ -1,5 +1,16 @@
-Mini PDF 0.10.1 - User Guide
+Mini PDF 0.11.0 - User Guide
 Windows 10 / Windows 11 x64
+
+WORD EXPORT
+Choose Menu > File > Convert PDF to Word. Preserve layout keeps page positions with
+editable ordinary text boxes and high-resolution artwork. Continuous text creates ordinary
+Word paragraphs for continuous editing; pagination and figure/equation positions can change.
+Optional offline simple equations are available in Continuous text. Complex or uncertain math
+remains artwork. Research-paper checks cover staggered columns, Greek scripts, complex
+formula regions with numbering and complete figure labels. Continuous text flows selected
+pages together; formula-heavy lines may remain images. No OCR or AI model is included;
+scans remain images. Review the exported DOCX.
+The source PDF and any original DOCX stay unchanged. Source details: WordExport.md.
 
 START AND LANGUAGE
 Double-click Mini PDF.exe in a writable folder. No installation or activation is required.

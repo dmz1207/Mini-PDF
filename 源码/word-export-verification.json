@@ -1,0 +1,65 @@
+{
+  "recorded": "2026-10-23",
+  "version": "0.11.0.0",
+  "scope": "Local Word conversion quality checks; not arbitrary mathematical semantic equivalence",
+  "ocr_included": false,
+  "learned_model_included": false,
+  "additional_runtime_included": false,
+  "private_local_paper": {
+    "source_pages": 8,
+    "not_distributed": true,
+    "modes": {
+      "layout": {
+        "word_rendered_pages": 8,
+        "editable_text_characters": 42785,
+        "text_boxes": 2804,
+        "ordinary_paragraphs_over_200_characters": 8,
+        "docx_bytes": 2676269,
+        "all_pages_rendered": true,
+        "native_omml_equations": 0
+      },
+      "continuous": {
+        "word_rendered_pages": 13,
+        "editable_text_characters": 34953,
+        "text_boxes": 0,
+        "ordinary_paragraphs_over_200_characters": 39,
+        "docx_bytes": 3962514,
+        "all_pages_rendered": true,
+        "native_omml_equations": 0
+      },
+      "math": {
+        "word_rendered_pages": 13,
+        "editable_text_characters": 34988,
+        "text_boxes": 0,
+        "ordinary_paragraphs_over_200_characters": 40,
+        "docx_bytes": 3924507,
+        "all_pages_rendered": true,
+        "native_omml_equations": 12
+      }
+    },
+    "all_rendered_pages_visually_reviewed": 34,
+    "renderer": "Installed Microsoft Word read-only PDF export followed by Poppler page rendering",
+    "known_limits": [
+      "Continuous mode changes pagination and equation/figure positions",
+      "Formula-heavy lines and paragraphs may remain complete images",
+      "Running headers, footers and captions can need manual cleanup",
+      "Simple OMML inference must be reviewed; it does not recover original LaTeX"
+    ]
+  },
+  "reproducible_fixtures": [
+    "matrix-scaled text, generated spaces, hidden/covered text and Unicode",
+    "staggered and aligned columns, full-width prose, scanned and rotated pages",
+    "Greek variables, sub/superscripts, numerator and denominator semantics",
+    "unsupported large operator with equation number retained as one image",
+    "figure labels retained with complete artwork",
+    "Computer Modern Roman body classification and reading order"
+  ],
+  "public_font_sample": {
+    "source": "pdfjs/test/pdfs/issue18823.pdf",
+    "commit": "d213fafd7b43212b93788c910d5cdc9e30d0dd8c",
+    "converted_and_word_rendered": true
+  },
+  "office_forms_desktop": 62,
+  "office_forms_independent": 340,
+  "private_documents_uploaded": false
+}

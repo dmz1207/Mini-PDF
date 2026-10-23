@@ -6,11 +6,20 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.10.1 preview** is one approximately **2.94 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.11.0 preview** is one approximately **3 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.10.1 verification (2026-10-23):** 1,664 local assertions pass. The [completed Windows CI](https://github.com/dmz1207/Mini-PDF/actions/runs/39885416263) checks 4,211 public PDF paths with zero new regressions, plus text editing, Office conversion and forms. This run retains 61 exceptions; the historical baseline has 62. [Test record](测试记录.md).
+**v0.11.0 local verification (2026-10-23):** 1,722 assertions pass. New source CI is pending; the previous completed Windows CI and its public-corpus limitations remain in the [test record](测试记录.md). [Word export checks](word-export-verification.json).
+
+## New in v0.11.0
+
+- Choose **Preserve layout** for editable ordinary text at original positions, or **Continuous text** for normal Word paragraphs that can be edited and rewrapped throughout the article.
+- Correct matrix-scaled font sizes, generated spaces and intra-object gaps; recover simple column order even when text is fragmented into small objects.
+- Target research papers: establish staggered two-column order before extraction, retain complete complex-equation regions and numbering, and keep figure labels attached.
+- Keep complex equations and artwork as high-resolution images. Continuous text can optionally infer limited simple equations into native OMML using adjustable offline C# geometry rules.
+- Preserve uncertain structures; no OCR, learned model, PdfPig, PdfiumViewer or additional runtime is bundled.
+- Use the isolated raster worker for source previews, and preserve existing files on export failure. See [Word export modes and limits](WordExport.md).
 
 ## Refined in v0.10.1
 

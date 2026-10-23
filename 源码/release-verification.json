@@ -1,13 +1,13 @@
 {
   "recorded": "2026-10-23",
-  "version": "0.10.1.0",
-  "executable_bytes": 3082752,
-  "executable_sha256": "30602627380142BB3EFA6E1BDA78B74BC61F083FC8AB56B663DA04CC899C4210",
-  "core_sha256": "6F0A070402635EC93AD05B514E65A47BD4760CC34221592DA5AF755DAC8F5065",
+  "version": "0.11.0.0",
+  "executable_bytes": 3104256,
+  "executable_sha256": "B121BDDE61B17114ED766B5664F0CEBBC4954D87E6762CC7F52264BAB32A9498",
+  "core_sha256": "57B1DCD25BCFBE8703731F7607DFB1839F8FC518F0B743E563503FB528BFB12F",
   "pdfium_sha256": "A318C39C137482DC4687C2973B7EC1C27FC1C20253CF2DC31928F922EAB89E8F",
   "platform": "Windows 10 Home Chinese x64, build 19045",
   "checks": {
-    "desktop": 923,
+    "desktop": 942,
     "pdf_preservation": 33,
     "features": 51,
     "signature_watermark_fixes": 23,
@@ -15,33 +15,26 @@
     "selection_fonts": 45,
     "layer_compatibility": 141,
     "text_editing_independent": 64,
-    "office_forms_independent": 301,
+    "office_forms_independent": 340,
     "portable_launcher": 17
   },
-  "total_assertions": 1664,
+  "total_assertions": 1722,
   "physical_print_jobs": false,
   "separate_windows_11_test": false,
   "pdfium_rebuilt": false,
+  "ocr_included": false,
   "public_pdf_paths": 4211,
   "public_distinct_contents": 4206,
-  "public_baseline_evidence": "ci-editors.json",
-  "public_known_exceptions": 61,
+  "public_baseline_evidence": "ci-selection-editing.json",
   "github_ci": {
-    "run_id": 39885416263,
-    "code_commit": "e9f961519d9916b769c0cf6d497de23fb8194e12",
-    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/39885416263",
-    "conclusion": "success",
-    "evidence": "ci-selection-editing.json"
+    "status": "pending"
   },
-  "ocr_included": false,
   "changes": [
-    "In-document and independent-window editing with retained text/format drafts",
-    "Complete supported selected text, partial-object boundaries and mixed styles",
-    "Multi-page editing, deletion and resizing with one undo and per-page generation",
-    "Effective matrix-scaled font size and original per-character advances",
-    "High-DPI prompt buttons",
-    "Draft protection on tab switch and close"
+    "Preserve-layout and continuous-paragraph Word export",
+    "Effective font sizes, column order and common LaTeX body font families",
+    "Optional offline OMML inference for simple equations with configurable geometry rules",
+    "Complete complex-equation and figure fallback regions",
+    "Native raster-worker preview and temporary-file collision protection"
   ],
-  "public_new_regressions": 0,
-  "public_run_evidence": "ci-selection-editing.json"
+  "word_export_evidence": "word-export-verification.json"
 }

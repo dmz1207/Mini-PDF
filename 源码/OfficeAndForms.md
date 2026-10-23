@@ -1,6 +1,6 @@
 # PDF conversion and forms / 转换与表单
 
-English first; 简体中文 follows. Introduced in v0.10.0.
+English first; 简体中文 follows. Forms introduced in v0.10.0; Word export refined in v0.11.0. See [Word export](WordExport.md) for modes and equation limits.
 
 ## Word and Excel export
 
@@ -8,13 +8,13 @@ Open Menu > File > Convert PDF to Word… or Excel…. Choose all/current/custom
 
 | Output | Behavior |
 | --- | --- |
-| Word DOCX | Editable Unicode text, basic font/size/color/bold, common aligned tables and optional extracted images; flowing paragraphs and page sections |
+| Word DOCX | Preserve layout with editable ordinary text boxes, or Continuous text with normal editable paragraphs; high-resolution artwork and optional limited offline OMML equations |
 | Excel XLSX | Editable cells grouped by source position; one worksheet per selected PDF page; optional automatic column detection |
 | Image-only scan | Preserved as an image in Word when images are enabled; no recognized cells in Excel |
 | Existing text layer | Extracted directly, including supported filled form values; password fields are masked |
 | Identifiers/formulas | Leading-zero and long identifiers stay text; strings such as =2+2 are literal strings, never executable formulas |
 
-This is content conversion with approximate layout recovery. Mixed fonts, complex columns, merged cells, reading order, equations, charts, transparency and image transformations may need correction. Excel does not recreate formulas, charts or embedded illustrations. Word is not a pixel-identical replica and does not retain PDF annotations as editable Word annotations.
+See [Word export](WordExport.md) for the distinction between positioned text and ordinary paragraphs. This is content conversion with approximate layout recovery. Mixed fonts, complex columns, merged cells, reading order, equations, charts, transparency and image transformations may need correction. Excel does not recreate formulas, charts or embedded illustrations. Word is not a pixel-identical replica and does not retain PDF annotations as editable Word annotations.
 
 A separate export worker receives an immutable snapshot of the current document. It has a 768 MiB process budget. Cancel/close stops only that owned worker and removes its temporary package; completion atomically replaces the chosen destination. Failure leaves the original PDF and a pre-existing destination unchanged. Native conversion failures stay isolated from the reader.
 

@@ -11,11 +11,12 @@ using System.Text.RegularExpressions;
 
 namespace MiniPdf {
     internal sealed class OfficeExportOptions {
-        internal bool Excel,Images=true,DetectColumns=true;
+        internal bool Excel,Images=true,DetectColumns=true,Layout,Equations,Continuous;
+        internal OfficeMathSettings MathSettings=new OfficeMathSettings();
         internal int[] Pages;
         internal string TempPath;
     }
-    internal static class OfficeExport {
+    internal static partial class OfficeExport {
         const string S="http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         const string W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
         const string R="http://schemas.openxmlformats.org/officeDocument/2006/relationships";
@@ -24,7 +25,7 @@ namespace MiniPdf {
             var b=new StringBuilder();foreach(char ch in text??"")if((ch>=32&&ch!=0xfffe&&ch!=0xffff)||ch=='\n'||ch=='\r'||ch=='\t')b.Append(ch);
             return SecurityElement.Escape(b.ToString());
         }
-        static string F(double value){return value.ToString("0.###",CultureInfo.InvariantCulture);}
+        internal static string F(double value){return value.ToString("0.###",CultureInfo.InvariantCulture);}
         static void Part(ZipArchive zip,string name,string xml){using(var writer=new StreamWriter(zip.CreateEntry(name,CompressionLevel.Optimal).Open(),new UTF8Encoding(false)))writer.Write("<?xml version=\"1.0\" encoding=\"utf-8\"?>"+xml);}
         static string Rel(string id,string type,string target){return "<Relationship Id=\""+id+"\" Type=\""+R+"/"+type+"\" Target=\""+target+"\"/>";}
         static string Font(string name) {
@@ -92,13 +93,16 @@ namespace MiniPdf {
             }
             return b.Append("</sheetData><pageMargins left=\"0.25\" right=\"0.25\" top=\"0.4\" bottom=\"0.4\" header=\"0\" footer=\"0\"/></worksheet>").ToString();
         }
+        static FileStream CreateTemp(string path,out bool owned) {owned=false;var file=new FileStream(path,FileMode.CreateNew,FileAccess.ReadWrite,FileShare.None);owned=true;return file;}
         internal static int Save(PdfDocument document,OfficeExportOptions options,string path,Action<int,int> progress) {
             PdfDocument.Check(options.Pages!=null&&options.Pages.Length>0&&options.Pages.Length<=2000,UiText.Get("请选择 1 至 2000 页进行转换。"));
             PdfDocument.Check(options.Pages.All(p=>p>=0&&p<document.Count),UiText.Get("页面范围无效。"));
-            string full=Path.GetFullPath(path),temp=options.TempPath??Path.Combine(Path.GetDirectoryName(full),".minipdf-export-"+Guid.NewGuid().ToString("N")+".tmp");int skipped=0;
+            string full=Path.GetFullPath(path),temp=options.TempPath??Path.Combine(Path.GetDirectoryName(full),".minipdf-export-"+Guid.NewGuid().ToString("N")+".tmp");int skipped=0;bool ownsTemp=false;
+            PdfDocument.Check(!String.Equals(full,Path.GetFullPath(temp),StringComparison.OrdinalIgnoreCase),"Temporary output must differ from the destination.");
+            if((options.Layout||options.Continuous)&&!options.Excel)return SaveLayout(document,options,full,temp,progress);
             var forms=N.FPDF_GetFormType(document.Handle)==1?PdfForms.Read(document):null;
             try {
-                using(var file=new FileStream(temp,FileMode.CreateNew,FileAccess.ReadWrite,FileShare.None))using(var zip=new ZipArchive(file,ZipArchiveMode.Create,false)) {
+                using(var file=CreateTemp(temp,out ownsTemp))using(var zip=new ZipArchive(file,ZipArchiveMode.Create,false)) {
                     string main=options.Excel?"xl/workbook.xml":"word/document.xml";
                     Part(zip,"_rels/.rels","<Relationships xmlns=\""+P+"\">"+Rel("main","officeDocument",main)+"</Relationships>");
                     var content=new StringBuilder("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Default Extension=\"png\" ContentType=\"image/png\"/>");
@@ -111,13 +115,14 @@ namespace MiniPdf {
                             body.Append("<sheet name=\"Page ").Append(options.Pages[i]+1).Append("\" sheetId=\"").Append(i+1).Append("\" r:id=\"sheet").Append(i+1).Append("\"/>");
                             content.Append("<Override PartName=\"/xl/").Append(name).Append("\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>");
                         } else {
-                            for(int row=0;row<page.Rows.Count;) {
-                                int end=row+1;var first=page.Rows[row];
-                                if(first.Cells.Count>1)while(end<page.Rows.Count) {
-                                    var candidate=page.Rows[end];if(candidate.Cells.Count!=first.Cells.Count||candidate.Y-page.Rows[end-1].Y>Math.Max(24,candidate.Size*3))break;
+                            var ordered=OfficeLayout.ReadingOrder(page);
+                            for(int row=0;row<ordered.Count;) {
+                                int end=row+1;var first=ordered[row];
+                                if(first.Cells.Count>1)while(end<ordered.Count) {
+                                    var candidate=ordered[end];if(candidate.Cells.Count!=first.Cells.Count||candidate.Y-ordered[end-1].Y>Math.Max(24,candidate.Size*3))break;
                                     bool aligned=true;for(int c=0;c<first.Cells.Count;c++)if(Math.Abs(first.Cells[c].X-candidate.Cells[c].X)>8)aligned=false;if(!aligned)break;end++;
                                 }
-                                if(end-row>=2){body.Append(Table(page.Rows.GetRange(row,end-row),page));row=end;}
+                                if(end-row>=2){body.Append(Table(ordered.GetRange(row,end-row),page));row=end;}
                                 else {body.Append(Paragraph(first));row++;}
                             }
                             foreach(var image in page.Images) {imageId++;string name="media/image"+imageId+".png";using(var stream=zip.CreateEntry("word/"+name,CompressionLevel.Optimal).Open())stream.Write(image,0,image.Length);rels.Append(Rel("img"+imageId,"image",name));body.Append(Picture(imageId,image,page));}
@@ -137,7 +142,7 @@ namespace MiniPdf {
                 }
                 using(var test=ZipFile.OpenRead(temp)){PdfDocument.Check(test.GetEntry("[Content_Types].xml")!=null,UiText.Get("导出文件校验失败。"));}
                 if(File.Exists(full))File.Replace(temp,full,null);else File.Move(temp,full);return skipped;
-            } finally {if(File.Exists(temp))File.Delete(temp);}
+            } finally {if(ownsTemp&&File.Exists(temp))File.Delete(temp);}
         }
     }
 }

@@ -12,6 +12,7 @@ namespace MiniPdf {
         static byte[] OfficePixels(Bitmap image){var bits=image.LockBits(new Rectangle(0,0,image.Width,image.Height),System.Drawing.Imaging.ImageLockMode.ReadOnly,System.Drawing.Imaging.PixelFormat.Format32bppArgb);try{var bytes=new byte[Math.Abs(bits.Stride)*image.Height];System.Runtime.InteropServices.Marshal.Copy(bits.Scan0,bytes,0,bytes.Length);return bytes;}finally{image.UnlockBits(bits);}}
         static void OfficeFormsCoverage(string directory,bool withUi=true) {
             UiText.English=true;
+            WordLayoutCoverage(directory,withUi);
             bool hasCjk;
             using(var fonts=new System.Drawing.Text.InstalledFontCollection())hasCjk=fonts.Families.Any(f=>f.GetName(1033)=="Microsoft YaHei");
             string firstName=hasCjk?"张三 Alice":"Alice",secondName=hasCjk?"李四 Bob":"Bob",noteText=hasCjk?"First line\n第二行":"First line\nSecond line",countryLabel=hasCjk?"中国":"China";
@@ -117,6 +118,81 @@ using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,
             }
             using(var xfa=PdfDocument.Open(Path.Combine(directory,"forms-xfa.pdf"),"")){bool rejected=false;try{PdfForms.Read(xfa);}catch(InvalidOperationException){rejected=true;}Assert(rejected&&!xfa.Dirty,"forms: unsupported dynamic XFA is reported without modifying the PDF");}
             UiText.English=false;
+        }
+        static void WordLayoutCoverage(string directory,bool withUi) {
+            using(var doc=PdfDocument.Open(Path.Combine(directory,"word-latex-source.pdf"),"")) {
+                using(var copy=PdfDocument.FromBytes(doc.GetRenderSource().ReadAll(),"")) {
+                    var page=WordLayout.Read(copy,0,false,null,true);
+                    Assert(page.Text.Any(t=>t.Text!=null&&t.Text.Contains("RESEARCH-LEFT-00")&&t.Font=="Times New Roman"),"Research Word: Computer Modern Roman body is editable prose rather than a formula image");
+                }
+                OfficeExport.Save(doc,new OfficeExportOptions{Continuous=true,Pages=new[]{0,1}},Path.Combine(directory,"word-latex.docx"),null);
+            }
+            using(var doc=PdfDocument.Open(Path.Combine(directory,"word-research-source.pdf"),"")) {
+                using(var copy=PdfDocument.FromBytes(doc.GetRenderSource().ReadAll(),"")) {
+                    var page=WordLayout.Read(copy,0,true,null,true);
+                    Assert(page.Columns,"Research Word: recognize staggered scientific columns before extracting formulas");
+                    Assert(page.Text.Any(t=>t.Math!=null&&t.Math.Contains("α")&&t.Math.Contains("<m:sSubSup>")),"Research Word: Greek variables retain native editable subscripts and superscripts");
+                    Assert(page.Pictures.Any(p=>p.Block&&!p.Figure&&p.Width>180),"Research Word: unsupported sum and its equation number remain one complete image region");
+                    Assert(page.Pictures.Any(p=>p.Figure&&p.Block&&p.Width>200)&&!page.Text.Any(t=>t.Text!=null&&t.Text.Contains("Plot label")),"Research Word: chart labels remain attached to their complete figure");
+                    WordLayout.Read(copy,1,false);
+                }
+                Assert(!WordRegions.Columns(OfficeGeometry.Read(doc,1),doc.PageSize(1)),"Research Word: full-width prose is not mistaken for two columns");
+                OfficeExport.Save(doc,new OfficeExportOptions{Continuous=true,Equations=true,Pages=new[]{0,1}},Path.Combine(directory,"word-research.docx"),null);
+            }
+            using(var doc=PdfDocument.Open(Path.Combine(directory,"word-layout-source.pdf"),"")) {
+                string original=doc.AllText();
+                var flat=OfficeLayout.Read(doc,0,false);
+                Assert(flat.Rows.SelectMany(r=>r.Cells).Any(c=>c.Text.Contains("Matrix-scaled")&&Math.Abs(c.Size-12)<.1),"Word: effective font size includes the PDF text matrix");
+                var columns=OfficeLayout.ReadingOrder(OfficeLayout.Read(doc,1,false));
+                string ordered=String.Join("\n",columns.SelectMany(r=>r.Cells).Select(c=>c.Text));
+                Assert(ordered.IndexOf("LEFT11",StringComparison.Ordinal)<ordered.IndexOf("RIGHT00",StringComparison.Ordinal),"Word: long two-column prose reads down the left column first");
+                using(var copy=PdfDocument.FromBytes(doc.GetRenderSource().ReadAll(),"")) {
+                    var page=WordLayout.Read(copy,0,true);
+                    Assert(page.Text.Any(t=>t.Text!=null&&t.Text.Contains("Matrix-scaled"))&&page.Text.Any(t=>t.Text!=null&&t.Text.Contains("中文正文")),"Word: normal Latin and Chinese body text remain editable");
+                    Assert(page.Text.Any(t=>t.Bold&&t.Italic),"Word: body text preserves bold and italic styles");
+                    Assert(page.Equations>=2&&page.Text.Any(t=>t.Math!=null&&t.Math.Contains("<m:f>")&&t.Math.Contains("<m:sSubSup>")),"Word: symbol geometry creates an editable fraction with subscript and superscript");
+                    Assert(!page.Text.Any(t=>t.Text!=null&&(t.Text.Contains("HIDDEN VALUE")||t.Text.Contains("COVERED VALUE"))),"Word: hidden and visually covered text is not exposed as editable body text");
+                    Assert(page.Pictures.Count>0,"Word: ambiguous multi-line math uses a cropped high-resolution image");
+                }
+                var selection=new[]{0,1,2,3,0};
+                OfficeExport.Save(doc,new OfficeExportOptions{Layout=true,Pages=selection},Path.Combine(directory,"word-layout.docx"),null);
+                OfficeExport.Save(doc,new OfficeExportOptions{Continuous=true,Equations=true,Pages=new[]{0}},Path.Combine(directory,"word-equations.docx"),null);
+                OfficeExport.Save(doc,new OfficeExportOptions{Pages=new[]{1}},Path.Combine(directory,"word-columns.docx"),null);
+                OfficeExport.Save(doc,new OfficeExportOptions{Continuous=true,Equations=true,Pages=new[]{0,1,2,3}},Path.Combine(directory,"word-continuous.docx"),null);
+                Assert(doc.AllText()==original&&!doc.Dirty&&!doc.CanUndo,"Word: positioned export and repeated pages leave the source and undo state unchanged");
+                string output=Path.Combine(directory,"word-preserved.docx");File.WriteAllText(output,"existing file");
+                bool rejected=false;try{OfficeExport.Save(doc,new OfficeExportOptions{Layout=true,Pages=new[]{0},MathSettings=new OfficeMathSettings{ScriptRatio=Single.NaN}},output,null);}catch(InvalidOperationException){rejected=true;}
+                Assert(rejected&&File.ReadAllText(output)=="existing file"&&!Directory.GetFiles(directory,".minipdf-export-*.tmp").Any(),"Word: invalid rule settings preserve an existing destination and remove temporary output");
+                bool collisionsSafe=true;
+                foreach(bool positioned in new[]{false,true}) {
+                    string occupied=Path.Combine(directory,"word-owned-by-user.tmp");File.WriteAllText(occupied,"user data");
+                    try{OfficeExport.Save(doc,new OfficeExportOptions{Layout=positioned,Pages=new[]{0},TempPath=occupied},Path.Combine(directory,"word-collision.docx"),null);}catch(IOException){}
+                    collisionsSafe&=File.Exists(occupied)&&File.ReadAllText(occupied)=="user data";
+                }
+                Assert(collisionsSafe,"Word: an existing temporary-path file is never deleted or overwritten");
+                if(withUi) {
+                    using(var window=new OfficeWindow(doc,false)) {
+                        window.Show();Application.DoEvents();
+                        var wait=System.Diagnostics.Stopwatch.StartNew();while(!window.PreviewReadyForTest&&wait.ElapsedMilliseconds<10000){Application.DoEvents();System.Threading.Thread.Sleep(20);}
+                        Assert(window.PreviewReadyForTest,"Word: source preview completes in the isolated raster worker");
+                        var mode=window.Controls.Find("WordExportMode",true).OfType<ComboBox>().Single();
+                        Assert(mode.SelectedIndex==0&&mode.Items[0].ToString().Contains("Preserve layout"),"Word: the bilingual dialog defaults to preserving page layout");
+                        using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,new Rectangle(0,0,window.Width,window.Height));shot.Save(Path.Combine(directory,"word-export-window.png"));}
+                        window.Close();
+                    }
+                    using(var window=new OfficeMathWindow(new OfficeMathSettings())) {
+                        window.Show();Application.DoEvents();
+                        using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,new Rectangle(0,0,window.Width,window.Height));shot.Save(Path.Combine(directory,"word-equation-settings.png"));}
+                        window.Close();
+                    }
+                    string worker=Path.Combine(directory,"word-layout-worker.docx");
+                    using(var progress=new OfficeProgress(doc,new OfficeExportOptions{Continuous=true,Equations=true,Pages=new[]{0},MathSettings=new OfficeMathSettings{SymbolGap=.75f}},worker)) {
+                        progress.Show();var watch=System.Diagnostics.Stopwatch.StartNew();
+                        while(progress.DialogResult==DialogResult.None&&!progress.IsDisposed&&watch.ElapsedMilliseconds<20000){Application.DoEvents();System.Threading.Thread.Sleep(20);}
+                        Assert(progress.DialogResult==DialogResult.OK&&File.Exists(worker),"Word: the isolated worker receives continuous mode and custom offline formula settings");progress.Close();
+                    }
+                }
+            }
         }
         internal static int RunOfficeForms(string directory,bool withUi=true){Directory.CreateDirectory(directory);logPath=Path.Combine(directory,"office-forms-test.txt");log.Clear();assertions=0;try{OfficeFormsCoverage(directory,withUi);log.AppendLine("TOTAL: "+assertions+" Office/form assertions, 0 failures");File.WriteAllText(logPath,log.ToString());return 0;}catch(Exception e){log.AppendLine(e.ToString());File.WriteAllText(logPath,log.ToString());return 1;}}
     }

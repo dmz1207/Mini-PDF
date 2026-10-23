@@ -32,39 +32,19 @@ namespace MiniPdf {
         internal int SkippedImages;
     }
     internal static class OfficeLayout {
-        sealed class Glyph {
-            internal string Text,Font; internal float X,Right,Y,Size; internal Color Color;
-        }
         internal static OfficePage Read(PdfDocument document,int index,bool images) {
-            document.OpenPage(index);
+            var glyphs=OfficeGeometry.Read(document,index).FindAll(g=>!g.Bad);
             var result=new OfficePage{Size=document.PageSize(index)};
-            int count=N.FPDFText_CountChars(document.TextPage);
-            PdfDocument.Check(count>=0&&count<=500000,UiText.Get("此页文字过多，无法转换。"));
-            var glyphs=new List<Glyph>();var fonts=new Dictionary<IntPtr,string>();
-            for(int i=0;i<count;i++) {
-                uint ch=N.FPDFText_GetUnicode(document.TextPage,i);N.Rect box;
-                if(ch<32||(ch==0xfffe||ch==0xffff)||ch>0x10ffff||ch>=0xd800&&ch<=0xdfff||N.FPDFText_GetLooseCharBox(document.TextPage,i,out box)==0)continue;
-                var a=document.ToDevice(box.left,box.top,(int)Math.Ceiling(result.Size.Width),(int)Math.Ceiling(result.Size.Height));
-                var b=document.ToDevice(box.right,box.bottom,(int)Math.Ceiling(result.Size.Width),(int)Math.Ceiling(result.Size.Height));
-                float size=12;IntPtr obj=N.FPDFText_GetTextObject(document.TextPage,i);string font="Arial";Color ink=Color.Black;
-                if(obj!=IntPtr.Zero) {
-                    N.FPDFTextObj_GetFontSize(obj,out size);var handle=N.FPDFTextObj_GetFont(obj);
-                    if(!fonts.TryGetValue(handle,out font)){font=PdfDocument.TextFontName(handle);fonts[handle]=font;}
-                    uint r,g,bl,alpha;if(N.FPDFPageObj_GetFillColor(obj,out r,out g,out bl,out alpha)!=0)ink=Color.FromArgb((int)r,(int)g,(int)bl);
-                }
-                if(Single.IsNaN(size)||Single.IsInfinity(size)||size<.1f)size=12;
-                glyphs.Add(new Glyph{Text=Char.ConvertFromUtf32((int)ch),X=Math.Min(a.X,b.X),Right=Math.Max(a.X,b.X),Y=(a.Y+b.Y)/2f,Size=Math.Max(1,Math.Min(200,size)),Font=font,Color=ink});
-            }
             glyphs.Sort((a,b)=>{int y=a.Y.CompareTo(b.Y);return y!=0?y:a.X.CompareTo(b.X);});
-            var rowGlyphs=new List<List<Glyph>>();
+            var rowGlyphs=new List<List<OfficeGlyph>>();
             foreach(var glyph in glyphs) {
-                List<Glyph> row=null;
+                List<OfficeGlyph> row=null;
                 for(int j=rowGlyphs.Count-1;j>=Math.Max(0,rowGlyphs.Count-3);j--)if(Math.Abs(rowGlyphs[j][0].Y-glyph.Y)<=Math.Max(2,Math.Min(rowGlyphs[j][0].Size,glyph.Size)*.35f)){row=rowGlyphs[j];break;}
-                if(row==null){row=new List<Glyph>();rowGlyphs.Add(row);}row.Add(glyph);
+                if(row==null){row=new List<OfficeGlyph>();rowGlyphs.Add(row);}row.Add(glyph);
             }
             foreach(var line in rowGlyphs) {
-                line.Sort((a,b)=>a.X.CompareTo(b.X));var row=new OfficeRow{Y=line[0].Y,Size=line[0].Size};
-                var text=new StringBuilder();Glyph first=null,prior=null;
+                line.Sort((a,b)=>{int x=a.X.CompareTo(b.X);return x!=0?x:a.Index.CompareTo(b.Index);});var row=new OfficeRow{Y=line[0].Y,Size=line[0].Size};
+                var text=new StringBuilder();OfficeGlyph first=null,prior=null;
                 Action flush=delegate {if(first!=null&&!String.IsNullOrWhiteSpace(text.ToString()))row.Cells.Add(new OfficeCell{Text=text.ToString().Trim(),Font=first.Font,Size=first.Size,Color=first.Color,Bold=first.Font.IndexOf("Bold",StringComparison.OrdinalIgnoreCase)>=0,X=first.X,Right=prior.Right,Y=first.Y});text.Clear();first=null;};
                 foreach(var glyph in line) {
                     if(prior!=null&&glyph.X-prior.Right>Math.Max(8,Math.Min(prior.Size,glyph.Size)*.8f))flush();
@@ -107,6 +87,25 @@ namespace MiniPdf {
                 foreach(string text in value.Replace("\r","").Split('\n')){if(text.Length>0){var row=new OfficeRow{Y=Math.Min(a.Y,b.Y)+4+size/2+line*size*1.25f,Size=size};row.Cells.Add(new OfficeCell{Text=text,Font="Arial",Size=size,Color=Color.Black,X=Math.Min(a.X,b.X)+4,Right=Math.Max(a.X,b.X)-4,Y=row.Y});page.Rows.Add(row);}line++;}
             }
             page.Rows.Sort((a,b)=>a.Y.CompareTo(b.Y));
+        }
+        internal static List<OfficeRow> ReadingOrder(OfficePage page) {
+            float middle=page.Size.Width/2;
+            // A repeated pair of long text columns is prose, rather than a table.
+            int prose=page.Rows.Count(r=>r.Cells.Count==2&&r.Cells.All(c=>c.Text.Length>35)&&r.Cells[0].Right<middle+2&&r.Cells[1].X>middle-2);
+            if(prose<6)return page.Rows;
+            var output=new List<OfficeRow>();var band=new List<OfficeRow>();
+            Action flush=delegate {
+                for(int side=0;side<2;side++)foreach(var source in band) {
+                    var cells=source.Cells.Where(c=>side==0?c.X<middle:c.X>=middle).ToList();
+                    if(cells.Count==0)continue;var row=new OfficeRow{Y=source.Y,Size=source.Size};row.Cells.AddRange(cells);output.Add(row);
+                }
+                band.Clear();
+            };
+            foreach(var row in page.Rows) {
+                bool spanning=row.Cells.Any(c=>c.X<middle-4&&c.Right>middle+4);
+                if(spanning){flush();output.Add(row);}else band.Add(row);
+            }
+            flush();return output;
         }
         internal static List<float> Columns(OfficePage page,bool detect) {
             var columns=new List<float>();if(!detect){columns.Add(0);return columns;}

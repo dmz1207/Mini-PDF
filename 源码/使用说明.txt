@@ -1,12 +1,22 @@
-Mini PDF 0.10.1 使用说明
+Mini PDF 0.11.0 使用说明
 
 English (README.md) | 简体中文 (README.zh-CN.md)
 
 轻量、原生的 Windows PDF 阅读器与编辑器。
 
-v0.10.1 预览版，单 EXE 约 2.94 MiB，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
+v0.11.0 预览版，单 EXE 约 3 MiB，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
 下载 Mini PDF.exe (https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · 源代码 (.) · 测试记录 (测试记录.md) · 反馈问题 (https://github.com/dmz1207/Mini-PDF/issues)
+
+Word 导出
+
+“保留版式”保留页面位置，普通文字通过文本框编辑，公式与图形保留高清外观。
+“连续正文”使用普通 Word 段落，便于全文连续编辑；分页、脚注、图片和公式位置可能变化。
+连续正文可选离线简单公式转换，明确的上下标、分式等可生成原生 Word 公式；复杂或不明确的公式保留图像。
+不加入 OCR 或 AI 模型；扫描页仍为图片。导出后请用 Word 核对。原 PDF 和原 DOCX 不修改。
+科研论文重点检查双栏顺序、希腊字母和上下标、复杂公式及编号、图表标注。
+连续正文把选中页连成普通段落，含复杂公式的行或段落可能仍为图像。
+细节见源代码 WordExport.md。
 
 本版打磨
 

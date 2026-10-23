@@ -408,7 +408,23 @@ XFA 动态表单暂不支持；请使用标准 PDF 表单。|Dynamic XFA forms a
 选区包含隐藏、剪裁、标记或非横排文字，请按单个对象编辑。|The selection includes hidden, clipped, marked or non-horizontal text. Edit individual objects instead.
 文字映射不连续，请缩小选区。|The text mapping is discontinuous. Select a smaller range.
 选区文字编码无法精确映射，请保留原文。|The selected text encoding cannot be mapped precisely. Keep the original.
-请保留跨页选区的页面分隔标记。|Keep the page separator markers in a multi-page selection.";
+请保留跨页选区的页面分隔标记。|Keep the page separator markers in a multi-page selection.
+保留版式（推荐）|Preserve layout (recommended)
+连续正文（便于编辑）|Continuous text (easy to edit)
+简单公式可编辑（离线）|Editable simple equations (offline)
+公式设置…|Equation settings…
+公式设置|Equation settings
+保留页面位置，普通正文可编辑，公式和图形保留高清外观。下方显示原文参考预览；扫描页不识别文字。|Keep page positions with editable body text and high-resolution equations and artwork. Preview shows the source PDF. No OCR for scans.
+参数越宽松，越可能误判。复杂或不明确的公式始终保留原貌。|Looser thresholds can cause mistakes. Complex or ambiguous equations retain their original appearance.
+脚标最大字号比例|Maximum script-to-body size ratio
+最小基线偏移比例|Minimum baseline offset ratio
+最大符号间距比例|Maximum symbol gap ratio
+分式横线最大厚度（磅）|Maximum fraction bar thickness (pt)
+恢复默认|Restore defaults
+无法生成预览。|Cannot generate the preview.
+此文件处于兼容预览，无法转换 Office 文件。|Office conversion is unavailable in compatibility preview.
+使用普通 Word 段落合并正文，可连续编辑全文。可选离线转换简单公式；公式和图片位置可能变化。扫描页不识别文字。|Merge body text into normal Word paragraphs for continuous editing. Optionally infer simple equations offline. Equations and images may move. No OCR for scans.
+";
             foreach(string line in pairs.Split('\n')){string value=line.TrimEnd('\r');int split=-1;for(int i=0;i<value.Length;i++)if(value[i]=='|'&&(i==0||value[i-1]!='\\')){split=i;break;}if(split<0)continue;strings[value.Substring(0,split).Replace("\\|","|").Replace("\\n","\n")]=value.Substring(split+1).Replace("\\|","|").Replace("\\n","\n");}
         }
     }

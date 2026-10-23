@@ -4,11 +4,20 @@
 
 **轻量、原生的 Windows PDF 阅读器与编辑器。**
 
-v0.10.1 预览版，单 EXE 约 **2.94 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
+v0.11.0 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](.) · [测试记录](测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.10.1 验证（2026-10-23）：** 本地 1,664 项通过；[完整 Windows CI](https://github.com/dmz1207/Mini-PDF/actions/runs/39885416263)检查 4,211 个公开路径及文字、转换、表单，无新增回归。本轮 61 个异常，历史基线为 62 个，详见[测试记录](测试记录.md)。
+**v0.11.0 本地验证（2026-10-23）：** 1,722 项通过。新源码线上检查待完成；历史公开库检查及限制保留在[测试记录](测试记录.md)，另见 [Word 导出验证](word-export-verification.json)。
+
+## v0.11.0 新增
+
+- Word 提供“保留版式”和“连续正文”：前者保留原位置并编辑普通文字文本框；后者使用普通 Word 段落，方便全文连续编辑、重新换行。
+- 修正矩阵缩放后的实际字号、补空格顺序和对象内大间隔；碎片化文字也可恢复常见双栏阅读顺序。
+- 面向科研论文：转换前判断错行双栏顺序，复杂公式与编号整体保留，图表标注跟随图形。
+- 复杂公式和图形保留高清图像。连续正文可选本地简单公式 OMML 转换，C# 几何规则阈值可调，结构不明确时保留原貌。
+- 没有 OCR、AI 模型、PdfPig/PdfiumViewer 或新增运行时。预览复用隔离渲染进程，导出失败保护已有文件。
+- 两种模式的可编辑程度及限制见 [Word 导出](WordExport.md)。
 
 ## v0.10.1 编辑细化
 
