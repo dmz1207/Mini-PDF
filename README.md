@@ -6,11 +6,19 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.10.0 preview** is one approximately **2.93 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.10.1 preview** is one approximately **2.94 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.10.0 verification (2026-10-23):** 1,589 local assertions pass. The [completed Windows CI run](https://github.com/dmz1207/Mini-PDF/actions/runs/39877478557) checks all 4,211 public PDF paths with zero new regressions, plus text editing, Office conversion and forms. The 62 known public exceptions remain documented. [Test record](源码/测试记录.md).
+**v0.10.1 local verification (2026-10-23):** 1,657 assertions pass, including the full desktop suite and independent saved-file/render checks. Public compatibility CI and its 62 known exceptions are documented in the [test record](源码/测试记录.md).
+
+## Refined in v0.10.1
+
+- Select the exact text to edit, including multiple lines, mixed fonts and pages. Edit, Delete and percentage resize act on the entire supported selection; unselected text at either end stays in place.
+- Press F2 or double-click a text object to edit directly in the document. Ctrl+Enter applies; Esc cancels. Choose **Edit in window** for the independent preview editor, and switch back without losing the draft.
+- Preserve unchanged character spacing and style fragments. Display the effective font size when a PDF uses a small font size with a scaled text matrix.
+- Preview each selected page, preserve page boundaries in multi-page replacements, and keep the whole edit in one undo step.
+- Fit native prompt buttons to high-DPI text so their captions remain visible.
 
 ## New in v0.10.0
 
@@ -71,7 +79,7 @@ The **v0.10.0 preview** is one approximately **2.93 MiB executable** for **Windo
 1. Place Mini PDF.exe in a writable folder and double-click it. No installer or activation is required.
 2. Open a PDF with Ctrl+O, or drop PDF files on the window. Additional files get tabs; the selected tab supplies the reading area.
 3. Use Select to select and copy text. Use Hand to drag a zoomed page freely in both directions.
-4. Click Edit to expand object, text, image and drawing tools. Use Object and double-click a text block to change it.
+4. Select text and press F2 to edit in the document, or use Edit in window for the independent preview editor. Edit also expands the object, image and drawing tools.
 5. Use Pages to organize the current document, or Menu > Pages > Merge PDF files to combine files into a new document.
 6. Save with Ctrl+S, or save a copy with Ctrl+Shift+S. Ctrl+P opens the print workspace.
 

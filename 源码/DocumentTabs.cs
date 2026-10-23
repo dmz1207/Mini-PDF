@@ -96,7 +96,7 @@ namespace MiniPdf {
         void RememberActiveTab(){if(activeTab==null||Document==null)return;activeTab.Layout=canvas.LayoutMode;activeTab.Continuous=canvas.Continuous;activeTab.Zoom=canvas.Zoom;activeTab.Fit=canvas.Fit;activeTab.Rotation=canvas.ViewRotation;activeTab.Scroll=new Point(-canvas.AutoScrollPosition.X,-canvas.AutoScrollPosition.Y);activeTab.Tool=readingMode?oldInteraction:canvas.Mode;activeTab.Ink=Ink;activeTab.Width=LineWidth;activeTab.Editor=readingMode||fullScreen?oldEditbar:editbar.Visible;activeTab.Search=query.Text;activeTab.SearchQuery=searchQuery;activeTab.Hit=lastHit;activeTab.PendingImage=pendingImage;}
         void TrackDocument(PdfDocument doc){var tab=new DocumentTab{Document=doc,Number=++unnamedNumber,Page=new TabPage{Tag=unnamedNumber}};changingTabs=true;try{documents.Add(tab);documentTabs.TabPages.Add(tab.Page);}finally{changingTabs=false;}ActivateTab(tab);}
         void ActivateTab(DocumentTab tab){
-            if(activeTab==tab)return;if(slideShow)ToggleFullScreen();RememberActiveTab();activeTab=tab;Document=tab.Document;
+            if(activeTab==tab)return;if(!canvas.ConfirmInlineText()){changingTabs=true;try{documentTabs.SelectedIndex=documents.IndexOf(activeTab);}finally{changingTabs=false;}return;}if(slideShow)ToggleFullScreen();RememberActiveTab();activeTab=tab;Document=tab.Document;
             canvas.LayoutMode=tab.Layout;canvas.Continuous=tab.Continuous;canvas.Fit=tab.Fit;canvas.Zoom=tab.Zoom;canvas.ViewRotation=tab.Rotation;canvas.ResetDocumentView();
             Ink=tab.Ink;LineWidth=tab.Width;colorButton.ForeColor=Ink;lineWidthBox.SelectedItem=LineWidth.ToString("0.0",System.Globalization.CultureInfo.InvariantCulture);query.Text=tab.Search;searchQuery=tab.SearchQuery;lastHit=tab.Hit;pendingImage=tab.PendingImage;findResult.Text="";if(readingMode||fullScreen){oldInteraction=tab.Tool;oldEditbar=tab.Editor;}
             singleItem.Checked=tab.Layout==PageLayout.Single;doubleItem.Checked=tab.Layout==PageLayout.Double;bookItem.Checked=tab.Layout==PageLayout.Book;gridItem.Checked=tab.Layout==PageLayout.Grid;continuousItem.Checked=tab.Continuous;
@@ -108,13 +108,14 @@ namespace MiniPdf {
         bool CloseTab(int index){
             CancelTabDrag();
             if(index<0||index>=documents.Count)return false;var tab=documents[index];
-            if(tab.Document.Dirty){ActivateTab(tab);if(!ConfirmClose())return false;}
+            if(tab==activeTab&&!canvas.ConfirmInlineText())return false;
+            if(tab.Document.Dirty){ActivateTab(tab);if(activeTab!=tab||!ConfirmClose())return false;}
             bool current=tab==activeTab;
             changingTabs=true;try{documents.RemoveAt(index);documentTabs.TabPages.Remove(tab.Page);}finally{changingTabs=false;}
             if(current){activeTab=null;Document=null;canvas.ResetDocumentView();if(documents.Count>0)ActivateTab(documents[Math.Min(index,documents.Count-1)]);else{lastHit=null;UpdateDocument(true);Report(UiText.Get("打开 PDF，开始阅读或编辑"));}}
             tab.Document.Dispose();tab.Page.Dispose();UpdateTabStrip();return true;
         }
-        bool ConfirmAllTabs(){foreach(var tab in documents.ToArray())if(tab.Document.Dirty){ActivateTab(tab);if(!ConfirmClose())return false;}return true;}
+        bool ConfirmAllTabs(){if(!canvas.ConfirmInlineText())return false;foreach(var tab in documents.ToArray())if(tab.Document.Dirty){ActivateTab(tab);if(!ConfirmClose())return false;}return true;}
         internal void OpenDocuments(string[] paths){if(paths==null)return;openingFiles=true;try{foreach(string path in paths)OpenDocument(path);}finally{openingFiles=false;}}
         internal void ReceiveOpenRequest(string[] paths){openRequests.Enqueue(paths);if(openTimer==null){openTimer=new System.Windows.Forms.Timer{Interval=120};openTimer.Tick+=delegate{if(IsDisposed||!Enabled||openingFiles||openRequests.Count==0)return;openTimer.Stop();if(WindowState==FormWindowState.Minimized)N.ShowWindow(Handle,9);Activate();N.SetForegroundWindow(Handle);OpenDocuments(openRequests.Dequeue());if(openRequests.Count>0)openTimer.Start();};}openTimer.Start();}
         void NewWindow(){string executable=Environment.GetEnvironmentVariable("MINIPDF_LAUNCHER");if(String.IsNullOrEmpty(executable)||!File.Exists(executable))executable=Application.ExecutablePath;Process.Start(new ProcessStartInfo(executable,"--new-window"){UseShellExecute=false,WorkingDirectory=Environment.CurrentDirectory});}

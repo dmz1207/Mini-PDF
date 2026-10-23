@@ -10,7 +10,7 @@ $probe=Join-Path $work 'editor-probe'
 New-Item -ItemType Directory -Force -Path $probe | Out-Null
 Copy-Item -LiteralPath (Join-Path $application 'MiniPDF.Core.exe'),(Join-Path $application 'pdfium.dll') -Destination $probe -Force
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-$sources=@('SelfTest.cs','ViewTests.cs','LanguageTests.cs','FrameTests.cs','FeatureTests.cs','SignatureTests.cs','MergeBoardTests.cs','ManyMergeTests.cs','PerformanceTests.cs','SelectionTests.cs','CompatibilityTests.cs','TextEditingTests.cs','OfficeFormTests.cs','TestProgram.cs') | ForEach-Object {Join-Path $PSScriptRoot $_}
+$sources=@('SelfTest.cs','ViewTests.cs','LanguageTests.cs','FrameTests.cs','FeatureTests.cs','SignatureTests.cs','MergeBoardTests.cs','ManyMergeTests.cs','PerformanceTests.cs','SelectionTests.cs','CompatibilityTests.cs','SelectionEditingTests.cs','TextEditingTests.cs','OfficeFormTests.cs','TestProgram.cs') | ForEach-Object {Join-Path $PSScriptRoot $_}
 $runner=Join-Path $probe 'MiniPdf.Tests.exe'
 & $compiler /nologo /optimize+ /platform:x64 /target:winexe /codepage:65001 "/out:$runner" "/reference:$(Join-Path $probe 'MiniPDF.Core.exe')" /reference:System.dll /reference:System.Core.dll /reference:System.Security.dll /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll /reference:System.Xml.dll /reference:System.Drawing.dll /reference:System.Windows.Forms.dll @sources
 if($LASTEXITCODE -ne 0){throw 'Editor test runner compilation failed.'}

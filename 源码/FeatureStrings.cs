@@ -389,7 +389,26 @@ XFA 动态表单暂不支持；请使用标准 PDF 表单。|Dynamic XFA forms a
 编辑表单结构前，请明确导出未加密副本。|Export an unencrypted copy explicitly before changing form structure.
 此字段只接受一个填写值。|This field accepts only one value.
 勾选或单选的选项值不能是 Off 或空值。|Checkbox and radio export values must be nonempty and cannot be Off.
-无法合并页面。|Cannot combine pages.";
+无法合并页面。|Cannot combine pages.
+预览页面|Preview page
+在文档中编辑|Edit in document
+原文编辑|Edit text
+在独立窗口编辑所选文字|Edit selected text in a separate window
+所选全部文字|All selected text
+修改所选全部文字…|Edit all selected text…
+删除所选全部文字|Delete all selected text
+缩放所选全部文字…|Scale all selected text…
+在文档中编辑文字（F2）|Edit text in document (F2)
+应用 Ctrl+Enter|Apply Ctrl+Enter
+取消 Esc|Cancel Esc
+窗口编辑…|Edit in window…
+应用文档内尚未确认的文字修改？|Apply the unconfirmed in-document text changes?
+请先选择文字。|Select text first.
+选区包含嵌套或无法映射的文字，暂不支持安全改写。|The selection includes nested or unmappable text that cannot be edited safely.
+选区包含隐藏、剪裁、标记或非横排文字，请按单个对象编辑。|The selection includes hidden, clipped, marked or non-horizontal text. Edit individual objects instead.
+文字映射不连续，请缩小选区。|The text mapping is discontinuous. Select a smaller range.
+选区文字编码无法精确映射，请保留原文。|The selected text encoding cannot be mapped precisely. Keep the original.
+请保留跨页选区的页面分隔标记。|Keep the page separator markers in a multi-page selection.";
             foreach(string line in pairs.Split('\n')){string value=line.TrimEnd('\r');int split=-1;for(int i=0;i<value.Length;i++)if(value[i]=='|'&&(i==0||value[i-1]!='\\')){split=i;break;}if(split<0)continue;strings[value.Substring(0,split).Replace("\\|","|").Replace("\\n","\n")]=value.Substring(split+1).Replace("\\|","|").Replace("\\n","\n");}
         }
     }

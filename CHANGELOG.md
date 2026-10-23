@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.1 — 2026-10-23
+
+- Select the exact text to edit, including multiple lines, mixed fonts and pages. Edit, Delete and percentage resize act on the entire supported selection; unselected text at either end stays in place.
+- Press F2 or double-click a text object to edit directly in the document. Ctrl+Enter applies; Esc cancels. Choose **Edit in window** for the independent preview editor, and switch back without losing the draft.
+- Preserve unchanged character spacing and style fragments. Display the effective font size when a PDF uses a small font size with a scaled text matrix.
+- Preview each selected page, preserve page boundaries in multi-page replacements, and keep the whole edit in one undo step.
+- Fit native prompt buttons to high-DPI text so their captions remain visible.
+
+
 ## 0.10.0 — 2026-10-23
 
 - Convert PDF content to editable Word DOCX or Excel XLSX using built-in ZIP/XML APIs. Preserve Unicode, common aligned tables, numbers/identifiers and optional Word images; no Office installation is required.

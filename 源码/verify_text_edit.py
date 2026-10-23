@@ -56,7 +56,29 @@ def fixtures(root):
  with (root/'text-source-actual-text.pdf').open('wb') as f:writer.write(f)
  reader=PdfReader(root/'text-source-basic.pdf');writer=PdfWriter(clone_from=reader);writer.pages[0].rotate(90)
  with (root/'text-source-page-rotation.pdf').open('wb') as f:writer.write(f)
- print(json.dumps({'text_fixture_files':11}))
+ def selected(c):
+  c.setFillColorRGB(0,0,0)
+  c.saveState();c.transform(10,0,0,10,45,720);c.setFont('Times-Roman',1)
+  rows=['PREFIX In this paper reaction wheels provide control.',
+        'Known a priori information stays in italic.',
+        'This is the final selected line. SUFFIX']
+  for i,line in enumerate(rows):
+   y=-1.4*i
+   if i==1:
+    a='Known ';b='a priori';c.drawString(0,y,a);c.setFont('Times-Italic',1);c.drawString(pdfmetrics.stringWidth(a,'Times-Roman',1),y,b);c.setFont('Times-Roman',1);c.drawString(pdfmetrics.stringWidth(a,'Times-Roman',1)+pdfmetrics.stringWidth(b,'Times-Italic',1),y,line[len(a+b):])
+   else:c.drawString(0,y,line)
+  c.restoreState();c.setFont('Helvetica',10);c.drawString(340,700,'OTHER COLUMN MUST STAY');c.drawString(45,100,'UNCHANGED FOOTER')
+ save('text-source-selection.pdf',selected)
+ b=io.BytesIO();c=canvas.Canvas(b,pagesize=(600,800));selected(c);c.showPage();selected(c);c.showPage();c.save();(root/'text-source-selection-pages.pdf').write_bytes(b.getvalue())
+
+ reader=PdfReader(root/'text-source-selection.pdf');writer=PdfWriter(clone_from=reader)
+ stream=DecodedStreamObject();data=writer.pages[0].get_contents().get_data()
+ original=b'(PREFIX In this paper reaction wheels provide control.) Tj'
+ assert original in data
+ stream.set_data(data.replace(original,b'[(PREFIX In this paper ) -25 (reaction wheels) 12 ( provide control.)] TJ'))
+ writer.pages[0][NameObject('/Contents')]=writer._add_object(stream)
+ with (root/'text-source-variable-spacing.pdf').open('wb') as f:writer.write(f)
+ print(json.dumps({'text_fixture_files':14}))
 
 def verify(root):
  import fitz
@@ -107,6 +129,36 @@ def verify(root):
   lines=[line for block in doc[0].get_text('dict')['blocks'] if block['type']==0 for line in block['lines'] if any('WRAPPED' in s['text'] or 'CONTENT' in s['text'] for s in line['spans'])]
   check(len(lines)>=2,'wrap: text actually spans multiple lines')
  with fitz.open(root/'text-edited-line.pdf') as doc:check('Joined line' in doc[0].get_text() and 'OTHER COLUMN' in doc[0].get_text(),'line: selected fragments merge and neighboring column survives')
+
+ for label in ['edited','deleted','resized']:
+  with fitz.open(root/'text-source-selection.pdf') as source,fitz.open(root/f'text-{label}-selection.pdf') as output:
+   before,after=source[0],output[0];content=after.get_text()
+   check(all(v in content for v in ['PREFIX','SUFFIX','OTHER COLUMN MUST STAY','UNCHANGED FOOTER']),label+': all unselected boundary text survives independent extraction')
+   if label=='edited':
+    check('control wheels' in content and 'reaction wheels' not in content and 'final selected line' in content,'selected paragraph: all selected rows persist after replacement')
+   if label=='deleted':check('reaction wheels' not in content and 'a priori' not in content and 'selected line' not in content,'selected paragraph: all selected rows are removed')
+   if label!='resized':
+    for name in ['PREFIX','SUFFIX']:
+     rect=before.search_for(name)[0];rect.x0-=.2;rect.x1+=.2;rect.y0-=.2;rect.y1+=.2
+     check(before.get_pixmap(matrix=fitz.Matrix(3,3),clip=rect).samples==after.get_pixmap(matrix=fitz.Matrix(3,3),clip=rect).samples,label+': unselected '+name+' stays pixel-identical inside a partly edited original object')
+   for rect,name in [(fitz.Rect(330,0,600,800),'other column'),(fitz.Rect(0,160,330,800),'footer')]:
+    check(before.get_pixmap(matrix=fitz.Matrix(2,2),clip=rect).samples==after.get_pixmap(matrix=fitz.Matrix(2,2),clip=rect).samples,label+': '+name+' remains pixel-identical')
+   if label!='deleted':
+    italic=[span for block in after.get_text('dict')['blocks'] if block['type']==0 for line in block['lines'] for span in line['spans'] if 'a priori' in span['text']]
+    check(len(italic)==1 and 'Italic' in italic[0]['font'] and abs(italic[0]['size']-(12 if label=='resized' else 10))<.01,label+': original italic font and effective size survive independently')
+ for label in ['edited','deleted','resized']:
+  with fitz.open(root/f'text-{label}-selection-pages.pdf') as output:
+   check(output.page_count==2,label+': multi-page document retains its page count')
+   for number,page in enumerate(output):
+    content=page.get_text()
+    check(('control wheels' in content if label=='edited' else 'reaction wheels' not in content if label=='deleted' else 'reaction wheels' in content) and 'PREFIX' in content and 'SUFFIX' in content,label+': selected page '+str(number+1)+' survives an independent reopen')
+
+ with fitz.open(root/'text-source-variable-spacing.pdf') as source,fitz.open(root/'text-edited-variable-spacing.pdf') as output:
+  check('control wheels' in output[0].get_text(),'nonuniform spacing: edited paragraph persists')
+  for clip,label in [(fitz.Rect(0,85,330,800),'following selected rows'),(fitz.Rect(330,0,600,800),'other column')]:
+   check(source[0].get_pixmap(matrix=fitz.Matrix(3,3),clip=clip).samples==output[0].get_pixmap(matrix=fitz.Matrix(3,3),clip=clip).samples,'nonuniform spacing: '+label+' stay pixel-identical')
+ with fitz.open(root/'text-wrapped-selection.pdf') as doc:
+  text=doc[0].get_text();check(all(word in text for word in ['PREFIX','SUFFIX','reaction','wheels','italic.','UNCHANGED FOOTER']),'selected paragraph: wrapping retains every selected word and outside text')
  report={'independent_checks':len(checks),'passed':checks,'skipped':skipped};(root/'text-edit-independent.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps({'independent_text_checks':len(checks),'failures':0,'skipped':len(skipped)}))
 
 if __name__=='__main__':

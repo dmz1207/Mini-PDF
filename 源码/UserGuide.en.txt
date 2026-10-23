@@ -1,4 +1,4 @@
-Mini PDF 0.10.0 - User Guide
+Mini PDF 0.10.1 - User Guide
 Windows 10 / Windows 11 x64
 
 START AND LANGUAGE
@@ -69,8 +69,17 @@ Esc or the right-click menu leaves these modes and restores the previous interfa
 View rotation changes reading orientation. Page rotation edits the PDF and is undoable.
 
 EDIT TEXT AND OBJECTS
+Select the exact text and press F2 to edit directly in the document. Multiple lines and mixed
+fonts are included; Ctrl+Enter applies, Esc cancels. Edit in window opens the separate preview
+editor, and Edit in document switches back with the draft retained. Leaving a changed inline
+draft asks whether to apply or discard it; Cancel keeps editing. The Edit toolbar has both commands.
+Multi-page selections retain explicit Page separators: keep those markers when replacing text.
+Use Preview page to inspect each selected page. One undo restores the complete multi-page edit.
+Edit, Delete and percentage resize cover all selected supported text; unselected prefixes/suffixes
+remain in their original positions. Hidden, marked, clipped or nested text cannot be grouped this
+way: use supported individual-object editing. This is not permanent redaction.
 Expand Edit, select Object, then click a text block, image or shape.
-Double-click a text object to edit it. Keep original font is the default; supported edits preserve
+Double-click a text object for in-document editing. Keep original font is the default; supported edits preserve
 its original font, transformation, spacing and graphics state. No white paint is used.
 Choose the current object, same-line fragments or an adjacent same-style horizontal paragraph.
 The native PDFium preview shows the text area or whole page. Adjust wrapping width (mm),
@@ -254,6 +263,6 @@ Complete Chinese documentation: README.zh-CN.md in the repository and source fol
 
 COMPATIBILITY TESTING
 The source Compatibility.md records 4,211 public PDF paths (4,206 distinct contents), exact test
-scope and remaining engine/import limitations. Optional-content layer configurations are not
-fully preserved by page importing. Malformed image/page-tree and extreme-complexity cases
+scope and remaining engine/import limitations. Default/view/print layer states are tested during
+page importing; a complete layer-configuration editor is not included. Malformed image/page-tree and extreme-complexity cases
 remain; passing these fixtures does not guarantee every PDF is free of defects.

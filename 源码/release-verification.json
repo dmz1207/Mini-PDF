@@ -1,39 +1,39 @@
 {
   "recorded": "2026-10-23",
-  "version": "0.10.0.0",
-  "executable_bytes": 3072512,
-  "executable_sha256": "D4932DD3E4DB00E61A3F9ECC8761456D02494918FA29624C0E2084819D704478",
-  "core_sha256": "DF297EB94C889EF91483D657C2E87024ED92E222CACB63787D17F7F3C0597B7D",
+  "version": "0.10.1.0",
+  "executable_bytes": 3081216,
+  "executable_sha256": "AEB0A08DEE2B508266704F563F453D7B9CB7389D801A81FDD69A8117EE0A20D4",
+  "core_sha256": "D9409BE06652FBCFDC793231C705AA13F618684A092D2CD9E4D1127DF4A182F2",
   "pdfium_sha256": "A318C39C137482DC4687C2973B7EC1C27FC1C20253CF2DC31928F922EAB89E8F",
   "platform": "Windows 10 Home Chinese x64, build 19045",
   "checks": {
-    "desktop": 882,
+    "desktop": 920,
     "pdf_preservation": 33,
     "features": 51,
     "signature_watermark_fixes": 23,
     "merge": 66,
     "selection_fonts": 45,
     "layer_compatibility": 141,
-    "text_editing_independent": 30,
+    "text_editing_independent": 60,
     "office_forms_independent": 301,
     "portable_launcher": 17
   },
-  "total_assertions": 1589,
+  "total_assertions": 1657,
   "physical_print_jobs": false,
   "separate_windows_11_test": false,
   "pdfium_rebuilt": false,
   "public_pdf_paths": 4211,
   "public_distinct_contents": 4206,
-  "public_new_regressions": 0,
+  "public_baseline_evidence": "ci-editors.json",
   "public_known_exceptions": 62,
-  "public_run_evidence": "editor-compatibility.json",
-  "office_open_and_render_validation": true,
+  "github_ci": null,
   "ocr_included": false,
-  "github_ci": {
-    "run_id": 39877478557,
-    "code_commit": "5fd40b36fabc0f2f371ede2a565890f3af7862ee",
-    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/39877478557",
-    "conclusion": "success",
-    "evidence": "ci-editors.json"
-  }
+  "changes": [
+    "In-document and independent-window editing with retained text/format drafts",
+    "Complete supported selected text, partial-object boundaries and mixed styles",
+    "Multi-page editing, deletion and resizing with one undo and per-page generation",
+    "Effective matrix-scaled font size and original per-character advances",
+    "High-DPI prompt buttons",
+    "Draft protection on tab switch and close"
+  ]
 }

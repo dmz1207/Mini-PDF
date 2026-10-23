@@ -199,6 +199,7 @@ namespace MiniPdf
                 Assert(rejected && document.AllText() == before && !document.CanUndo,
                        "public font: reject re-encoding that would lose unrelated text after save and restore original");
             }
+            SelectedTextCoverage(directory,withUi);
             if (!withUi) { UiText.English=false; return; }
             UiText.English=true;
             using(var document=PdfDocument.Open(fixture,""))

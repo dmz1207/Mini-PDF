@@ -354,6 +354,7 @@ namespace MiniPdf
         }
         public void ClearSelection()
         {
+            if(InlineEditing)EndInlineText();
             Selected = null;
             TextStart = -1;
             TextCount = 0;
@@ -557,6 +558,7 @@ namespace MiniPdf
         {
             if (disposing)
             {
+                if(InlineEditing)EndInlineText();
                 ClearImages();
                 if (selectionScroll != null) selectionScroll.Dispose();
             }
@@ -763,6 +765,7 @@ namespace MiniPdf
         }
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            if(InlineEditing&&!ConfirmInlineText())return;
             base.OnMouseDown(e);
             Focus();
             if (Doc == null || pageRects.Length == 0)
@@ -1020,7 +1023,7 @@ namespace MiniPdf
                 return;
             }
             if (Mode == Tool.Object && Selected != null)
-                owner.EditSelected();
+                owner.EditSelected(true);
         }
         protected override void OnMouseWheel(MouseEventArgs e)
         {
@@ -1062,7 +1065,7 @@ namespace MiniPdf
         protected override void OnScroll(ScrollEventArgs e)
         {
             base.OnScroll(e);
-            if (Doc == null || rebuilding || down || panning || !Continuous || pageRects.Length == 0)
+            if (InlineEditing || Doc == null || rebuilding || down || panning || !Continuous || pageRects.Length == 0)
                 return;
             long bestArea = 0, activeArea = 0;
             int best = Doc.Index, first, end;

@@ -27,6 +27,7 @@ namespace MiniPdf
         internal Color Color;
         internal bool Wrap, ChangeColor;
         internal N.Rect ResultBounds;
+        internal N.Rect[] PageBounds;
     }
     internal sealed class TextEditSelection
     {
@@ -37,6 +38,9 @@ namespace MiniPdf
         internal float Size, Width, Scale, LineHeight = 1.4f;
         internal Color Color;
         internal bool Ocr, Restructure, ChangeFont;
+        internal float SizeScale = 1;
+        internal SelectedTextData Range;
+        internal TextEditSelection[] Children;
         internal N.Rect Bounds;
     }
     internal sealed partial class PdfDocument
@@ -215,7 +219,8 @@ namespace MiniPdf
             Check(scaleX > .0001f && Finite(scaleX), UiText.Get("文字变换不支持编辑。"));
             var selection = new TextEditSelection { Page = Index, Epoch = RenderEpoch, Anchor = first.Index, Scope = scope,
                 Indices = indices.ToArray(), Originals = originals.ToArray(), Text = content.ToString(), FontName = first.FontName,
-                Size = first.Size, Width = width, Scale = scaleX, Color = first.Color, Ocr = pick.IsOcrText, Restructure = first.Safe && !first.Vertical, ChangeFont = first.Basic && !first.Vertical && (first.Mode == 0 || first.Mode == 3), Bounds = allBounds };
+                Size = first.Size, SizeScale = (float)Math.Sqrt(first.Matrix.c * first.Matrix.c + first.Matrix.d * first.Matrix.d),
+                Width = width, Scale = scaleX, Color = first.Color, Ocr = pick.IsOcrText, Restructure = first.Safe && !first.Vertical, ChangeFont = first.Basic && !first.Vertical && (first.Mode == 0 || first.Mode == 3), Bounds = allBounds };
             if (rows.Count > 1) selection.LineHeight = Math.Max(.8f, Math.Min(3, Math.Abs(rows[0][0].Y - rows[1][0].Y) / first.Size));
             return selection;
         }
@@ -341,9 +346,9 @@ namespace MiniPdf
         }
         internal bool ApplyTextEdit(TextEditSelection selection, TextEditOptions options, bool preview = false)
         {
-            Check(selection != null && options != null && (preview || selection.Page == Index && selection.Epoch == RenderEpoch),
+            Check(selection != null && options != null && (preview || (selection.Children != null || selection.Page == Index) && selection.Epoch == RenderEpoch),
                   UiText.Get("文字已变化，请重新选择。"));
-            Check(!String.IsNullOrWhiteSpace(options.Text) && options.Text.Length <= 20000 &&
+            Check(options.Text != null && (selection.Range != null || selection.Children != null || !String.IsNullOrWhiteSpace(options.Text)) && options.Text.Length <= 20000 &&
                   Finite(options.Size) && options.Size >= .1f && options.Size <= 1000, UiText.Get("请输入有效文字和字号。"));
             Check(!options.Wrap || Finite(options.Width) && options.Width >= 1 && options.Width <= 14400,
                   UiText.Get("请输入有效文本框宽度。"));
@@ -357,6 +362,7 @@ namespace MiniPdf
                       Char.GetUnicodeCategory(ch) != System.Globalization.UnicodeCategory.EnclosingMark &&
                       !(ch >= 0xfe70 && ch <= 0xfeff) && (!Char.IsControl(ch) || ch == '\n' || ch == '\r' || ch == '\t'),
                       UiText.Get("此文字需要暂未支持的复杂排版，请保留原文或使用其他编辑器。"));
+            if (selection.Range != null || selection.Children != null) return ApplySelectedText(selection,options,preview);
             var runs = new List<TextRun>();
             for (int i = 0; i < selection.Indices.Length; i++)
             {

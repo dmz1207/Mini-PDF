@@ -213,7 +213,8 @@ namespace MiniPdf
                     var rectangle = form.CanvasForTest.LayoutRectangles[page]; rectangle.Offset(form.CanvasForTest.AutoScrollPosition);
                     from.X = rectangle.Left + 3;
                     Mouse(form.CanvasForTest, from, to);
-                    Assert(form.CanvasForTest.CopiedText().Contains("扫描文字选择") && form.CanvasForTest.CopiedText().Contains("OCR TEXT SELECTION"),
+                    string captured=form.CanvasForTest.CopiedText();if(!captured.Contains("扫描文字选择")||!captured.Contains("OCR TEXT SELECTION"))log.AppendLine("OCR selection diagnostic: page="+page+", active="+form.Document.Index+", mode="+form.CanvasForTest.Mode+", start="+from+", end="+to+", scroll="+form.CanvasForTest.AutoScrollPosition+", copied="+captured.Replace("\r","\\r").Replace("\n","\\n"));
+                    Assert(captured.Contains("扫描文字选择") && captured.Contains("OCR TEXT SELECTION"),
                            "actual margin-to-text drag selects hidden Chinese OCR variant " + page);
                     Assert(form.CanvasForTest.TextRanges().Count == 1 && !form.Document.Dirty,
                            "OCR selection alone preserves document and image in variant " + page);
