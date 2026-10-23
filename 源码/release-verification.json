@@ -25,8 +25,14 @@
   "public_pdf_paths": 4211,
   "public_distinct_contents": 4206,
   "public_baseline_evidence": "ci-editors.json",
-  "public_known_exceptions": 62,
-  "github_ci": null,
+  "public_known_exceptions": 61,
+  "github_ci": {
+    "run_id": 39885416263,
+    "code_commit": "e9f961519d9916b769c0cf6d497de23fb8194e12",
+    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/39885416263",
+    "conclusion": "success",
+    "evidence": "ci-selection-editing.json"
+  },
   "ocr_included": false,
   "changes": [
     "In-document and independent-window editing with retained text/format drafts",
@@ -35,5 +41,7 @@
     "Effective matrix-scaled font size and original per-character advances",
     "High-DPI prompt buttons",
     "Draft protection on tab switch and close"
-  ]
+  ],
+  "public_new_regressions": 0,
+  "public_run_evidence": "ci-selection-editing.json"
 }
