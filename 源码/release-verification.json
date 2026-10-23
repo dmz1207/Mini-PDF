@@ -28,5 +28,12 @@
   "public_known_exceptions": 62,
   "public_run_evidence": "editor-compatibility.json",
   "office_open_and_render_validation": true,
-  "ocr_included": false
+  "ocr_included": false,
+  "github_ci": {
+    "run_id": 39877478557,
+    "code_commit": "5fd40b36fabc0f2f371ede2a565890f3af7862ee",
+    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/39877478557",
+    "conclusion": "success",
+    "evidence": "ci-editors.json"
+  }
 }

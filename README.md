@@ -10,7 +10,7 @@ The **v0.10.0 preview** is one approximately **2.93 MiB executable** for **Windo
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-**Historical v0.9.0 CI verification (2026-10-22):** the full 4,211-path regression check passes. Exact fresh-process comparisons distinguish PDFium replay variance from save damage; known baseline exceptions remain documented. [Investigation and results](源码/CI-Verification.md). That verification did not change the v0.9.0 application binary.
+**v0.10.0 verification (2026-10-23):** 1,589 local assertions pass. The [completed Windows CI run](https://github.com/dmz1207/Mini-PDF/actions/runs/39877478557) checks all 4,211 public PDF paths with zero new regressions, plus text editing, Office conversion and forms. The 62 known public exceptions remain documented. [Test record](源码/测试记录.md).
 
 ## New in v0.10.0
 

@@ -8,7 +8,7 @@ v0.10.0 预览版，单 EXE 约 **2.93 MiB**，面向 Windows 10 / 11 x64。使�
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](源码) · [测试记录](源码/测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.9.0 历史 CI 验证（2026-10-22）：** 4,211 个路径的完整回归检查已通过。用独立进程精确比较，区分 PDFium 重放差异与保存损坏；已知异常继续保留。[调查和结果](源码/CI-Verification.md)。该次验证没有修改 v0.9.0 的应用 EXE。
+**v0.10.0 验证（2026-10-23）：** 本地 1,589 项检查通过；[完整 Windows CI](https://github.com/dmz1207/Mini-PDF/actions/runs/39877478557)检查 4,211 个公开路径及文字编辑、转换、表单，新增回归为 0。62 个既有异常继续保留，详见[测试记录](源码/测试记录.md)。
 
 ## v0.10.0 更新
 

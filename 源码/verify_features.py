@@ -118,8 +118,8 @@ def verify(root):
             bytes_path.write_bytes(signed)
             env = dict(os.environ, TEMP=str(root), TMP=str(root))
             result = subprocess.run([str(openssl), 'cms', '-verify', '-binary', '-noverify', '-inform', 'DER',
-                                     '-in', str(cms_path), '-content', str(bytes_path), '-out', os.devnull],
-                                    capture_output=True, env=env, timeout=30)
+                                     '-in', str(cms_path), '-content', str(bytes_path)],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env=env, timeout=30)
             check(result.returncode == 0, name+': OpenSSL verifies detached SHA-256 signature: '+result.stderr.decode(errors='replace').strip())
         with fitz.open(root / name) as pdf:
             check(pdf[0].get_pixmap().width > 100, name+': independent renderer opens signed document')

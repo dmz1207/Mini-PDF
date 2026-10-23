@@ -1,0 +1,81 @@
+{
+  "recorded": "2026-10-23",
+  "run_id": 39877478557,
+  "job_id": 120166497730,
+  "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/39877478557",
+  "code_commit": "5fd40b36fabc0f2f371ede2a565890f3af7862ee",
+  "conclusion": "success",
+  "local_executable_sha256": "D4932DD3E4DB00E61A3F9ECC8761456D02494918FA29624C0E2084819D704478",
+  "public_paths": 4211,
+  "public_distinct_contents": 4206,
+  "public_new_regressions": 0,
+  "public_known_exceptions": 62,
+  "headless_text_assertions": 97,
+  "independent_text_checks": 30,
+  "headless_office_forms_assertions": 33,
+  "independent_office_forms_checks": 301,
+  "cjk_skipped": false,
+  "summary_lines": [
+    "2026-10-23T00:26:43.6638830Z {\"logical_pdfs\": 4211, \"unique_pdfs\": 4206, \"statuses\": {\"ok\": 4137, \"page_error\": 7, \"open_error\": 37, \"error\": 11, \"ok_signed\": 15, \"crash\": 1, \"timeout\": 3}, \"elapsed_seconds\": 352.734, \"workers\": 4, \"render_max_dimension\": 600, \"timeout_seconds_per_pdf\": 45, \"process_commit_limit_mib\": 768}",
+    "2026-10-23T00:27:20.6217600Z {\"paths\": 4211, \"classification\": {\"applicable_checks_pass\": 4134, \"engine_open_or_page_difference\": 14, \"password_required\": 11, \"reference_also_cannot_complete\": 21, \"no_displayable_pages\": 7, \"engine_only_merge_difference\": 3, \"signed_preservation_pass\": 15, \"xfa_only_unsupported\": 2, \"native_process_failure\": 1, \"probe_time_limit\": 3}, \"exceptions\": 62}",
+    "2026-10-23T00:27:47.0659407Z TOTAL: 97 text-edit assertions, 0 failures",
+    "2026-10-23T00:27:47.4508778Z {\"independent_text_checks\": 30, \"failures\": 0, \"skipped\": 0}",
+    "2026-10-23T00:27:54.8519902Z TOTAL: 33 Office/form assertions, 0 failures",
+    "2026-10-23T00:27:56.6767968Z {\"office_form_checks\": 301, \"failures\": 0, \"cjk_skipped\": false}",
+    "2026-10-23T00:27:57.3558713Z {\"checked\": 4211, \"regressions\": []}"
+  ],
+  "steps": [
+    {
+      "name": "Set up job",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install development renderer",
+      "conclusion": "success"
+    },
+    {
+      "name": "Build and probe pinned public PDFs",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify text editing preservation",
+      "conclusion": "success"
+    },
+    {
+      "name": "Verify Office conversion and AcroForm tools",
+      "conclusion": "success"
+    },
+    {
+      "name": "Detect regressions against reviewed results",
+      "conclusion": "success"
+    },
+    {
+      "name": "Retain compatibility diagnostics",
+      "conclusion": "success"
+    },
+    {
+      "name": "Summarize diagnostics",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success"
+    }
+  ]
+}
