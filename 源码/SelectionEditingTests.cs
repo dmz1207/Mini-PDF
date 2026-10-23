@@ -113,6 +113,13 @@ namespace MiniPdf {
                 using(var answer=AnswerSavePrompt(1,UiText.Get("操作未完成")))form.EditSelected(true);
                 Assert(!view.InlineEditing&&!form.Document.Dirty&&!form.Document.CanUndo,"selected text: unsupported clipped selection gives an explicit message and edits none of it");form.Close();Application.DoEvents();
             }
+
+            using(var d=PdfDocument.Open(Path.Combine(folder,"text-source-selection-mixed-pages.pdf"),"")){
+                var ranges=new List<TextRange>{EditingRange(d,"In this paper","selected line.")};d.OpenPage(1);ranges.Add(EditingRange(d,"In this paper","selected line."));
+                var s=d.SelectTextEdit(ranges);d.ApplyTextEdit(s,EditingOptions(s,s.Text.Replace("reaction wheels","control wheels")));
+                for(int page=0;page<2;page++){d.OpenPage(page);var pick=EditingPick(d,"a priori");float size;N.FPDFTextObj_GetFontSize(d.ObjectAt(pick),out size);N.Matrix matrix;N.FPDFPageObj_GetMatrix(d.ObjectAt(pick),out matrix);Assert(Math.Abs(size*matrix.d-(page==0?10:14))<.01,"selected text: editing mixed pages preserves each original effective font size on page "+(page+1));}
+                var range=EditingRange(d,"Known","a priori");double x,y;N.FPDFText_GetCharOrigin(d.TextPage,range.Start,out x,out y);Assert(Math.Abs(y-694.8)<.02,"selected text: mixed-page editing retains the second page's different original line spacing");d.Save(Path.Combine(folder,"text-edited-selection-mixed-pages.pdf"));
+            }
             if(withUi)using(var d=PdfDocument.Open(path,"")){
                 var s=d.SelectTextEdit(new List<TextRange>{EditingRange(d,"In this paper","selected line.")});
                 using(var editor=new TextEditWindow(d,s)){editor.Show();PumpUntil(()=>editor.ReadyForTest);Assert(editor.Selection.Text.Contains("final selected line")&&Math.Abs(editor.DisplaySizeForTest-10)<.01,"selected text: actual editor displays the entire range and effective font size");editor.Close();}

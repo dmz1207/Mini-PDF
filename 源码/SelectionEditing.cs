@@ -219,7 +219,7 @@ namespace MiniPdf {
                 int end=i+1<children.Length?requested.IndexOf(SelectionDivider(children[i+1].Page),at,StringComparison.Ordinal):requested.Length;
                 Check(end>=at,UiText.Get("请保留跨页选区的页面分隔标记。"));contents.Add(requested.Substring(at,end-at));at=end;
             }
-            Edit(delegate{for(int i=0;i<children.Length;i++){OpenPage(preview?i:children[i].Page);var child=children[i];var opt=new TextEditOptions{Text=contents[i],Face=options.Face,Size=options.Size*selection.SizeScale/child.SizeScale,Color=options.Color,ChangeColor=options.ChangeColor,Wrap=options.Wrap,Width=options.Width*selection.Scale/child.Scale,LineHeight=options.LineHeight};ReplaceSelectedCore(child,opt);Check(N.FPDFPage_GenerateContent(Page)!=0,UiText.Get("无法生成页面内容。"));options.PageBounds[i]=opt.ResultBounds;if(i==0)options.ResultBounds=opt.ResultBounds;}OpenPage(saved);},VerifySelectedSave);
+            Edit(delegate{for(int i=0;i<children.Length;i++){OpenPage(preview?i:children[i].Page);var child=children[i];var opt=new TextEditOptions{Text=contents[i],Face=options.Face,Size=options.Face=="保留原字体"?child.Size*options.Size/selection.Size:options.Size*selection.SizeScale/child.SizeScale,Color=options.Color,ChangeColor=options.ChangeColor,Wrap=options.Wrap,Width=options.Width*selection.Scale/child.Scale,LineHeight=Near(options.LineHeight,selection.LineHeight)?child.LineHeight:options.LineHeight};ReplaceSelectedCore(child,opt);Check(N.FPDFPage_GenerateContent(Page)!=0,UiText.Get("无法生成页面内容。"));options.PageBounds[i]=opt.ResultBounds;if(i==0)options.ResultBounds=opt.ResultBounds;}OpenPage(saved);},VerifySelectedSave);
             return true;
         }
         internal void ModifySelectedText(List<TextRange> ranges,bool resize,float ratio) {

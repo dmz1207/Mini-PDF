@@ -10,7 +10,7 @@ The **v0.10.1 preview** is one approximately **2.94 MiB executable** for **Windo
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.10.1 local verification (2026-10-23):** 1,657 assertions pass, including the full desktop suite and independent saved-file/render checks. Public compatibility CI and its 62 known exceptions are documented in the [test record](源码/测试记录.md).
+**v0.10.1 local verification (2026-10-23):** 1,664 assertions pass, including the full desktop suite and independent saved-file/render checks. Public compatibility CI and its 62 known exceptions are documented in the [test record](源码/测试记录.md).
 
 ## Refined in v0.10.1
 

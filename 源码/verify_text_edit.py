@@ -56,14 +56,14 @@ def fixtures(root):
  with (root/'text-source-actual-text.pdf').open('wb') as f:writer.write(f)
  reader=PdfReader(root/'text-source-basic.pdf');writer=PdfWriter(clone_from=reader);writer.pages[0].rotate(90)
  with (root/'text-source-page-rotation.pdf').open('wb') as f:writer.write(f)
- def selected(c):
+ def selected(c,scale=10,spacing=1.4):
   c.setFillColorRGB(0,0,0)
-  c.saveState();c.transform(10,0,0,10,45,720);c.setFont('Times-Roman',1)
+  c.saveState();c.transform(scale,0,0,scale,45,720);c.setFont('Times-Roman',1)
   rows=['PREFIX In this paper reaction wheels provide control.',
         'Known a priori information stays in italic.',
         'This is the final selected line. SUFFIX']
   for i,line in enumerate(rows):
-   y=-1.4*i
+   y=-spacing*i
    if i==1:
     a='Known ';b='a priori';c.drawString(0,y,a);c.setFont('Times-Italic',1);c.drawString(pdfmetrics.stringWidth(a,'Times-Roman',1),y,b);c.setFont('Times-Roman',1);c.drawString(pdfmetrics.stringWidth(a,'Times-Roman',1)+pdfmetrics.stringWidth(b,'Times-Italic',1),y,line[len(a+b):])
    else:c.drawString(0,y,line)
@@ -78,7 +78,8 @@ def fixtures(root):
  stream.set_data(data.replace(original,b'[(PREFIX In this paper ) -25 (reaction wheels) 12 ( provide control.)] TJ'))
  writer.pages[0][NameObject('/Contents')]=writer._add_object(stream)
  with (root/'text-source-variable-spacing.pdf').open('wb') as f:writer.write(f)
- print(json.dumps({'text_fixture_files':14}))
+ b=io.BytesIO();c=canvas.Canvas(b,pagesize=(600,800));selected(c);c.showPage();selected(c,14,1.8);c.showPage();c.save();(root/'text-source-selection-mixed-pages.pdf').write_bytes(b.getvalue())
+ print(json.dumps({'text_fixture_files':15}))
 
 def verify(root):
  import fitz
@@ -159,6 +160,12 @@ def verify(root):
    check(source[0].get_pixmap(matrix=fitz.Matrix(3,3),clip=clip).samples==output[0].get_pixmap(matrix=fitz.Matrix(3,3),clip=clip).samples,'nonuniform spacing: '+label+' stay pixel-identical')
  with fitz.open(root/'text-wrapped-selection.pdf') as doc:
   text=doc[0].get_text();check(all(word in text for word in ['PREFIX','SUFFIX','reaction','wheels','italic.','UNCHANGED FOOTER']),'selected paragraph: wrapping retains every selected word and outside text')
+
+ with fitz.open(root/'text-edited-selection-mixed-pages.pdf') as doc:
+  for i,page in enumerate(doc):
+   spans=[s for block in page.get_text('dict')['blocks'] if block['type']==0 for line in block['lines'] for s in line['spans'] if 'a priori' in s['text']]
+   check(len(spans)==1 and abs(spans[0]['size']-(10 if i==0 else 14))<.01,'mixed pages: original effective font size persists independently on page '+str(i+1))
+   check('control wheels' in page.get_text() and 'SUFFIX' in page.get_text(),'mixed pages: edited and outside text survive on page '+str(i+1))
  report={'independent_checks':len(checks),'passed':checks,'skipped':skipped};(root/'text-edit-independent.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps({'independent_text_checks':len(checks),'failures':0,'skipped':len(skipped)}))
 
 if __name__=='__main__':
