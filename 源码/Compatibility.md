@@ -1,5 +1,9 @@
 # Mini PDF 0.9.0 — Public PDF compatibility tests
 
+Latest v0.10.0 local recheck (2026-10-23): **4,211 paths, zero new regressions**, with 4,134 applicable unsigned passes, 15 signed preservation passes and 62 recorded exceptions. Standard form appearances are now rendered and imported field parents/resources are restored. The new run and 20 representative text-edit probes are preserved in [editor-compatibility.json](editor-compatibility.json); the older tables below remain historical. Final source CI and release checks are linked from [the test record](测试记录.md).
+
+本轮完整公开库复测新增回归为 0；没有将 62 个既有异常改为通过。新增表单外观渲染、字段结构导入恢复及文字改写样本证据独立保存，下方历史表格不覆盖。
+
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 Recorded 2026-10-22 on Windows 10 Home Chinese x64, build 19045. This is an application smoke and preservation test using pinned public PDFs, with independent diagnosis of exceptions. It does not execute the complete upstream PDFium, PDF.js or veraPDF conformance harnesses.

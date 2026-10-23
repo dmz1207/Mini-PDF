@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
+This investigation and the binary hashes below refer to v0.9.0. See [the current test record](测试记录.md) for v0.9.1 verification.
+
 ## What failed
 
 The first public-corpus workflow completed its build and probes, then failed the regression gate on PDF.js `issue14438.pdf`: a saved/reopened rendering differed from the first source rendering. The workflow has one job, so GitHub reported “All jobs failed” for that one failed gate. It did not report that all 4,211 PDFs failed.

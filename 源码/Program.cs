@@ -8,6 +8,7 @@ namespace MiniPdf {
         [STAThread] static int Main(string[] args) {
             bool initialized=false;SingleInstance instance=null;
             try {
+                if(args.Length==2&&args[0]=="--office-worker"){N.SetErrorMode(3);N.SetDefaultDllDirectories(0xa00);if(N.LoadLibraryEx(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"pdfium.dll"),IntPtr.Zero,0x900)==IntPtr.Zero)return 1;N.FPDF_InitLibrary();initialized=true;return OfficeWorker.Run(args[1]);}
                 bool renderer=args.Length==3&&(args[0]=="--render-worker"||args[0]=="--system-render-worker");
                 if(renderer){N.SetErrorMode(3);N.SetDefaultDllDirectories(0x00000a00);if(N.LoadLibraryEx(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"pdfium.dll"),IntPtr.Zero,0x00000900)==IntPtr.Zero)return 1;N.FPDF_InitLibrary();initialized=true;N.SetProcessDPIAware();return RasterWorker.Run(args[1],Int32.Parse(args[2],System.Globalization.CultureInfo.InvariantCulture),args[0]=="--system-render-worker");}
                 bool separate=false;var files=new List<string>();foreach(string arg in args){if(arg=="--new-window")separate=true;else files.Add(Path.GetFullPath(arg));}
@@ -20,6 +21,7 @@ namespace MiniPdf {
                 using(var main=new MainWindow(null)){main.Shown+=delegate{main.OpenDocuments(files.ToArray());};if(instance!=null){IntPtr handle=main.Handle;instance.Listen(delegate(string[] paths){try{if(!main.IsDisposed)main.BeginInvoke(new Action(delegate{main.ReceiveOpenRequest(paths);}));}catch(InvalidOperationException){}});}Application.Run(main);}
                 return 0;
             } catch(Exception e) {
+                if(args.Length>0&&args[0]=="--office-worker")return 1;
                 MessageBox.Show(e.Message,"Mini PDF",MessageBoxButtons.OK,MessageBoxIcon.Error);return 1;
             } finally {RenderPool.Shutdown();if(instance!=null)instance.Dispose();if(initialized)N.FPDF_DestroyLibrary();}
         }

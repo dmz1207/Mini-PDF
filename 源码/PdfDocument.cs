@@ -395,7 +395,8 @@ namespace MiniPdf
                 list.RemoveAt(0);
             }
         }
-        public void Edit(Action change)
+        public void Edit(Action change) { Edit(change, null); }
+        void Edit(Action change, Action validate)
         {
             Check(CanEdit, SignatureCount > 0 ? UiText.Get("已签名的 PDF 以只读方式打开，以保留签名字节。")
                                               : UiText.Get("此 PDF 限制内容修改，请使用具有编辑权限的密码打开。"));
@@ -408,6 +409,7 @@ namespace MiniPdf
                     OpenPage(Index);
                 Check(N.FPDFPage_GenerateContent(Page) != 0, UiText.Get("无法生成页面内容。"));
                 CloseText();
+                if (validate != null) validate();
                 undo.Add(before);
                 Trim(undo);
                 redo.Clear();
@@ -479,7 +481,7 @@ namespace MiniPdf
         }
         internal bool CanRenderQuickly(int index)
         {
-            if (index != Index || N.FPDFPage_GetAnnotCount(Page) > 32) return false;
+            if (index != Index || N.FPDFPage_GetAnnotCount(Page) > 32 || N.FPDF_GetFormType(Handle) != 0) return false;
             int count = N.FPDFPage_CountObjects(Page);
             if (count < 0 || count > 250) return false;
             for (int i = 0; i < count; i++)
@@ -517,6 +519,8 @@ namespace MiniPdf
                 }
                 N.FPDF_RenderPageBitmap(bitmap, page, -region.X, -region.Y, pageWidth, pageHeight, rotation,
                                         renderFlags);
+                if ((renderFlags & 1) != 0) using (var forms = new FormRendering(Handle, page, index))
+                    forms.Draw(bitmap, -region.X, -region.Y, pageWidth, pageHeight, rotation, renderFlags);
                 return true;
             }
             finally

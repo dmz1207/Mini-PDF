@@ -4,7 +4,47 @@ namespace MiniPdf {
     internal static partial class UiText {
         static void AddFeatureTranslations(Dictionary<string,string> strings){
             // One entry per line keeps the optional feature vocabulary separate.
-            const string pairs=@"全部文件逐页交错|Interleave all files, one page each
+            const string pairs=@"此文字带有替代文本标记，暂不支持保真改写。|This text has ActualText replacement metadata. Faithful rewriting is not supported yet.
+竖排文字暂不支持保真改写。|Vertical text rewriting is not yet supported with preservation guarantees.
+此文字用于剪裁，暂不支持安全改写。|This text defines clipping and cannot be safely rewritten yet.
+文字超出页面边界。可启用自动换行并调整宽度。|Text extends beyond the page. Enable wrapping and adjust the width.
+保留原字体|Keep original font
+当前文字对象|Selected text object
+同一行文字|Text on the same line
+相邻同样式段落|Adjacent matching paragraph
+自动换行|Wrap text
+宽度（毫米）|Width (mm)
+行距倍数|Line spacing
+预览文字区域|Preview text area
+应用修改|Apply changes
+原字体：|Original font: 
+ 个文字对象| text object(s)
+仅修改识别层，扫描图像保持原样。|Edits the recognition layer; the scan image stays unchanged.
+正在生成预览…|Generating preview...
+正在等待预览…|Waiting for preview...
+预览通过。应用后可撤销；未修改的对象保持原样。|Preview ready. Changes can be undone; other objects remain unchanged.
+文字区域不在页面内。|The text area is outside the page.
+无法读取原字体的字宽，请选择其他字体。|Cannot read glyph widths. Choose another font.
+文字字号不支持编辑。|This text size is outside the editing range.
+无法读取原字体。|Cannot read the original font.
+无法读取可编辑文字。|Cannot read editable text.
+此页对象较多，请按单个文字对象编辑。|This page has many objects. Edit one text object at a time.
+文字块较大，请缩小编辑范围。|The text block is too large. Select a smaller scope.
+文字变换不支持编辑。|This text transformation cannot be edited.
+无法确认原字体包含新增字符 U+|Cannot confirm that the original font contains new character U+
+。请选择自动或系统字体，并核对预览。|. Choose Auto or a system font and check the preview.
+字距超出可编辑范围。|Character spacing is outside the editing range.
+文本框太窄，无法容纳一个字符。|The text box is too narrow for a character.
+换行过多，请增大文本框宽度。|Too many lines. Increase the text box width.
+文字已变化，请重新选择。|The text changed. Select it again.
+请输入有效文字和字号。|Enter valid text and font size.
+请输入有效文本框宽度。|Enter a valid text box width.
+请输入有效行距。|Enter valid line spacing.
+此文字需要暂未支持的复杂排版，请保留原文或使用其他编辑器。|This text needs unsupported complex shaping. Keep the original or use another editor.
+此文字带有隐藏、图层或剪裁属性，请保留原字体并按单个对象编辑。|This text has hidden, layer or clipping state. Keep its original font and edit one object.
+无法保留文字间距。|Cannot preserve character spacing.
+原字体无法正确表示输入文字，请选择“自动”或其他系统字体后重试。|The original font cannot represent this text correctly. Choose Auto or a system font.
+全部文件逐页交错|Interleave all files, one page each
 全部文件每 N 页交错…|Interleave all files in blocks of N…
 按文件名自然排序|Sort files by name (natural order)
 各文件内部倒序|Reverse pages within each file
@@ -255,6 +295,100 @@ PDF 和图片 (*.pdf;*.png;*.jpg;*.jpeg;*.bmp)\|*.pdf;*.png;*.jpg;*.jpeg;*.bmp|P
 请至少添加一页。|Add at least one page.
 将 PDF 或图片拖到这里\n展开文件组后，可拖动页面调整顺序|Drop PDFs or images here\nExpand a file group to drag and reorder its pages
 {0} 页|{0} pages
+此页字体保存后无法保持文字完整，已取消修改；可尝试明确更换字体。|This page loses text after font serialization. The edit was canceled; try explicitly replacing the font.
+PDF 转 Word|PDF to Word
+PDF 转 Excel|PDF to Excel
+PDF 转 Word…|Convert PDF to Word…
+PDF 转 Excel…|Convert PDF to Excel…
+表单工具|Form tools
+表单工具…|Form tools…
+页面范围|Page range
+自动检测列|Detect columns
+包含图片|Include images
+预览第一页|Preview first page
+按位置整理为可编辑单元格，每个 PDF 页一个工作表；复杂表格请核对。无文字层的扫描页不识别。|Extract positioned text into editable cells, one sheet per PDF page. Review complex tables. Scans without a text layer are not recognized.
+导出可编辑文字和图片，采用流式排版；复杂版式可能变化。扫描页不会自动识别文字。|Export editable text and images with flowing layout. Complex layouts may change. Scans are not recognized automatically.
+此页没有可提取文字；未启用 OCR。|No extractable text on this page. OCR is not included.
+导出…|Export…
+转换文档|Convert document
+正在转换…|Converting…
+转换进程启动超时。|The conversion worker did not start in time.
+部分图片超过导出限制或无法读取：|Some images exceeded export limits or could not be read: 
+转换未完成|Conversion incomplete
+此页文字过多，无法转换。|This page has too much text to convert.
+检测到过多列，请使用单列文本模式。|Too many columns were detected. Use single-column text mode.
+单个单元格超过 Excel 的文字上限。|A cell exceeds Excel's text limit.
+请选择 1 至 2000 页进行转换。|Select between 1 and 2,000 pages to convert.
+页面范围无效。|Invalid page range.
+转换内容过大，请分批导出。|The conversion is too large. Export fewer pages at a time.
+导出文件校验失败。|Exported file validation failed.
+文本框|Text field
+多行文本|Multiline text
+密码框|Password field
+勾选框|Checkbox
+单选组|Radio group
+下拉框|Dropdown
+可编辑下拉框|Editable dropdown
+列表框|List box
+多选列表|Multiple selection
+签名字段|Signature field
+按钮|Button
+不支持的字段|Unsupported field
+设计字段|Design fields
+选择 / 填写|Select / fill
+导入数据…|Import data…
+导出数据…|Export data…
+重置填写值|Reset values
+字段名称|Field name
+提示说明|Tooltip
+填写值|Value
+已勾选|Checked
+默认值|Default value
+当前单选项 / 勾选导出值|Selected option / checkbox export value
+选项（每行 导出值\|显示文字）|Options (one export value\|label per line)
+字数|Max length
+左对齐|Align left
+右对齐|Align right
+只读|Read only
+必填|Required
+不导出数据|Exclude from export
+更新字段|Update field
+复制字段 / 新增单选项|Duplicate / add radio option
+删除所选字段|Delete selected field
+字段顺序上移|Move field up
+字段顺序下移|Move field down
+应用到文档|Apply to document
+应用尚未提交的字段修改？|Apply pending field changes?
+只读查看；签名、权限或加密限制了表单修改。|Read only: signature, permissions or encryption restrict form editing.
+ 个字段，未填必填项：| fields; required values missing: 
+字号 0 表示自动；设计模式下可拖动和缩放。|Font size 0 means automatic. Use Design fields to move and resize.
+将可填写字段恢复为默认值？|Restore writable fields to their defaults?
+已导入字段：|Imported fields: 
+关闭前将表单修改应用到当前文档？之后可用 Ctrl+S 保存。|Apply form changes to the current document before closing? Save the PDF afterward with Ctrl+S.
+表单未打开|Cannot open form tools
+表单页面树无效。|Invalid form page tree.
+兼容预览不能处理表单。|Form tools are unavailable in compatibility preview.
+XFA 动态表单暂不支持；请使用标准 PDF 表单。|Dynamic XFA forms are not supported. Use a standard PDF AcroForm.
+表单字段树无效或过大。|The form field tree is invalid or too large.
+直接内联字段暂不支持编辑。|Direct inline field dictionaries cannot be edited.
+最多支持 10000 个表单字段。|At most 10,000 form fields are supported.
+字段名称不能为空或重复，层级名称用点分隔。|Field names must be nonempty and unique. Use dots for hierarchical names.
+字段文字过长。|Field text is too long.
+字段文字超过最大长度：|Field exceeds its maximum length: 
+签名、动作按钮及未知字段在这里仅供查看。|Signature fields, action buttons and unknown fields are read only here.
+选项导出值必须唯一。|Option export values must be unique.
+填写值不在字段选项内：|The value is not among the field options: 
+单选组的选项值必须唯一。|Radio options must have distinct export values.
+字段位置或大小无效。|Invalid field position or size.
+字段名称不能同时作为其他字段的父组。|A terminal field name cannot also be another field's parent group.
+无法生成表单外观。|Cannot generate the field appearance.
+表单外观页数校验失败。|Field appearance page validation failed.
+字段引用已变化，请重新打开表单工具。|Field references changed. Reopen form tools.
+表单保存校验失败。|Saved form validation failed.
+请选择 XFDF 表单数据文件。|Choose an XFDF form data file.
+编辑表单结构前，请明确导出未加密副本。|Export an unencrypted copy explicitly before changing form structure.
+此字段只接受一个填写值。|This field accepts only one value.
+勾选或单选的选项值不能是 Off 或空值。|Checkbox and radio export values must be nonempty and cannot be Off.
 无法合并页面。|Cannot combine pages.";
             foreach(string line in pairs.Split('\n')){string value=line.TrimEnd('\r');int split=-1;for(int i=0;i<value.Length;i++)if(value[i]=='|'&&(i==0||value[i-1]!='\\')){split=i;break;}if(split<0)continue;strings[value.Substring(0,split).Replace("\\|","|").Replace("\\n","\n")]=value.Substring(split+1).Replace("\\|","|").Replace("\\n","\n");}
         }

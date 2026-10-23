@@ -6,11 +6,23 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.9.0 preview** is one approximately **2.88 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.10.0 preview** is one approximately **2.93 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-**CI verification update (2026-10-22):** the full 4,211-path regression check passes. Exact fresh-process comparisons distinguish PDFium replay variance from save damage; known baseline exceptions remain documented. [Investigation and results](源码/CI-Verification.md). The application binary is unchanged.
+**Historical v0.9.0 CI verification (2026-10-22):** the full 4,211-path regression check passes. Exact fresh-process comparisons distinguish PDFium replay variance from save damage; known baseline exceptions remain documented. [Investigation and results](源码/CI-Verification.md). That verification did not change the v0.9.0 application binary.
+
+## New in v0.10.0
+
+- Convert PDF content to editable Word DOCX or Excel XLSX using built-in ZIP/XML APIs. Preserve Unicode, common aligned tables, numbers/identifiers and optional Word images; no Office installation is required.
+- Add a standard AcroForm workspace for creating, moving, resizing, copying, deleting, filling and ordering common fields, with default values, choices, flags, local history and XFDF data import/export.
+- Render native widget appearances and reconnect imported field trees/resources during merge, insertion, duplication and extraction. Keep the original files unchanged.
+- Edit supported existing text in place, retaining its original PDF font, transformation, baseline, spacing, opacity, clipping and marks. No white covering rectangle is added.
+- Choose one text object, adjacent fragments on one line, or a conservative same-style horizontal paragraph. Adjust size/color, local wrapping width and line spacing.
+- Inspect a debounced PDFium preview of the text area or whole page before applying. One undo restores the complete change; accepting unchanged content creates no undo entry.
+- If a new character cannot be confirmed in the original font, choose Auto or an installed system font explicitly. Font programs and rendering metrics can then change; inspect the preview.
+- Preserve hidden OCR text without changing the scan image. Reject unsupported vertical/complex-script text, text used for clipping and ActualText replacement metadata rather than silently damaging it. Nested Form and outlined text remain outside this editor.
+- Reuse the existing PDFium and native Windows UI; no new runtime, font pack or OCR model is bundled. See [Text editing](源码/TextEditing.md) for scope and reproducible checks.
 
 ## Refined in v0.9.0
 
@@ -87,7 +99,7 @@ The collapsed menu, rounded draggable document tabs and window buttons share one
 
 | Area | Available features |
 | --- | --- |
-| Existing text | Replace top-level text objects; the old object is removed rather than hidden under white paint |
+| Existing text | Preserve original fonts for supported top-level text edits; native preview, same-line/paragraph grouping, local wrapping, explicit font replacement and one-step undo |
 | New content | Add Chinese/English multiline text, images, rectangles and visible signatures |
 | Objects | Select, move, resize and delete text, images and shapes; double-click text or notes to edit |
 | Annotations | Highlight, underline, strikeout, ink, sticky notes and annotation removal |
@@ -95,7 +107,8 @@ The collapsed menu, rounded draggable document tabs and window buttons share one
 | Pages | Insert blank pages, duplicate, rotate, delete, extract, reorder and combine |
 | Watermarks | Text/images, opacity, angle, position, tiling, page counters, ranges, Mini PDF replacement and checked third-party watermark removal |
 | Navigation | Thumbnails, outline, current-page annotations, search, text selection/copy, internal and web links |
-| Export | Current-page PNG, document TXT and printing |
+| Forms | Create, edit, fill and manage common AcroForm fields; Unicode XFDF data import/export |
+| Export | Editable Word DOCX / Excel XLSX, current-page PNG, document TXT and printing |
 | History | Per-document undo/redo, up to twelve steps with a 64 MiB target |
 | Save | Reload validation, atomic replacement, safe new-font subsetting and preservation of existing encryption |
 
@@ -107,7 +120,7 @@ Select text in Select mode, then choose a color from Highlight or the right-clic
 
 Open Pages or press Ctrl+Shift+P to manage the active document. Expand a file group to see its individual pages. Ctrl-click selects multiple pages; Shift-click selects a range. Hold the left mouse button to drag selected pages to another position. Rotate, duplicate, remove, undo and redo are available. Apply commits the whole operation to the active document; its normal undo restores the previous state. Destinations attached to retained original pages are preserved during reorder/delete; links to deleted pages may no longer resolve.
 
-Combine Files accepts dropped or selected PDF, PNG, JPEG and BMP files. Drag collapsed groups to change file order, or expand groups and drag pages across them. Images are placed on A4 pages. Combining creates a new unsaved document and preserves the original files. Word/Excel import is not provided. Source outlines and document-level interactive form structures are not combined into unified structures. Default/view/print optional-content group states are preserved in the tested merge workflows, including distinct groups with identical names; arbitrary named alternative configurations are not all retained. Importing layered pages into an encrypted target is rejected without changing that target; combining an encrypted source into a new unencrypted output is supported. Three native merge comparisons remain unresolved; see [Compatibility](源码/Compatibility.md). Each workspace supports up to 10,000 pages and twenty workspace undo steps.
+Combine Files accepts dropped or selected PDF, PNG, JPEG and BMP files. Drag collapsed groups to change file order, or expand groups and drag pages across them. Images are placed on A4 pages. Combining creates a new unsaved document and preserves the original files. Word/Excel import is not provided. Source outlines are not unified. Standard AcroForm field trees and appearances are restored; arbitrary form actions and document automation are not reconstructed. Default/view/print optional-content group states are preserved in the tested merge workflows, including distinct groups with identical names; arbitrary named alternative configurations are not all retained. Importing layered or form pages into an encrypted target is rejected without changing that target; combining an encrypted source into a new unencrypted output is supported. Three native merge comparisons remain unresolved; see [Compatibility](源码/Compatibility.md). Each workspace supports up to 10,000 pages and twenty workspace undo steps.
 
 The + / - square expands or collapses a file without adding a separate cover. The file title above its first page is the handle for moving the whole file; the image below selects and moves that page. Other thumbnails retain their source filename and original page number. Hover for the full filename. Wider thumbnail gaps and darker gray dividers separate files; the blue capped line marks the actual insertion point, with a destination hint. Hover over a collapsed destination to expand it; edge dragging scrolls. Releasing outside the board or pressing Esc cancels the move.
 
@@ -132,6 +145,18 @@ Closing a changed Combine Files workspace asks whether to save the current arran
 ### Scanned PDFs with a text layer
 
 Existing OCR text can be read, selected across pages, copied, searched and edited when it is a top-level text object. Editing preserves the text's invisibility/transparency and the original scan. Changing the recognition layer does not alter letters inside the scan image. Nested Form text remains readable/searchable but cannot be edited character by character. No OCR engine is bundled.
+
+## PDF to Word / Excel and form tools
+
+Use **Menu > File > Convert PDF to Word… / Excel…**. Select all/current/custom pages and preview the first selected page. Word exports editable text, basic fonts/colors, aligned tables and extracted images to DOCX. Excel groups text by position into editable cells, with one worksheet per PDF page; turn off automatic column detection for a single text column. Conversion runs in a separate, cancelable process and leaves the PDF untouched.
+
+These are content conversions, with approximate layout reconstruction. Complex multi-column pages, merged cells, charts and reading order may need correction. Image-only pages remain images in Word and contain no recognized cells in Excel. Existing text layers are usable, but **no OCR is included**. Text that looks like an Excel formula is exported as literal text; leading-zero identifiers are preserved.
+
+Press **Ctrl+Shift+F** or choose **Menu > File > Form tools…**. Select a field, change its value on the right and choose Update field. Enable Design fields to add text, multiline/password fields, checkboxes, radio groups, dropdowns and single/multiple-selection lists. Drag to create/move, or drag a corner to resize. Name, tooltip, default/current values, options/export values, font size, alignment, length, read-only/required/NoExport flags and field order can be edited. Radio groups can have multiple selectable widgets. Undo/redo works inside the workspace.
+
+Apply to document commits the form changes as one undoable operation; **Ctrl+S then saves the PDF**. Import/export uses standard Unicode XFDF data. Reset values respects defaults and read-only fields. Standard field parents, values and appearances are retained during tested merge/insert/duplicate/extract operations; copied fields get independent names.
+
+This covers common **AcroForm** authoring and filling. Dynamic XFA, JavaScript calculations/actions, submissions and editing existing signature/action-button fields are unsupported. Digitally signed documents and encrypted PDFs remain view-only in this workspace; it does not remove encryption to enable editing. Certificate signing remains a separate tool. See [Conversion and forms](源码/OfficeAndForms.md) for details and verification.
 
 ## Printing
 
@@ -177,6 +202,7 @@ Menu > Language lists English first and 简体中文 second. Changes apply immed
 | Book / grid | Ctrl+8 / Ctrl+9 |
 | Select / hand / temporary pan | V / H / hold Space |
 | Highlight selected text | Ctrl+Alt+H |
+| Form tools | Ctrl+Shift+F |
 | Organize pages / print | Ctrl+Shift+P / Ctrl+P |
 | Find / next result | Ctrl+F / Enter or F3 |
 | Undo / redo | Ctrl+Z / Ctrl+Y |
@@ -195,7 +221,7 @@ The portable folder must be writable. Save documents outside the runtime directo
 
 ## Current limits
 
-This remains a preview. PDF text editing is object-based, not flowing paragraph editing; replacement fonts may change metrics. Outlined or nested Form text cannot be edited character by character. No built-in OCR, general interactive form filling, permanent redaction, measurement, paragraph reflow, annotation replies or Adobe cloud workflows are included. Existing links can be followed but new link creation is not provided. Very large PDFs can exceed the history/cache targets, especially with multiple tabs. Public adversarial tests still expose engine-level image, page-tree and layer-import limitations; see [Compatibility](源码/Compatibility.md) for the exact scope and remaining cases.
+This remains a preview. Text editing supports local same-style horizontal blocks, rather than document-wide Word-style flow. Explicit replacement fonts may change metrics. Outlined or nested Form text, vertical/complex-script text and ActualText metadata cannot be faithfully rewritten by this editor. Dynamic XFA, form JavaScript/actions/submissions, built-in OCR, permanent redaction, measurement, document-wide reflow, annotation replies or Adobe cloud workflows are included. Existing links can be followed but new link creation is not provided. Very large PDFs can exceed the history/cache targets, especially with multiple tabs. Public adversarial tests still expose engine-level image, page-tree and layer-import limitations; see [Compatibility](源码/Compatibility.md) for the exact scope and remaining cases.
 
 ## Build and verification
 
@@ -214,6 +240,8 @@ python .\源码\verify_pdf.py fixtures .\work\tests
 python .\源码\verify_features.py fixtures .\work\tests
 python .\源码\verify_fixes.py fixtures .\work\tests
 python .\源码\selection_fixtures.py .\work\tests .\work\compatibility
+python .\源码\verify_text_edit.py fixtures .\work\tests
+python .\源码\verify_office_forms.py fixtures .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\build.ps1 -Test
 python .\源码\verify_pdf.py verify .\work\tests
 python .\源码\verify_features.py verify .\work\tests
@@ -221,6 +249,8 @@ python .\源码\verify_fixes.py verify .\work\tests
 python .\源码\verify_merge.py verify .\work\tests
 python .\源码\verify_selection.py .\work\tests
 python .\源码\verify_compatibility.py .\work\tests
+python .\源码\verify_text_edit.py verify .\work\tests
+python .\源码\verify_office_forms.py verify .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 ~~~
 

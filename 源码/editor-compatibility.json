@@ -1,0 +1,220 @@
+{
+  "recorded": "2026-10-23",
+  "version": "0.10.0.0",
+  "corpus": {
+    "logical_pdfs": 4211,
+    "unique_pdfs": 4206,
+    "statuses": {
+      "ok": 4137,
+      "page_error": 7,
+      "open_error": 37,
+      "error": 11,
+      "ok_signed": 15,
+      "crash": 1,
+      "timeout": 3
+    },
+    "elapsed_seconds": 886.593,
+    "workers": 4,
+    "render_max_dimension": 600,
+    "timeout_seconds_per_pdf": 45,
+    "process_commit_limit_mib": 768,
+    "probe_build": {
+      "probe_sha256": "f3f60141416045328e08258857da28c36b3ac025fbcaa7500b35eaea0b178ea7",
+      "core_sha256": "559c15efc8d98e4b08224e7bef8bc10289957e69ff0f11e9a74ff196e01e9114",
+      "pdfium_sha256": "a318c39c137482dc4687c2973b7ec1c27fc1c20253cf2dc31928f922eab89e8f",
+      "render_max_dimension": 600,
+      "timeout_seconds_per_pdf": 45,
+      "process_commit_limit_mib": 768
+    },
+    "classification": {
+      "applicable_checks_pass": 4134,
+      "engine_open_or_page_difference": 14,
+      "password_required": 11,
+      "reference_also_cannot_complete": 21,
+      "no_displayable_pages": 7,
+      "engine_only_merge_difference": 3,
+      "signed_preservation_pass": 15,
+      "xfa_only_unsupported": 2,
+      "native_process_failure": 1,
+      "probe_time_limit": 3
+    },
+    "merge_mismatches": 3,
+    "signed_checks_do_not_edit": true,
+    "permission_skipped_edit_checks": 10,
+    "sources": [
+      {
+        "key": "pdfium",
+        "repo": "chromium/pdfium",
+        "commit": "a84323421e94f484faca52dd9d027934eba42ab8",
+        "route": "verified-local-cache",
+        "archive_bytes": 8951427,
+        "extracted_bytes": 6109660
+      },
+      {
+        "key": "pdfjs",
+        "repo": "mozilla/pdf.js",
+        "commit": "d213fafd7b43212b93788c910d5cdc9e30d0dd8c",
+        "route": "verified-local-cache",
+        "archive_bytes": 104909909,
+        "extracted_bytes": 124645065
+      },
+      {
+        "key": "verapdf",
+        "repo": "veraPDF/veraPDF-corpus",
+        "commit": "bb75f4f0073d9350dfd058c0162a367e6fadf25e",
+        "route": "verified-local-cache",
+        "archive_bytes": 140980346,
+        "extracted_bytes": 167346059
+      }
+    ]
+  },
+  "regression_comparison": {
+    "checked": 4211,
+    "regressions": []
+  },
+  "public_text": {
+    "cases": 20,
+    "results": [
+      {
+        "status": "edited",
+        "font": "Times-Roman",
+        "text": "Hello, world!",
+        "source": "pdfium/hello_world.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Times-Roman",
+        "text": "Hello, world!",
+        "source": "pdfium/cropped_text.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Times-Roman",
+        "text": "A1",
+        "source": "pdfium/font_matrix.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Helvetica",
+        "text": "1",
+        "source": "pdfium/font_weight.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Times-Roman",
+        "text": "Hello, ",
+        "source": "pdfium/rotated_text.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Times-Roman",
+        "text": "Hello,",
+        "source": "pdfium/rotated_text_90.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "last_guard": "Vertical text rewriting is not yet supported with preservation guarantees.",
+        "status": "no_supported_top_level_text",
+        "source": "pdfium/vertical_text.pdf"
+      },
+      {
+        "status": "edited",
+        "font": "LiberationSerif",
+        "text": "asdf",
+        "source": "pdfium/text_font.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Courier-Bold",
+        "text": "Test 1",
+        "source": "pdfium/text_in_page_marked.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Courier-Bold",
+        "text": "Test 1",
+        "source": "pdfium/text_in_page_marked_indirect.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "no_supported_top_level_text",
+        "source": "pdfium/tagged_actual_text.pdf"
+      },
+      {
+        "status": "no_supported_top_level_text",
+        "source": "pdfium/tagged_alt_text.pdf"
+      },
+      {
+        "status": "no_supported_top_level_text",
+        "source": "pdfium/form_object_with_text.pdf"
+      },
+      {
+        "status": "edited",
+        "font": "Times-Roman",
+        "text": "Hello, world!",
+        "source": "pdfium/hello_world_2_pages.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Times-Roman",
+        "text": "Hello, world!",
+        "source": "pdfium/hello_world_split_streams.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "status": "edited",
+        "font": "Helvetica",
+        "text": "fill",
+        "source": "pdfium/text_render_mode.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "last_guard": "The original font cannot represent this text correctly. Choose Auto or a system font.",
+        "status": "no_supported_top_level_text",
+        "source": "pdfjs/SimFang-variant.pdf"
+      },
+      {
+        "status": "edited",
+        "font": "����",
+        "text": "目 ",
+        "source": "pdfjs/XiaoBiaoSong.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      },
+      {
+        "last_guard": "The original font cannot represent this text correctly. Choose Auto or a system font.",
+        "status": "no_supported_top_level_text",
+        "source": "pdfjs/issue18117.pdf"
+      },
+      {
+        "status": "edited",
+        "font": "����",
+        "text": "北斗星",
+        "source": "pdfjs/issue20489.pdf",
+        "independent_pixels_equal": true,
+        "independent_nonspace_text_equal": true
+      }
+    ]
+  },
+  "note": "The local corpus probe predates later form-window layout-only fixes. The final source is also checked by GitHub CI; see the release test record for its completed run. Historical 0.9.0 CSV/exception reports are retained unchanged."
+}

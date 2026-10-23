@@ -6,6 +6,8 @@ Builds inventory.json from pinned corpus_sources.json and verifies every extract
 import argparse
 import concurrent.futures
 import hashlib
+import gzip
+import http.client
 import json
 from pathlib import Path
 import re
@@ -21,12 +23,13 @@ def fetch(url, output, label):
                            ('system-proxy', urllib.request.ProxyHandler())]:
         started = time.monotonic()
         opener = urllib.request.build_opener(handler)
-        request = urllib.request.Request(url, headers={'User-Agent': 'MiniPDF-Compatibility-Test/1.0'})
+        request = urllib.request.Request(url, headers={'User-Agent': 'MiniPDF-Compatibility-Test/1.0', 'Accept-Encoding': 'gzip'})
         try:
             with opener.open(request, timeout=15) as response, output.with_suffix('.partial').open('wb') as stream:
+                reader = gzip.GzipFile(fileobj=response) if response.headers.get('Content-Encoding') == 'gzip' else response
                 count, last = 0, time.monotonic()
                 while True:
-                    chunk = response.read(256 * 1024)
+                    chunk = reader.read(256 * 1024)
                     if not chunk:
                         break
                     stream.write(chunk)
@@ -38,7 +41,7 @@ def fetch(url, output, label):
             output.with_suffix('.partial').replace(output)
             return {'route': route, 'archive_bytes': count,
                     'seconds': round(time.monotonic() - started, 2)}
-        except (OSError, urllib.error.URLError) as error:
+        except (OSError, urllib.error.URLError, http.client.HTTPException, EOFError) as error:
             failure = type(error).__name__
             print(json.dumps({'download': label, 'route': route, 'retry_reason': failure}), flush=True)
     raise OSError(f'{label}: direct and configured network routes failed ({failure})')

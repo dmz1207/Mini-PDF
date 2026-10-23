@@ -79,6 +79,7 @@ namespace MiniPdf
             }
             return Is(value,"View") || Is(value,"All");
         }
+        bool importedForms;
         internal LayerImport(IList<PdfDocument> documents)
         {
             try { foreach(var document in documents) Prepare(document); }
@@ -87,9 +88,11 @@ namespace MiniPdf
         void Prepare(PdfDocument document)
         {
             byte[] bytes=document.Serialize(false,true);
+            bool forms; bytes=FormImport.Tag(document,bytes,out forms); importedForms|=forms;
+            if(forms)using(var normalize=PdfDocument.FromBytes(bytes,""))bytes=normalize.Serialize(false);
             bool possibleLayers=HasKey(bytes,"/OCProperties");
             bool repair=HasContentsArray(bytes) || N.FPDF_DocumentHasValidCrossReferenceTable(document.Handle)==0;
-            if(!possibleLayers && !repair) return;
+            if(!possibleLayers && !repair) { if(forms)prepared[document]=PdfDocument.FromBytes(bytes,""); return; }
             var syntax=new PdfSyntax(bytes);
             var changes=new SortedDictionary<int,string>();
             if(repair)
@@ -149,7 +152,7 @@ namespace MiniPdf
                     }
                 }
             }
-            if(changes.Count==0) return;
+            if(changes.Count==0) {if(forms)prepared[document]=PdfDocument.FromBytes(bytes,"");return;}
             var copy=PdfDocument.FromBytes(syntax.Append(bytes,changes),"");
             prepared.Add(document,copy);
             if(source!=null) source.Prepared=copy;
@@ -244,7 +247,7 @@ namespace MiniPdf
             if(radio.Count>0) result["RBGroups"]="["+String.Join(" ",radio)+"]";
             return result;
         }
-        internal byte[] Restore(byte[] bytes)
+        byte[] RestoreLayers(byte[] bytes)
         {
             if(sources.Count==0) return bytes;
             var syntax=new PdfSyntax(bytes);
@@ -275,17 +278,23 @@ namespace MiniPdf
             changes[syntax.Root]=PdfSyntax.Dictionary(catalog);
             return syntax.Append(bytes,changes);
         }
+        internal byte[] Restore(byte[] bytes) {
+            byte[] result=RestoreLayers(bytes);
+            if(!importedForms)return result;
+            if(sources.Count>0)using(var normalized=PdfDocument.FromBytes(result,""))result=normalized.Serialize(false);
+            return FormImport.Recover(result);
+        }
         internal void BeginTarget(PdfDocument target)
         {
-            if(sources.Count==0) return;
+            if(sources.Count==0 && !importedForms) return;
             if(N.FPDF_GetSecurityHandlerRevision(target.Handle)>=0)
-                throw new IOException("Layered imports into an encrypted document are not supported. Export an unencrypted copy explicitly first.");
-            Source source;
-            if(byDocument.TryGetValue(target,out source)) target.ReloadForLayerImport(source.Prepared.Serialize(false));
+                throw new IOException("Layered/form imports into an encrypted document are not supported. Export an unencrypted copy explicitly first.");
+            PdfDocument source;
+            if(prepared.TryGetValue(target,out source)) target.ReloadForLayerImport(source.Serialize(false));
         }
         internal void EndTarget(PdfDocument target)
         {
-            if(sources.Count>0) target.ReloadForLayerImport(Restore(target.Serialize(false)));
+            if(sources.Count>0 || importedForms) {byte[] data=Restore(target.Serialize(false));target.ReloadForLayerImport(data);}
         }
         public void Dispose()
         {

@@ -1,4 +1,4 @@
-Mini PDF 0.9.0 - User Guide
+Mini PDF 0.10.0 - User Guide
 Windows 10 / Windows 11 x64
 
 START AND LANGUAGE
@@ -70,8 +70,17 @@ View rotation changes reading orientation. Page rotation edits the PDF and is un
 
 EDIT TEXT AND OBJECTS
 Expand Edit, select Object, then click a text block, image or shape.
-Double-click a text object to edit it. The original text object is replaced, not hidden under white paint.
-Replacement fonts may change character widths; this is not Word-style paragraph reflow.
+Double-click a text object to edit it. Keep original font is the default; supported edits preserve
+its original font, transformation, spacing and graphics state. No white paint is used.
+Choose the current object, same-line fragments or an adjacent same-style horizontal paragraph.
+The native PDFium preview shows the text area or whole page. Adjust wrapping width (mm),
+font size, color and line spacing, then Apply. One undo restores the complete edit.
+Unchanged confirmation creates no undo step. Previewing/canceling leaves the document untouched.
+If a new character cannot be confirmed in the original font, select Auto or a system font;
+replacement fonts may change widths. Fonts are not bundled with the app.
+Hidden OCR text edits leave scan pixels unchanged. Vertical text, complex shaping, text used
+for clipping and ActualText replacement metadata are rejected; nested Form/outlined text
+cannot be rewritten character by character. This is local layout, not Word-style document flow.
 Drag selected objects to move them. Unrotated objects can be resized by dragging a corner.
 The resize command accepts a percentage. Delete removes the selected object.
 Text adds Chinese or English text at a clicked position, including multiple lines.
@@ -144,6 +153,28 @@ Unchanged arrangements and view-only expansion do not prompt. Organize Pages off
 its changes remain undoable in the original document. Save to a separate filename if already open.
 Thumbnail gaps are wider, with darker file dividers and a separate blue insertion marker.
 
+PDF TO WORD / EXCEL
+Menu > File > Convert PDF to Word... / Excel... exports all/current/custom pages to DOCX/XLSX.
+Preview the first selected page. Word includes editable text, common aligned tables and optional
+images; Excel infers columns and creates one sheet per source page. Turn column detection off
+for one text column. Exports run in an isolated, cancelable process and leave the PDF unchanged.
+Layout reconstruction is approximate: check complex columns, merged cells, charts and reading order.
+Image-only scans stay images in Word; Excel does not recognize text from them. No OCR is bundled.
+Formula-looking strings are literal text and leading-zero IDs are preserved. Office is not required.
+
+FORM TOOLS (Ctrl+Shift+F)
+Use Menu > File > Form tools. Pick a field, fill its value on the right and click Update field.
+Enable Design fields to create text, multiline/password, checkbox, radio, dropdown and list fields.
+Drag a rectangle to create, drag a field to move, or use a corner to resize. Set names/tooltips,
+default/current values, options in export-value|label lines, font size (0 = automatic), alignment,
+length and read-only/required/NoExport flags. Duplicate adds a separate field or another radio option.
+Delete, reorder, undo/redo, default-value reset and Unicode XFDF import/export are available.
+Apply to document commits one undoable operation; use Ctrl+S to save the actual PDF.
+Standard fields, values and appearances are preserved in tested merge/insert/duplicate/extract flows.
+Dynamic XFA, JavaScript calculations/actions/submission and editing signature/action-button fields
+are unsupported. Signed and encrypted PDFs are view-only here; encryption is never silently removed.
+Certificate signing is a separate tool. This does not provide the full Acrobat forms/automation suite.
+
 PRINTING
 Ctrl+P opens Mini PDF's print workspace. Printer Properties and Page Setup use Windows/driver UI.
 Select all/current pages or ranges such as 5,1-3,8; filter odd/even pages or reverse the order.
@@ -202,7 +233,7 @@ Newly embedded fonts are subsetted. Existing password protection is retained.
 Restricted documents require a password with editing permission for changes.
 
 LIMITS AND LICENSES
-No general interactive form filling, permanent redaction, measurement, annotation replies,
+No dynamic XFA, form JavaScript/actions/submission, permanent redaction, measurement, annotation replies,
 full paragraph reflow or image retouching is provided. Outlined text cannot be edited as text.
 Documents containing digital signatures open read-only; Save As preserves the original bytes.
 The image-cache target is 64 MiB. High zoom renders visible areas as native-resolution tiles.

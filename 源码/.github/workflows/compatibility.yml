@@ -6,6 +6,7 @@ on:
       - '源码/**/*.cs'
       - '源码/**/*.ps1'
       - '源码/corpus_*.py'
+      - '源码/verify_*.py'
       - '源码/compare_corpus.py'
       - '源码/corpus_sources.json'
       - '源码/compatibility-results.csv'
@@ -15,6 +16,7 @@ on:
       - '源码/**/*.cs'
       - '源码/**/*.ps1'
       - '源码/corpus_*.py'
+      - '源码/verify_*.py'
       - '源码/compare_corpus.py'
       - '源码/corpus_sources.json'
       - '源码/compatibility-results.csv'
@@ -43,6 +45,15 @@ jobs:
         shell: pwsh
         run: |
           & '.\源码\test-corpus.ps1' -Python python -Name ci -Workers 4
+      - name: Verify text editing preservation
+        shell: pwsh
+        run: |
+          python -m pip install reportlab==4.4.9 pypdf==6.10.0
+          & '.\源码\test-editors.ps1' -Python python -Suite Text -CoreOnly -UseExistingBuild
+      - name: Verify Office conversion and AcroForm tools
+        shell: pwsh
+        run: |
+          & '.\源码\test-editors.ps1' -Python python -Suite OfficeForms -CoreOnly -UseExistingBuild
       - name: Detect regressions against reviewed results
         run: python ".\源码\compare_corpus.py" ".\源码\compatibility-results.csv" ".\work\compatibility\runs\ci\results.jsonl"
       - name: Retain compatibility diagnostics
@@ -53,6 +64,12 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
           path: |
+            work/text-edit-tests/text-edit-test.txt
+            work/text-edit-tests/text-edit-independent.json
+            work/text-edit-tests/system-cjk-skipped.txt
+            work/office-forms-tests/office-forms-test.txt
+            work/office-forms-tests/office-forms-independent.json
+            work/office-forms-tests/forms-cjk-skipped.txt
             work/compatibility/reports/
             work/compatibility/runs/ci/results.jsonl
             work/compatibility/runs/ci/regression-comparison.json

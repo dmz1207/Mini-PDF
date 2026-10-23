@@ -78,6 +78,14 @@ namespace MiniPdf
             }
             return result;
         }
+        internal string StreamData(int id) {
+            int at=offsets[id];Atom(ref at);Atom(ref at);Check(Atom(ref at)=="obj");
+            string dictionary=Read(ref at);var entries=ParseDictionary(dictionary);Check(Atom(ref at)=="stream");
+            if(at<text.Length&&text[at]=='\r')at++;Check(at<text.Length&&text[at]=='\n');at++;
+            string value=entries["Length"];int reference;if(TryReference(value,out reference))value=Resolve(value);
+            int length;Check(Int32.TryParse(value,out length)&&length>=0&&(long)at+length<=text.Length);
+            return text.Substring(at,length);
+        }
         internal byte[] Append(byte[] original, SortedDictionary<int,string> changes)
         {
             using (var output = new MemoryStream())
@@ -89,13 +97,15 @@ namespace MiniPdf
                 foreach (var item in changes)
                 {
                     positions[item.Key]=output.Position;
-                    write(item.Key+" "+generations[item.Key]+" obj\n"+item.Value+"\nendobj\n");
+                    write(item.Key+" "+(generations.ContainsKey(item.Key)?generations[item.Key]:0)+" obj\n"+item.Value+"\nendobj\n");
                 }
                 long xref=output.Position;
                 write("xref\n");
                 foreach (var item in positions)
-                    write(item.Key+" 1\n"+item.Value.ToString("0000000000",CultureInfo.InvariantCulture)+" "+generations[item.Key].ToString("00000",CultureInfo.InvariantCulture)+" n \n");
+                    write(item.Key+" 1\n"+item.Value.ToString("0000000000",CultureInfo.InvariantCulture)+" "+(generations.ContainsKey(item.Key)?generations[item.Key]:0).ToString("00000",CultureInfo.InvariantCulture)+" n \n");
                 var trailer = new Dictionary<string,string>(Trailer);
+                int size=Size;foreach(int id in changes.Keys)size=Math.Max(size,id+1);
+                trailer["Size"]=size.ToString(CultureInfo.InvariantCulture);
                 trailer["Prev"]=StartXref.ToString(CultureInfo.InvariantCulture);
                 trailer.Remove("XRefStm");
                 write("trailer\n"+Dictionary(trailer)+"\nstartxref\n"+xref.ToString(CultureInfo.InvariantCulture)+"\n%%EOF\n");

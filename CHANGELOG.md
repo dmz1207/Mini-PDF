@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10.0 — 2026-10-23
+
+- Convert PDF content to editable Word DOCX or Excel XLSX using built-in ZIP/XML APIs. Preserve Unicode, common aligned tables, numbers/identifiers and optional Word images; no Office installation is required.
+- Add a standard AcroForm workspace for creating, moving, resizing, copying, deleting, filling and ordering common fields, with default values, choices, flags, local history and XFDF data import/export.
+- Render native widget appearances and reconnect imported field trees/resources during merge, insertion, duplication and extraction. Keep the original files unchanged.
+- Use a bounded export worker with cancellation and owned-temporary-file cleanup; fix repeated progress-window disposal. Correct high-DPI form property layout and pending checkbox Apply state.
+- Add an existing-text editor with original-font updates, native PDFium preview, conservative same-line/paragraph grouping, width-based wrapping, line spacing and fractional font sizes.
+- Keep original text transformations, baseline/spacing, separate fill/stroke opacity, clipping and marks for supported single-object edits. Validate extracted Unicode after every change and roll back on failure.
+- Require explicit font replacement when original glyph coverage cannot be confirmed. Preserve hidden OCR rendering; reject unsupported vertical/complex shaping, text clipping and ActualText replacement metadata.
+- Add repeatable backend/UI and independent PDF/font/pixel preservation checks, plus a headless CI editing step. No new production dependency or PDFium rebuild.
+- Retry incomplete corpus inventory downloads and handle gzip responses; continue direct-first downloads with configured proxy fallback.
+
 ## 0.9.0 — 2026-10-22
 
 - Verification follow-up: confirm apparent save regressions with exact independent PDFium snapshots, preserve replay diagnostics, retain CI artifacts and update pinned actions to Node 24. The full 4,211-path gate passes with zero new regressions. Application/PDFium binaries and the historical baseline remain unchanged. [Evidence](源码/CI-Verification.md).
@@ -53,7 +65,7 @@
 - Add quick Select/Hand/Highlight/Pages controls, V/H/Esc and temporary Space panning, selected-text highlighting with twelve colors and custom colors.
 - Preserve compact title tabs and English-first bilingual UI; update both guides and document certificate/printing limits.
 
-[English](CHANGELOG.md) | [简体中文](CHANGELOG.zh-CN.md)
+[English](源码/CHANGELOG.md) | [简体中文](源码/CHANGELOG.zh-CN.md)
 
 ## v0.6.1 — 2026-10-20
 
