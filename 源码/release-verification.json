@@ -27,7 +27,13 @@
   "public_distinct_contents": 4206,
   "public_baseline_evidence": "ci-selection-editing.json",
   "github_ci": {
-    "status": "pending"
+    "status": "success",
+    "run_id": 40164877872,
+    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872",
+    "source_commit": "9426f7624cb77eae0ae35aced6b3273710b3fa25",
+    "new_regressions": 0,
+    "known_exceptions": 62,
+    "evidence": "ci-word-export.json"
   },
   "changes": [
     "Preserve-layout and continuous-paragraph Word export",
@@ -39,5 +45,6 @@
     "Adaptive academic profiles, actual gutters, section headings and measured vertical margin directions",
     "Responsive English/Chinese conversion progress status"
   ],
-  "word_export_evidence": "word-export-verification.json"
+  "word_export_evidence": "word-export-verification.json",
+  "public_ci_evidence": "ci-word-export.json"
 }

@@ -1,0 +1,65 @@
+{
+  "recorded": "2026-10-25",
+  "version": "0.11.0.0",
+  "run_id": 40164877872,
+  "job_id": 121083772295,
+  "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872",
+  "source_commit": "9426f7624cb77eae0ae35aced6b3273710b3fa25",
+  "conclusion": "success",
+  "public_probe": {
+    "logical_pdfs": 4211,
+    "unique_pdfs": 4206,
+    "statuses": {
+      "ok": 4137,
+      "page_error": 7,
+      "open_error": 37,
+      "error": 11,
+      "ok_signed": 15,
+      "crash": 1,
+      "timeout": 3
+    },
+    "elapsed_seconds": 360.406,
+    "workers": 4,
+    "render_max_dimension": 600,
+    "timeout_seconds_per_pdf": 45,
+    "process_commit_limit_mib": 768
+  },
+  "reviewed_classification": {
+    "paths": 4211,
+    "classification": {
+      "applicable_checks_pass": 4134,
+      "engine_open_or_page_difference": 14,
+      "password_required": 11,
+      "reference_also_cannot_complete": 21,
+      "no_displayable_pages": 7,
+      "engine_only_merge_difference": 3,
+      "signed_preservation_pass": 15,
+      "xfa_only_unsupported": 2,
+      "native_process_failure": 1,
+      "probe_time_limit": 3
+    },
+    "exceptions": 62
+  },
+  "regression_comparison": {
+    "checked": 4211,
+    "regressions": []
+  },
+  "headless_checks": {
+    "text_native": 123,
+    "text_independent": {
+      "independent_text_checks": 64,
+      "failures": 0,
+      "skipped": 0
+    },
+    "office_forms_native": 67,
+    "office_forms_independent": {
+      "office_form_checks": 352,
+      "failures": 0,
+      "cjk_skipped": false
+    }
+  },
+  "word_application_checks_in_ci": false,
+  "private_documents_in_ci": false,
+  "scope": "Public corpus tests opening/rendering/saving/merging preservation. It is not 4,211 Word conversion tests.",
+  "remaining_limits": "62 reviewed exceptions include 3 probe time limits and 3 native-only merge differences; they are not counted as passes."
+}

@@ -10,7 +10,7 @@ The **v0.11.0 preview** is one approximately **3 MiB executable** for **Windows 
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.11.0 local verification (2026-10-25):** 1,758 assertions pass. New source CI is pending; the previous completed Windows CI and its public-corpus limitations remain in the [test record](测试记录.md). [Word export checks](word-export-verification.json).
+**v0.11.0 local verification (2026-10-25):** 1,758 assertions pass. [Source CI passed](https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872): 4,211 public paths, zero new regressions and 62 recorded exceptions. Scope and limits remain in the [test record](测试记录.md). [Word export checks](word-export-verification.json).
 
 ## New in v0.11.0
 

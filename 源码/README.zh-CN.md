@@ -8,7 +8,7 @@ v0.11.0 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用�
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](.) · [测试记录](测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.11.0 本地验证（2026-10-25）：** 1,758 项通过。新源码线上检查待完成；历史公开库检查及限制保留在[测试记录](测试记录.md)，另见 [Word 导出验证](word-export-verification.json)。
+**v0.11.0 本地验证（2026-10-25）：** 1,758 项通过。[最终源码线上检查通过](https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872)：4,211 个公开路径无新增回归，62 个既有异常如实保留；范围与限制见[测试记录](测试记录.md)，另见 [Word 导出验证](word-export-verification.json)。
 
 ## v0.11.0 新增
 
