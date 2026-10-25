@@ -72,6 +72,8 @@ namespace MiniPdf {
                 var chars=group.Value;var box=Bounds(group.Key,result,document);
                 if(chars.Count<20||box.Width>=14||box.Height<=result.Size.Height*.3f||box.Height<=box.Width*15||
                     box.Left>=result.Size.Width*.12f&&box.Right<=result.Size.Width*.88f||Math.Abs(chars[0].Y-chars[chars.Count-1].Y)<=box.Height*.6f)continue;
+                if(N.FPDFTextObj_GetTextRenderMode(group.Key)!=0||!WordObjects.Visible(document,result,group.Key)||
+                    objects.Keys.Any(o=>N.FPDFPageObj_GetType(o)==3&&Bounds(o,result,document).IntersectsWith(box)))continue;
                 bool clockwise=chars[0].Y>chars[chars.Count-1].Y;result.MarginNotes.Add(Tuple.Create(box,clockwise));
                 box.Inflate(1,1);box=RectangleF.Intersect(box,new RectangleF(PointF.Empty,result.Size));
                 var note=WordRegions.Crop(document,result.Size,box);

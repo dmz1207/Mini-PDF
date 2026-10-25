@@ -131,7 +131,7 @@ using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,
                 }
                 var directions=new List<bool>();
                 for(int i=0;i<2;i++)using(var copy=PdfDocument.FromBytes(doc.GetRenderSource().ReadAll(),""))directions.AddRange(WordLayout.Read(copy,i,false,null,true).MarginNotes.Select(n=>n.Item2));
-                Assert(directions.Contains(true)&&directions.Contains(false),"Academic profiles: both vertical notice directions are measured before image reorientation");
+                Assert(directions.Count==2&&directions.Contains(true)&&directions.Contains(false),"Academic profiles: visible vertical notices keep both directions; hidden OCR cannot create a duplicate image");
                 OfficeExport.Save(doc,new OfficeExportOptions{Continuous=true,Pages=new[]{0,1,2,3}},Path.Combine(directory,"word-academic.docx"),null);
                 Assert(doc.AllText()==original&&!doc.Dirty,"Academic profiles: mixed templates leave the source unchanged");
             }

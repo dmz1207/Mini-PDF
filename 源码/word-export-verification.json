@@ -9,16 +9,48 @@
     "source_pages": 8,
     "not_distributed": true,
     "modes": {
-      "status": "Final revision recheck in progress"
+      "layout": {
+        "word_rendered_pages": 8,
+        "editable_text_characters": 42785,
+        "text_boxes": 2804,
+        "ordinary_paragraphs_over_200_characters": 8,
+        "docx_bytes": 2676269,
+        "all_pages_rendered": true,
+        "native_omml_equations": 0
+      },
+      "continuous": {
+        "word_rendered_pages": 12,
+        "editable_text_characters": 46797,
+        "text_boxes": 0,
+        "ordinary_paragraphs_over_200_characters": 59,
+        "docx_bytes": 1729653,
+        "all_pages_rendered": true,
+        "native_omml_equations": 0
+      },
+      "math": {
+        "word_rendered_pages": 12,
+        "editable_text_characters": 46818,
+        "text_boxes": 0,
+        "ordinary_paragraphs_over_200_characters": 60,
+        "docx_bytes": 1679798,
+        "all_pages_rendered": true,
+        "native_omml_equations": 18
+      }
     },
-    "renderer": "Installed Microsoft Word read-only PDF export followed by Poppler page rendering",
+    "renderer": "Installed Microsoft Word read-only PDF export, all pages rendered by Poppler",
     "known_limits": [
       "Continuous mode changes pagination and equation/figure positions",
       "Formula-heavy lines and paragraphs may remain complete images",
       "Running headers, footers and captions can need manual cleanup",
-      "Simple OMML inference must be reviewed; it does not recover original LaTeX"
+      "Simple OMML inference must be reviewed; it does not recover original LaTeX",
+      "Complex inline math can remain fragmented or move; an arbitrary complete formula region cannot always be isolated"
     ],
-    "current_visual_qa": "pending"
+    "current_visual_qa": "completed",
+    "all_rendered_pages_visually_reviewed": 32,
+    "final_package_payload_equivalence": {
+      "checked_modes": 3,
+      "all_parts_equal": true
+    }
   },
   "reproducible_fixtures": [
     "matrix-scaled text, generated spaces, hidden/covered text and Unicode",
@@ -86,7 +118,23 @@
         "route": "direct"
       }
     ],
-    "word_readonly_open_check": "pending",
-    "visual_first_pages_reviewed": 0
+    "word_readonly_open_check": {
+      "checked": 84,
+      "passed": 84,
+      "word_rendered_pages": 322
+    },
+    "visual_first_pages_reviewed": 84,
+    "final_package_payload_equivalence": {
+      "checked": 84,
+      "equal": 84,
+      "scope": "Every ZIP part, including XML and image bytes, equals the package opened and rendered by Word; ZIP timestamps may differ"
+    },
+    "rendering": "Microsoft Word read-only PDF export and PyMuPDF first-page contact sheets",
+    "margin_notice_example": {
+      "source_pages": 3,
+      "previous_word_pages": 6,
+      "current_word_pages": 3,
+      "source_content_and_paths_distributed": false
+    }
   }
 }

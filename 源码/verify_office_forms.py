@@ -98,6 +98,7 @@ def academic_fixtures(root):
    for dot in range(8):c.circle(25,100+dot*65,.5,stroke=0,fill=1)
    c.saveState();c.translate(8,100);c.rotate(90);c.setFont('Times-Roman',6);c.drawString(0,0,'VERTICAL PUBLISHER NOTICE retained in full for reading. '+('Copyright and license terms. '*7));c.restoreState()
   if key=='ELSEVIER':
+   c.saveState();c.translate(580,740);c.rotate(270);hidden=c.beginText(0,0);hidden.setFont('Times-Roman',6);hidden.setTextRenderMode(3);hidden.textOut('HIDDEN OCR NOTICE MUST NOT CREATE AN IMAGE. '+('Invisible metadata. '*12));c.drawText(hidden);c.restoreState()
    c.saveState();c.translate(590,740);c.rotate(270);c.setFont('Times-Roman',6);c.drawString(0,0,'OPPOSITE VERTICAL PUBLISHER NOTICE retained in full. '+('Copyright and license terms. '*7));c.restoreState()
   c.showPage()
  c.save();(root/'word-academic-source.pdf').write_bytes(b.getvalue())
@@ -231,7 +232,7 @@ def verify(root):
   check('ELSEVIER-LEFT-14' in text and 'ELSEVIER-LEFT-END' in text,'Academic profiles: single-column body remains editable')
   check(text.index('IEEE-LEFT-END')<text.index('ELSEVIER-LEFT-00')<text.index('WILEY-LEFT-00')<text.index('SPRINGER-LEFT-00'),'Academic profiles: mixed source templates preserve selected-page order')
   extents=[(int(e.attrib['cx'])/12700,int(e.attrib['cy'])/12700) for e in d.iter(WP+'extent')]
-  check(sum(w>200 and h<14 for w,h in extents)>=2 and not any(w<14 and h>200 for w,h in extents),'Academic profiles: narrow vertical margin note is retained horizontally without a page-height blank')
+  check(sum(w>200 and h<14 for w,h in extents)==2 and not any(w<14 and h>200 for w,h in extents),'Academic profiles: narrow vertical margin note is retained horizontally without a page-height blank')
  with zipfile.ZipFile(root/'word-columns.docx') as z:
   text=''.join(E.fromstring(z.read('word/document.xml')).itertext());check(text.index('LEFT11')<text.index('RIGHT00'),'Word columns: flowing text does not interleave the two columns')
  created=PdfReader(root/'forms-created.pdf');filled=PdfReader(root/'forms-filled.pdf');managed=PdfReader(root/'forms-managed.pdf');f=created.get_fields();g=filled.get_fields();m=managed.get_fields()
