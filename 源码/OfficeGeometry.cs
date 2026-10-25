@@ -5,13 +5,14 @@ using System.Runtime.InteropServices;
 
 namespace MiniPdf {
     internal static partial class N {
+        [DllImport(D)] internal static extern int FPDFFont_GetFlags(IntPtr font);
         [DllImport(D)] internal static extern int FPDFText_IsHyphen(IntPtr page,int index);
         [DllImport(D)] internal static extern int FPDFText_GetMatrix(IntPtr page,int index,out Matrix matrix);
         [DllImport(D)] internal static extern int FPDFText_GetCharBox(IntPtr page,int index,out double left,out double right,out double bottom,out double top);
     }
     internal sealed class OfficeGlyph {
         internal IntPtr Object;
-        internal int Index;
+        internal int Index,FontFlags;
         internal string Text,Font;
         internal float X,Right,Y,Top,Bottom,Size;
         internal Color Color;
@@ -29,7 +30,7 @@ namespace MiniPdf {
             document.OpenPage(index);var size=document.PageSize(index);
             int count=N.FPDFText_CountChars(document.TextPage);
             PdfDocument.Check(count>=0&&count<=500000,UiText.Get("此页文字过多，无法转换。"));
-            var glyphs=new List<OfficeGlyph>();var fonts=new Dictionary<IntPtr,string>();
+            var glyphs=new List<OfficeGlyph>();var fonts=new Dictionary<IntPtr,string>();var flags=new Dictionary<IntPtr,int>();
             for(int i=0;i<count;i++) {
                 IntPtr obj=N.FPDFText_GetTextObject(document.TextPage,i);
                 if(obj==IntPtr.Zero)continue;
@@ -49,9 +50,9 @@ namespace MiniPdf {
                 bool unsupported=Single.IsNaN(em)||Single.IsInfinity(em)||em<1||em>200;
                 if(Single.IsNaN(em)||Single.IsInfinity(em)||em<.1f)em=Math.Max(1,Math.Abs(z.Y-a.Y));
                 IntPtr font=N.FPDFTextObj_GetFont(obj);string name;
-                if(!fonts.TryGetValue(font,out name)){name=PdfDocument.TextFontName(font);fonts[font]=name;}
+                if(!fonts.TryGetValue(font,out name)){name=PdfDocument.TextFontName(font);fonts[font]=name;flags[font]=Math.Max(0,N.FPDFFont_GetFlags(font));}
                 uint red,green,blue,alpha;var ink=N.FPDFPageObj_GetFillColor(obj,out red,out green,out blue,out alpha)!=0?Color.FromArgb((int)alpha,(int)red,(int)green,(int)blue):Color.Black;
-                glyphs.Add(new OfficeGlyph{Unsupported=unsupported,Index=i,Object=obj,Text=valid?Char.ConvertFromUtf32((int)ch):"",Bad=!valid||N.FPDFText_HasUnicodeMapError(document.TextPage,i)==1,Font=name,
+                glyphs.Add(new OfficeGlyph{Unsupported=unsupported,FontFlags=flags[font],Index=i,Object=obj,Text=valid?Char.ConvertFromUtf32((int)ch):"",Bad=!valid||N.FPDFText_HasUnicodeMapError(document.TextPage,i)==1,Font=name,
                     X=start.X,Right=Math.Max(start.X,end.X),Y=start.Y,Top=Math.Min(a.Y,z.Y),Bottom=Math.Max(a.Y,z.Y),Size=Math.Max(1,Math.Min(200,em)),Color=ink});
             }
             return glyphs;

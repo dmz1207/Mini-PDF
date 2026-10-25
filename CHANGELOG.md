@@ -1,7 +1,10 @@
 # Changelog
 
-## 0.11.0 — 2026-10-23
+## 0.11.0 — 2026-10-25
 
+- Recover readable publisher body fonts, structural tags and transformed nested text in continuous mode; keep partial clips and uncertain mappings as artwork.
+- Add adaptive academic profiles using publication hints and measured columns, gutters, body size, spacing and indentation. Preserve asymmetric/staggered columns and full-width bands; orient narrow outer-margin notices for reading.
+- Fit the conversion status to its text, including enlarged English and Chinese fonts.
 - Add Preserve layout and Continuous text Word export. Keep ordinary text editable at source positions or merge it into normal flowing Word paragraphs.
 - Fix effective font sizes, generated-space ordering, large intra-object gaps and simple two-column reading order.
 - Preserve complete complex-equation regions and numbering, along with figure labels, using bounded high-resolution PDFium images. Retain staggered source-column order before extraction and flow selected pages into one Word section.

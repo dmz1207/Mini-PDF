@@ -62,7 +62,7 @@ namespace MiniPdf {
             }
             if(chunks.Count>2000)return;
             foreach(var pair in objects)if(!removed.Contains(pair.Key)&&N.FPDFPageObj_GetType(pair.Key)==2&&N.FPDFPath_CountSegments(pair.Key)<=5&&N.FPDFPageObj_CountMarks(pair.Key)==0) {
-                var box=WordLayout.Bounds(pair.Key,output.Size,document);
+                var box=WordLayout.Bounds(pair.Key,output,document);
                 uint r,g,b,a;bool dark=N.FPDFPageObj_GetFillColor(pair.Key,out r,out g,out b,out a)!=0&&a==255&&r+g+b<650;
                 if(!dark)dark=N.FPDFPageObj_GetStrokeColor(pair.Key,out r,out g,out b,out a)!=0&&a==255&&r+g+b<650;
                 if(dark&&box.Width>=3&&box.Width<=200&&box.Height<=settings.BarHeight&&box.Height>=0)
@@ -86,7 +86,7 @@ namespace MiniPdf {
                 // A whole native object must belong to this region. Anything overlapping
                 // from outside makes the grouping ambiguous; keep the original artwork.
                 if(glyphs.Any(g=>!members.Contains(g.Object)&&g.X<bounds.Right&&g.Right>bounds.Left&&g.Top<bounds.Bottom&&g.Bottom>bounds.Top))continue;
-                bool overlap=false;foreach(var obj in objects.Keys)if(!members.Contains(obj)&&N.FPDFPageObj_GetType(obj)!=1&&WordLayout.Bounds(obj,output.Size,document).IntersectsWith(bounds)){overlap=true;break;}
+                bool overlap=false;foreach(var obj in objects.Keys)if(!members.Contains(obj)&&N.FPDFPageObj_GetType(obj)!=1&&WordLayout.Bounds(obj,output,document).IntersectsWith(bounds)){overlap=true;break;}
                 if(overlap)continue;
                 var bars=part.Where(c=>c.Bar).ToList();bool structured=false;
                 string xml=convert&&!chars.Any(g=>g.Bad)&&part.Where(c=>!c.Bar).All(c=>Token(String.Concat(c.Glyphs.Select(g=>g.Text))))?Parse(chars,bars,settings,0,chars.Max(g=>g.Size),ref structured):null;

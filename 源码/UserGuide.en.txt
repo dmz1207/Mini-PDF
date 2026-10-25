@@ -10,7 +10,11 @@ remains artwork. Research-paper checks cover staggered columns, Greek scripts, c
 formula regions with numbering and complete figure labels. Continuous text flows selected
 pages together; formula-heavy lines may remain images. No OCR or AI model is included;
 scans remain images. Review the exported DOCX.
-The source PDF and any original DOCX stay unchanged. Source details: WordExport.md.
+Export reads a private PDF snapshot; the chosen destination is replaced only after package validation.
+Academic profiles recognize IEEE, Elsevier, Springer Nature, Wiley, ACM and other publication hints,
+then measure actual page columns, gutters, body size and spacing. Unknown publishers use geometry.
+Readable publisher fonts, structural tags and nested text can stay editable in Continuous text.
+Narrow vertical margin notices are retained horizontally after the page body. Source details: WordExport.md.
 
 START AND LANGUAGE
 Double-click Mini PDF.exe in a writable folder. No installation or activation is required.

@@ -19,9 +19,17 @@ namespace MiniPdf {
         sealed class FlowRow {
             internal readonly List<FlowItem> Items=new List<FlowItem>();
             internal float Y,X,Right,Size;
-            internal bool Block;
+            internal bool Block,Heading;
         }
-        static List<WordPicture> Artwork(WordPage page,bool columns) {
+        static bool FlowHeading(FlowRow row,float nominal) {
+            string text=String.Concat(row.Items.Where(i=>i.Text!=null&&i.Text.Text!=null).Select(i=>i.Text.Text)).Trim();
+            if(text.Length<5||text.Length>140)return false;
+            int letters=text.Count(Char.IsLetter);if(letters<4)return false;
+            bool numbered=System.Text.RegularExpressions.Regex.IsMatch(text,@"^(?:[IVX]+\.|[A-Z]\.|[0-9]+(?:\.[0-9]+)*\.?)[ \t]+[A-Z]");
+            return row.Size>nominal*1.2f||numbered&&text.Count(Char.IsUpper)>letters*.55f||
+                row.Items.Where(i=>i.Text!=null&&i.Text.Bold&&i.Text.Text!=null).Sum(i=>i.Text.Text.Length)>text.Length*.7f;
+        }
+        static List<WordPicture> Artwork(WordPage page,bool columns,float split) {
             var result=new List<WordPicture>();
             using(var stream=new MemoryStream(page.Background,false))using(var image=new Bitmap(stream))
             using(var small=new Bitmap(Math.Max(1,(int)page.Size.Width),Math.Max(1,(int)page.Size.Height),PixelFormat.Format32bppArgb)) {
@@ -30,7 +38,8 @@ namespace MiniPdf {
                 byte[] pixels=new byte[data.Stride*small.Height];try{Marshal.Copy(data.Scan0,pixels,0,pixels.Length);}finally{small.UnlockBits(data);}
                 double sx=image.Width/page.Size.Width,sy=image.Height/page.Size.Height;
                 for(int side=0;side<(columns?2:1);side++) {
-                    int x0=columns?side*small.Width/2:0,x1=columns?(side+1)*small.Width/2:small.Width;
+                    int cut=Math.Max(1,Math.Min(small.Width-1,(int)Math.Round(split*small.Width/page.Size.Width)));
+                    int x0=columns?(side==0?0:cut):0,x1=columns?(side==0?cut:small.Width):small.Width;
                     int top=-1,bottom=-1,left=x1,right=x0;
                     Action flush=delegate {
                         if(top<0)return;
@@ -79,12 +88,10 @@ namespace MiniPdf {
             return xml;
         }
         static void FlowPage(WordPage page,SizeF paper,OfficeExportOptions options,ZipArchive zip,StringBuilder rels,StringBuilder body,ref int id) {
-            float middle=page.Size.Width/2;
-            var nativeLines=page.Text.Where(t=>t.Text!=null).GroupBy(t=>Math.Round(t.Y*2));
-            bool columns=page.Columns||nativeLines.Count(g=>g.Where(t=>t.X<middle&&t.X+t.Width<middle+2).Sum(t=>t.Text.Length)>35)>=6&&
-                nativeLines.Count(g=>g.Where(t=>t.X>=middle).Sum(t=>t.Text.Length)>35)>=6;
+            var profile=page.Profile??new AcademicLayout{Split=page.Size.Width/2,BodySize=10,LineStep=12,Indent=5.5f};
+            float middle=profile.Split;bool columns=profile.Columns;
             var items=page.Text.Select(t=>new FlowItem{Text=t,X=t.X,Y=t.Y,Width=t.Width,Height=t.Height,Size=t.Size}).ToList();
-            var artwork=page.Text.Count==0&&page.Pictures.Count==0?new List<WordPicture>{new WordPicture{Width=page.Size.Width,Height=page.Size.Height,Data=page.Background,Block=true}}:Artwork(page,columns);
+            var artwork=page.Text.Count==0&&page.Pictures.Count==0?new List<WordPicture>{new WordPicture{Width=page.Size.Width,Height=page.Size.Height,Data=page.Background,Block=true}}:Artwork(page,columns,middle);
             if(options.Images)foreach(var picture in page.Pictures.Concat(artwork)) {
                 float baseline=picture.Baseline;
                 var nearby=page.Text.Where(t=>t.Y>=picture.Y&&t.Y<=picture.Y+picture.Height+3).OrderBy(t=>Math.Abs(t.Y-picture.Y-picture.Height*.8f)).FirstOrDefault();
@@ -116,12 +123,12 @@ namespace MiniPdf {
                 band.Clear();
             };
             foreach(var row in rows) {
-                if(columns&&row.Items.Any(i=>i.X<middle-4&&i.X+i.Width>middle+4)){flush();ordered.Add(row);}else band.Add(row);
+                if(columns&&row.Items.Any(i=>i.X<middle-4&&i.X+i.Width>middle+4||i.Picture!=null&&i.Picture.Y>page.Size.Height)){flush();ordered.Add(row);}else band.Add(row);
             }
-            flush();bool paragraph=false;FlowRow prior=null;string lastText="";
+            flush();foreach(var row in ordered)row.Heading=FlowHeading(row,profile.BodySize);bool paragraph=false;FlowRow prior=null;string lastText="";
             foreach(var row in ordered) {
-                bool fresh=!paragraph||row.Block||prior.Block||row.Y<prior.Y||row.Y-prior.Y>Math.Max(14,row.Size*1.65f)||
-                    Math.Abs(row.Size-prior.Size)>1||row.X-prior.X>4||row.Right-row.X<row.Size*8;
+                bool fresh=!paragraph||row.Block||prior.Block||row.Y<prior.Y||row.Y-prior.Y>Math.Max(14,profile.LineStep*1.5f)||
+                    Math.Abs(row.Size-prior.Size)>1||row.Heading!=prior.Heading||row.X-prior.X>profile.Indent;
                 if(fresh) {
                     if(paragraph)body.Append("</w:p>");
                     body.Append("<w:p><w:pPr><w:spacing w:after=\"60\" w:line=\"240\" w:lineRule=\"auto\"/>");

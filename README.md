@@ -10,13 +10,14 @@ The **v0.11.0 preview** is one approximately **3 MiB executable** for **Windows 
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.11.0 local verification (2026-10-23):** 1,722 assertions pass. New source CI is pending; the previous completed Windows CI and its public-corpus limitations remain in the [test record](源码/测试记录.md). [Word export checks](源码/word-export-verification.json).
+**v0.11.0 local verification (2026-10-25):** 1,758 assertions pass. New source CI is pending; the previous completed Windows CI and its public-corpus limitations remain in the [test record](源码/测试记录.md). [Word export checks](源码/word-export-verification.json).
 
 ## New in v0.11.0
 
 - Choose **Preserve layout** for editable ordinary text at original positions, or **Continuous text** for normal Word paragraphs that can be edited and rewrapped throughout the article.
 - Correct matrix-scaled font sizes, generated spaces and intra-object gaps; recover simple column order even when text is fragmented into small objects.
-- Target research papers: establish staggered two-column order before extraction, retain complete complex-equation regions and numbering, and keep figure labels attached.
+- Target research papers with publication hints for IEEE, Elsevier, Springer Nature, Wiley, ACM and others, backed by measured columns, actual gutters, body size and spacing on each page. Handle single/asymmetric/staggered columns and full-width title bands.
+- Recover readable publisher fonts, structural tags and nested body text in Continuous text; retain complete complex-equation regions, numbering and figure labels. Narrow vertical margin notices remain readable without page-height blanks.
 - Keep complex equations and artwork as high-resolution images. Continuous text can optionally infer limited simple equations into native OMML using adjustable offline C# geometry rules.
 - Preserve uncertain structures; no OCR, learned model, PdfPig, PdfiumViewer or additional runtime is bundled.
 - Use the isolated raster worker for source previews, and preserve existing files on export failure. See [Word export modes and limits](源码/WordExport.md).

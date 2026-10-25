@@ -23,12 +23,7 @@ namespace MiniPdf {
             return inner.Left>=outer.Left-.05f&&inner.Top>=outer.Top-.05f&&inner.Right<=outer.Right+.05f&&inner.Bottom<=outer.Bottom+.05f;
         }
         internal static bool Columns(IEnumerable<OfficeGlyph> glyphs,SizeF size) {
-            float middle=size.Width/2;
-            var rows=glyphs.Where(g=>!g.Bad&&!String.IsNullOrWhiteSpace(g.Text)).GroupBy(g=>Math.Round(g.Y*2)).Where(g=>g.Count()>35).ToList();
-            int pairs=rows.Count(g=>g.Count(c=>c.Right<middle-1)>=15&&g.Count(c=>c.X>middle+1)>=15&&!g.Any(c=>c.X<middle+1&&c.Right>middle-1));
-            int left=rows.Count(g=>g.Min(c=>c.X)<middle-36&&g.Max(c=>c.Right)<middle+1);
-            int right=rows.Count(g=>g.Min(c=>c.X)>middle-1&&g.Max(c=>c.Right)>middle+36);
-            return left+pairs>=6&&right+pairs>=6;
+            return AcademicLayout.Read(glyphs.ToList(),size).Columns;
         }
         internal static float Nominal(IEnumerable<OfficeGlyph> glyphs) {
             var sizes=glyphs.Where(g=>!g.Bad&&!String.IsNullOrWhiteSpace(g.Text)&&WordLayout.Family(g.Font)!=null).GroupBy(g=>Math.Round(g.Size*2)).OrderByDescending(g=>g.Count()).FirstOrDefault();
@@ -38,7 +33,7 @@ namespace MiniPdf {
             var regions=new List<RectangleF>();
             foreach(var obj in objects.Keys) {
                 int kind=N.FPDFPageObj_GetType(obj);if(kind!=2&&kind!=3&&kind!=5)continue;
-                var box=WordLayout.Bounds(obj,page.Size,document);if(box.Width<36||box.Height<24)continue;
+                var box=WordLayout.Bounds(obj,page,document);if(page.TextForms.Contains(obj))continue;if(box.Width<36||box.Height<24)continue;
                 if(kind==2) {
                     int fill,stroke;uint r,g,b,a;
                     if(N.FPDFPath_GetDrawMode(obj,out fill,out stroke)==0)continue;
@@ -46,7 +41,7 @@ namespace MiniPdf {
                     visible|=fill!=0&&N.FPDFPageObj_GetFillColor(obj,out r,out g,out b,out a)!=0&&a>0&&(r<245||g<245||b<245);
                     if(!visible)continue;
                 }
-                if(box.Width*box.Height>page.Size.Width*page.Size.Height*.65f){regions.Clear();regions.Add(new RectangleF(PointF.Empty,page.Size));break;}
+                if(box.Width*box.Height>page.Size.Width*page.Size.Height*.65f){if(glyphs.Count>200&&kind!=3)continue;regions.Clear();regions.Add(new RectangleF(PointF.Empty,page.Size));break;}
                 box.Inflate(8,8);regions.Add(box);
                 if(regions.Count>256){regions.Clear();regions.Add(new RectangleF(PointF.Empty,page.Size));break;}
             }
@@ -54,12 +49,12 @@ namespace MiniPdf {
         }
         internal static void Equations(PdfDocument document,WordPage page,List<OfficeGlyph> glyphs,Dictionary<IntPtr,int> objects,HashSet<IntPtr> removed) {
             var protectedObjects=new HashSet<IntPtr>(page.Pictures.Where(p=>p.Figure&&p.Objects!=null).SelectMany(p=>p.Objects));
-            var chars=glyphs.Where(g=>!protectedObjects.Contains(g.Object)&&!String.IsNullOrWhiteSpace(g.Text)&&WordLayout.Safe(g.Object)).ToList();
+            var chars=glyphs.Where(g=>!protectedObjects.Contains(g.Object)&&!String.IsNullOrWhiteSpace(g.Text)&&WordLayout.Safe(g.Object,true)).ToList();
             if(chars.Count>20000)return;
             float nominal=Nominal(chars);var lines=new List<Line>();
-            float middle=page.Size.Width/2;
-            for(int side=0;side<2;side++) {
-                var column=chars.Where(g=>side==0?g.X<middle:g.X>=middle).ToList();
+            float middle=page.Profile==null?page.Size.Width/2:page.Profile.Split;
+            for(int side=0;side<(page.Columns?2:1);side++) {
+                var column=chars.Where(g=>!page.Columns||(side==0?g.X<middle:g.X>=middle)).ToList();
                 var bases=new List<Line>();
                 foreach(var glyph in column.Where(g=>g.Size>=nominal*.85f).OrderBy(g=>g.Y)) {
                     var line=bases.LastOrDefault(l=>Math.Abs(l.Y-glyph.Y)<Math.Max(.7f,glyph.Size*.12f));
@@ -81,7 +76,10 @@ namespace MiniPdf {
                     int letters=line.Glyphs.Where(g=>!OfficeMath.MathFont(g.Font)).Sum(g=>g.Text.Count(Char.IsLetter));
                     bool op=line.Glyphs.Any(g=>g.Text=="="||g.Text=="≤"||g.Text=="≥");
                     bool complex=line.Glyphs.Any(g=>OfficeMath.MathFont(g.Font)&&(g.Bad||g.Font.IndexOf("CMEX",StringComparison.OrdinalIgnoreCase)>=0||!OfficeMath.Token(g.Text)));
-                    bool mathematical=complex||math>=2&&(letters<25||math>letters*.45f)||op&&letters<15;
+                    var plain=new System.Text.StringBuilder();OfficeGlyph prior=null;
+                    foreach(var glyph in line.Glyphs.Where(g=>!OfficeMath.MathFont(g.Font)).OrderBy(g=>g.X)) {if(prior!=null&&glyph.X-prior.Right>nominal*.12f)plain.Append(' ');plain.Append(glyph.Text);prior=glyph;}
+                    bool prose=System.Text.RegularExpressions.Regex.Matches(plain.ToString(),@"[A-Za-z]{3,}").Cast<System.Text.RegularExpressions.Match>().Count(m=>!new[]{"sin","cos","tan","log","lim","min","max","exp"}.Contains(m.Value))>=2||plain.ToString().Count(c=>c>=0x3400&&c<=0x9fff)>=4;
+                    bool mathematical=!prose&&(complex||math>=2&&(letters<25||math>letters*.45f)||op&&letters<15);
                     var candidates=line.Glyphs.Where(g=>OfficeMath.MathFont(g.Font)||g.Text=="="||g.Text=="≤"||g.Text=="≥"||g.Size<nominal*.85f).ToList();
                     bool covered=candidates.Count>0&&candidates.All(g=>native.Contains(g.Object));
                     if(mathematical&&!covered) {
@@ -97,13 +95,13 @@ namespace MiniPdf {
         }
         static void Capture(PdfDocument document,WordPage page,List<RectangleF> regions,Dictionary<IntPtr,int> objects,HashSet<IntPtr> removed,bool figure) {
             if(regions.Count==0)return;
-            var boxes=objects.Keys.ToDictionary(o=>o,o=>WordLayout.Bounds(o,page.Size,document));
+            var boxes=objects.Keys.Where(o=>!page.TextForms.Contains(o)).ToDictionary(o=>o,o=>WordLayout.Bounds(o,page,document));
             var pageBox=new RectangleF(PointF.Empty,page.Size);
             for(int i=0;i<regions.Count;i++) {
                 var region=RectangleF.Intersect(regions[i],pageBox);
                 for(int pass=0;pass<8;pass++) {
                     var prior=region;
-                    foreach(var item in boxes)if(!item.Value.IsEmpty&&item.Value.IntersectsWith(region)&&
+                    foreach(var item in boxes)if(!item.Value.IsEmpty&&item.Value.IntersectsWith(region)&&(!page.ProseLetters.ContainsKey(item.Key)||Contains(region,item.Value))&&
                         (item.Value.Width*item.Value.Height<pageBox.Width*pageBox.Height*.65f||Contains(region,pageBox)))region=RectangleF.Union(region,item.Value);
                     region=RectangleF.Intersect(region,pageBox);if(region==prior)break;
                 }
@@ -116,13 +114,15 @@ namespace MiniPdf {
                 if(region.Width<=0||region.Height<=0)continue;
                 var members=new HashSet<IntPtr>(boxes.Where(b=>!b.Value.IsEmpty&&Contains(region,b.Value)).Select(b=>b.Key));
                 if(members.Count==0||boxes.Any(b=>b.Value.IntersectsWith(region)&&!Contains(region,b.Value)&&b.Value.Width*b.Value.Height<pageBox.Width*pageBox.Height*.65f))continue;
+                int prose=members.Where(page.ProseLetters.ContainsKey).Sum(o=>page.ProseLetters[o]);
+                if(!figure&&prose>0||figure&&prose>500)continue;
                 page.Text.RemoveAll(t=>t.Math!=null&&t.Objects!=null&&t.Objects.Any(members.Contains));
                 page.Pictures.RemoveAll(p=>p.Objects!=null&&p.Objects.Any(members.Contains));
                 var picture=Crop(document,page.Size,region);picture.Figure=figure;picture.Block=true;picture.Objects=members.ToArray();page.Pictures.Add(picture);
                 foreach(var obj in members)removed.Add(obj);
             }
         }
-        static WordPicture Crop(PdfDocument document,SizeF size,RectangleF box) {
+        internal static WordPicture Crop(PdfDocument document,SizeF size,RectangleF box) {
             double scale=Math.Min(300.0/72,Math.Sqrt(16000000.0/(box.Width*box.Height)));
             int width=Math.Max(1,(int)Math.Floor(size.Width*scale)),height=Math.Max(1,(int)Math.Floor(size.Height*scale));
             double sx=width/size.Width,sy=height/size.Height;

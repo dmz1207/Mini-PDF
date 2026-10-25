@@ -48,11 +48,67 @@ def research_fixtures(root):
  for i in range(12):c.drawString(36,740-i*14,'FULL-WIDTH '+str(i)+' ordinary editable paragraph spanning the middle of the paper without a column gutter.')
  c.showPage();c.save();(root/'word-research-source.pdf').write_bytes(b.getvalue())
 
+def reflow_fixtures(root):
+ b=io.BytesIO();c=canvas.Canvas(b,pagesize=(600,800))
+ c.beginForm('Plot',0,0,220,100);c.setStrokeColorRGB(.1,.4,.7);c.rect(0,0,220,100,fill=0,stroke=1);c.line(5,5,215,95);c.setFont('Helvetica',8);c.drawString(10,82,'Container plot label');c.endForm()
+ c.beginForm('ResearchBody',0,0,600,800);c._code.append('/P <</MCID 0>> BDC')
+ clip=c.beginPath();clip.rect(20,20,560,760);c.clipPath(clip,stroke=0,fill=0);c.setFont('Times-Roman',8)
+ for i in range(12):
+  c.drawString(36,740-i*12,f'CONTAINER-LEFT-{i:02d} ordinary Unicode body stays editable.')
+  c.drawString(316,735.7-i*12,f'CONTAINER-RIGHT-{i:02d} ordinary Unicode body stays editable.')
+ c.setFont('Times-Roman',10);c.drawString(36,550,'INLINE PROSE remains editable while');c.setFont('Symbol',18);c.drawString(215,550,'∑')
+ c.saveState();c.translate(320,390);c.doForm('Plot');c.restoreState()
+ c.saveState();p=c.beginPath();p.rect(35,145,45,15);c.clipPath(p,stroke=0,fill=0);c.setFont('Times-Roman',10);c.drawString(36,150,'CLIPPED VALUE MUST STAY ARTWORK');c.restoreState()
+ c.setFont('Times-Roman',9);c.drawString(36,310,'CONTAINER-LEFT-END');c.drawString(316,305.7,'CONTAINER-RIGHT-END');c._code.append('EMC');c.endForm()
+ c.saveState();c.translate(10,12);c.scale(.95,.95);c.doForm('ResearchBody');c.restoreState();c.showPage();c.save();(root/'word-reflow-base.pdf').write_bytes(b.getvalue())
+ from pypdf import PdfReader,PdfWriter
+ from pypdf.generic import NameObject
+ writer=PdfWriter(clone_from=PdfReader(root/'word-reflow-base.pdf'));seen=set()
+ def rename(resources):
+  if not resources:return
+  for ref in resources.get('/Font',{}).values():
+   font=ref.get_object()
+   if str(font.get('/BaseFont',''))=='/Times-Roman':font[NameObject('/BaseFont')]=NameObject('/ResearchUnicodeSerif')
+  for ref in resources.get('/XObject',{}).values():
+   obj=ref.get_object()
+   if id(obj) in seen:continue
+   seen.add(id(obj));rename(obj.get('/Resources'))
+ for page in writer.pages:rename(page.get('/Resources'))
+ writer.write(root/'word-reflow-source.pdf')
+
+def academic_fixtures(root):
+ b=io.BytesIO();c=canvas.Canvas(b,pagesize=(600,800))
+ cases=[('IEEE TRANSACTIONS','IEEE',36,370,280,190),('Elsevier Ltd','ELSEVIER',36,None,525,0),('John Wiley & Sons','WILEY',36,270,205,285),('Springer Nature','SPRINGER',36,316,240,240)]
+ for signal,key,left,right,lwidth,rwidth in cases:
+  c.setFont('Times-Roman',8);c.drawString(36,780,signal)
+  c.setFont('Times-Bold',16);c.drawString(36,750,'ACADEMIC FULL-WIDTH TITLE FOR '+key)
+  c.setFont('Times-Roman',9)
+  for i in range(3):c.drawString(36,722-i*12,'FULL-WIDTH ABSTRACT ordinary prose above the columns remains before all body paragraphs.')
+  for side,start,width in [('LEFT',left,lwidth),('RIGHT',right,rwidth)]:
+   if start is None:continue
+   c.setFont('Times-Roman',8)
+   for i in range(15):
+    text=key+'-'+side+'-'+str(i).zfill(2)+' ordinary editable research prose stays in this column.'+(' Scientific body text.'*6)
+    while pdfmetrics.stringWidth(text,'Times-Roman',8)>width:text=text.rsplit(' ',1)[0]
+    offset=40 if key=='WILEY' and side=='RIGHT' and i>=5 else 0
+    while pdfmetrics.stringWidth(text,'Times-Roman',8)>width-offset:text=text.rsplit(' ',1)[0]
+    c.drawString(start+offset,660-i*13-(3.4 if side=='RIGHT' else 0),text)
+   c.drawString(start,450,key+'-'+side+'-END')
+  if key=='IEEE':
+   for dot in range(8):c.circle(25,100+dot*65,.5,stroke=0,fill=1)
+   c.saveState();c.translate(8,100);c.rotate(90);c.setFont('Times-Roman',6);c.drawString(0,0,'VERTICAL PUBLISHER NOTICE retained in full for reading. '+('Copyright and license terms. '*7));c.restoreState()
+  if key=='ELSEVIER':
+   c.saveState();c.translate(590,740);c.rotate(270);c.setFont('Times-Roman',6);c.drawString(0,0,'OPPOSITE VERTICAL PUBLISHER NOTICE retained in full. '+('Copyright and license terms. '*7));c.restoreState()
+  c.showPage()
+ c.save();(root/'word-academic-source.pdf').write_bytes(b.getvalue())
+
 def fixtures(root):
  root.mkdir(parents=True,exist_ok=True)
  pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
  word_fixtures(root)
  research_fixtures(root)
+ reflow_fixtures(root)
+ academic_fixtures(root)
  b=io.BytesIO();c=canvas.Canvas(b,pagesize=(600,800));c.setFont('Times-Roman',20);c.drawString(45,750,'Mini PDF export sample')
  c.setFont('STSong-Light',14);c.drawString(45,714,'可编辑文字与表格')
  c.setFont('Helvetica',12)
@@ -160,6 +216,22 @@ def verify(root):
   check('RESEARCH-LEFT-00' in text and 'RESEARCH-RIGHT-END' in text and 'FULL-WIDTH' in text,'Research Word: Computer Modern Roman body stays editable across columns and pages')
   check(text.index('RESEARCH-LEFT-END')<text.index('RESEARCH-RIGHT-00'),'Research Word: Computer Modern prose retains column order')
   check(not d.findall('.//'+M+'oMath') and not d.findall('.//'+V+'shape'),'Research Word: formula conversion stays opt-in in continuous LaTeX prose')
+ with zipfile.ZipFile(root/'word-reflow.docx') as z:
+  check(z.testzip() is None,'Research reflow: checksums pass')
+  d=E.fromstring(z.read('word/document.xml'));text=''.join(d.itertext())
+  check('CONTAINER-LEFT-00' in text and 'CONTAINER-RIGHT-END' in text and 'INLINE PROSE remains editable' in text,'Research reflow: complete nested tagged Unicode body stays editable')
+  check(text.index('CONTAINER-LEFT-END')<text.index('CONTAINER-RIGHT-00'),'Research reflow: nested transformed body retains column order')
+  check('CLIPPED VALUE' not in text and 'Container plot label' not in text,'Research reflow: partial clips and chart labels remain image content')
+  check(not d.findall('.//'+V+'shape') and len(d.findall('.//'+W+'sectPr'))==1,'Research reflow: ordinary flowing paragraphs without position text boxes')
+ with zipfile.ZipFile(root/'word-academic.docx') as z:
+  check(z.testzip() is None,'Academic profiles: valid DOCX checksums')
+  d=E.fromstring(z.read('word/document.xml'));text=''.join(d.itertext())
+  for key in ['IEEE','WILEY','SPRINGER']:
+   check(text.index(key+'-LEFT-END')<text.index(key+'-RIGHT-00'),'Academic profiles: '+key+' actual gutter keeps column order')
+  check('ELSEVIER-LEFT-14' in text and 'ELSEVIER-LEFT-END' in text,'Academic profiles: single-column body remains editable')
+  check(text.index('IEEE-LEFT-END')<text.index('ELSEVIER-LEFT-00')<text.index('WILEY-LEFT-00')<text.index('SPRINGER-LEFT-00'),'Academic profiles: mixed source templates preserve selected-page order')
+  extents=[(int(e.attrib['cx'])/12700,int(e.attrib['cy'])/12700) for e in d.iter(WP+'extent')]
+  check(sum(w>200 and h<14 for w,h in extents)>=2 and not any(w<14 and h>200 for w,h in extents),'Academic profiles: narrow vertical margin note is retained horizontally without a page-height blank')
  with zipfile.ZipFile(root/'word-columns.docx') as z:
   text=''.join(E.fromstring(z.read('word/document.xml')).itertext());check(text.index('LEFT11')<text.index('RIGHT00'),'Word columns: flowing text does not interleave the two columns')
  created=PdfReader(root/'forms-created.pdf');filled=PdfReader(root/'forms-filled.pdf');managed=PdfReader(root/'forms-managed.pdf');f=created.get_fields();g=filled.get_fields();m=managed.get_fields()

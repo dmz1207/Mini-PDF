@@ -1,5 +1,5 @@
 {
-  "recorded": "2026-10-23",
+  "recorded": "2026-10-25",
   "version": "0.11.0.0",
   "scope": "Local Word conversion quality checks; not arbitrary mathematical semantic equivalence",
   "ocr_included": false,
@@ -9,42 +9,16 @@
     "source_pages": 8,
     "not_distributed": true,
     "modes": {
-      "layout": {
-        "word_rendered_pages": 8,
-        "editable_text_characters": 42785,
-        "text_boxes": 2804,
-        "ordinary_paragraphs_over_200_characters": 8,
-        "docx_bytes": 2676269,
-        "all_pages_rendered": true,
-        "native_omml_equations": 0
-      },
-      "continuous": {
-        "word_rendered_pages": 13,
-        "editable_text_characters": 34953,
-        "text_boxes": 0,
-        "ordinary_paragraphs_over_200_characters": 39,
-        "docx_bytes": 3962514,
-        "all_pages_rendered": true,
-        "native_omml_equations": 0
-      },
-      "math": {
-        "word_rendered_pages": 13,
-        "editable_text_characters": 34988,
-        "text_boxes": 0,
-        "ordinary_paragraphs_over_200_characters": 40,
-        "docx_bytes": 3924507,
-        "all_pages_rendered": true,
-        "native_omml_equations": 12
-      }
+      "status": "Final revision recheck in progress"
     },
-    "all_rendered_pages_visually_reviewed": 34,
     "renderer": "Installed Microsoft Word read-only PDF export followed by Poppler page rendering",
     "known_limits": [
       "Continuous mode changes pagination and equation/figure positions",
       "Formula-heavy lines and paragraphs may remain complete images",
       "Running headers, footers and captions can need manual cleanup",
       "Simple OMML inference must be reviewed; it does not recover original LaTeX"
-    ]
+    ],
+    "current_visual_qa": "pending"
   },
   "reproducible_fixtures": [
     "matrix-scaled text, generated spaces, hidden/covered text and Unicode",
@@ -52,14 +26,67 @@
     "Greek variables, sub/superscripts, numerator and denominator semantics",
     "unsupported large operator with equation number retained as one image",
     "figure labels retained with complete artwork",
-    "Computer Modern Roman body classification and reading order"
+    "Computer Modern Roman body classification and reading order",
+    "readable substitute fonts, structural tags, nested transformed text, containing and partial rectangular clips",
+    "mixed publisher marks, single/asymmetric/staggered columns, measured gutters amid indented blocks",
+    "both vertical margin reading directions and full-width title/abstract bands",
+    "English/Chinese conversion status at 10, 14 and 18 point UI fonts"
   ],
   "public_font_sample": {
     "source": "pdfjs/test/pdfs/issue18823.pdf",
     "commit": "d213fafd7b43212b93788c910d5cdc9e30d0dd8c",
     "converted_and_word_rendered": true
   },
-  "office_forms_desktop": 62,
-  "office_forms_independent": 340,
-  "private_documents_uploaded": false
+  "office_forms_desktop": 86,
+  "office_forms_independent": 352,
+  "private_documents_uploaded": false,
+  "academic_corpus": {
+    "file_paths": 84,
+    "distinct_source_contents": 84,
+    "source_pages": 252,
+    "source_unicode_letters": 829300,
+    "editable_unicode_letters": 787216,
+    "by_publisher": {
+      "IEEE": 29,
+      "Elsevier": 15,
+      "Taylor & Francis": 9,
+      "Springer Nature": 8,
+      "Wiley": 8,
+      "SIAM": 4,
+      "Unknown": 4,
+      "APS": 1,
+      "Oxford": 1,
+      "MDPI": 3,
+      "ACM": 2
+    },
+    "native_conversion_errors": 0,
+    "metric_scope": "Letter coverage proxy only; not textual, layout or formula accuracy",
+    "publisher_count": 10,
+    "source_collection": "User-authorized local paper/Desktop libraries plus two public ACM samples",
+    "private_paths_and_content_distributed": false,
+    "reading_order": {
+      "checked_two_column_bands": 150,
+      "passed": 150,
+      "unmatched_bands": 0,
+      "scope": "Unique ordinary-text anchors in geometric bands; not complete reading-order equivalence"
+    },
+    "public_sample_sources": [
+      {
+        "publisher": "ACM",
+        "url": "https://tug.ctan.org/macros/latex/contrib/acmart/samples/sigconf.pdf",
+        "bytes": 1066778,
+        "sha256": "9ff4fa912c9fe62a6b69712e39147998678611ef6486089c490f9a37d5c027fe",
+        "route": "direct"
+      },
+      {
+        "publisher": "ACM",
+        "url": "https://tug.ctan.org/macros/latex/contrib/acmart/samples/acmsmall.pdf",
+        "bytes": 643588,
+        "sha256": "2db89eb8fc5f1ef3fc07cf5bfdcc62823d5907c29bf6081dc4515d17761a412b",
+        "route": "direct"
+      }
+    ],
+    "word_readonly_open_check": "pending",
+    "visual_first_pages_reviewed": 0
+  }
 }

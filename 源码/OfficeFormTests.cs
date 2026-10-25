@@ -120,6 +120,34 @@ using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,
             UiText.English=false;
         }
         static void WordLayoutCoverage(string directory,bool withUi) {
+            using(var doc=PdfDocument.Open(Path.Combine(directory,"word-academic-source.pdf"),"")) {
+                string original=doc.AllText();string[] publishers={"IEEE","Elsevier","Wiley","Springer Nature"};
+                for(int i=0;i<4;i++) {
+                    var profile=AcademicLayout.Read(OfficeGeometry.Read(doc,i),doc.PageSize(i));
+                    Assert(profile.Publisher==publishers[i],"Academic profiles: recognize publication marks for "+publishers[i]);
+                    Assert(profile.Columns==(i!=1),"Academic profiles: geometry selects the actual column count for "+publishers[i]);
+                    if(i==2)Assert(profile.Split<270,"Academic profiles: indented right-column blocks cannot push the gutter into prose");
+                    if(i==0||i==2)Assert(Math.Abs(profile.Split-300)>20,"Academic profiles: asymmetric gutter is measured for "+publishers[i]+" ("+profile.Split.ToString("F1")+"pt)");
+                }
+                var directions=new List<bool>();
+                for(int i=0;i<2;i++)using(var copy=PdfDocument.FromBytes(doc.GetRenderSource().ReadAll(),""))directions.AddRange(WordLayout.Read(copy,i,false,null,true).MarginNotes.Select(n=>n.Item2));
+                Assert(directions.Contains(true)&&directions.Contains(false),"Academic profiles: both vertical notice directions are measured before image reorientation");
+                OfficeExport.Save(doc,new OfficeExportOptions{Continuous=true,Pages=new[]{0,1,2,3}},Path.Combine(directory,"word-academic.docx"),null);
+                Assert(doc.AllText()==original&&!doc.Dirty,"Academic profiles: mixed templates leave the source unchanged");
+            }
+            using(var doc=PdfDocument.Open(Path.Combine(directory,"word-reflow-source.pdf"),"")) {
+                string before=doc.AllText();
+                using(var copy=PdfDocument.FromBytes(doc.GetRenderSource().ReadAll(),"")) {
+                    var page=WordLayout.Read(copy,0,false,null,true);
+                    string text=String.Join("\n",page.Text.Where(t=>t.Text!=null).Select(t=>t.Text));
+                    Assert(text.Contains("CONTAINER-LEFT-00")&&text.Contains("CONTAINER-RIGHT-END"),"Research Word: nested, marked body with a substitute font remains editable");
+                    Assert(text.Contains("INLINE PROSE remains editable"),"Research Word: an inline large operator does not rasterize ordinary prose");
+                    Assert(!text.Contains("CLIPPED VALUE"),"Research Word: partially clipped text is retained as artwork");
+                    Assert(page.Pictures.Any(p=>p.Figure)&&!text.Contains("Container plot label"),"Research Word: nested chart labels remain with the figure");
+                }
+                OfficeExport.Save(doc,new OfficeExportOptions{Continuous=true,Pages=new[]{0}},Path.Combine(directory,"word-reflow.docx"),null);
+                Assert(doc.AllText()==before&&!doc.Dirty&&!doc.CanUndo,"Research Word: extracting nested text never changes the open PDF");
+            }
             using(var doc=PdfDocument.Open(Path.Combine(directory,"word-latex-source.pdf"),"")) {
                 using(var copy=PdfDocument.FromBytes(doc.GetRenderSource().ReadAll(),"")) {
                     var page=WordLayout.Read(copy,0,false,null,true);
@@ -185,6 +213,21 @@ using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,
                         using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,new Rectangle(0,0,window.Width,window.Height));shot.Save(Path.Combine(directory,"word-equation-settings.png"));}
                         window.Close();
                     }
+                    foreach(bool english in new[]{true,false}) {
+                        UiText.English=english;
+                        using(var progress=new OfficeProgress(doc,new OfficeExportOptions{Pages=new[]{0}},Path.Combine(directory,"layout-only.docx"))) {
+                            var label=progress.Controls.Find("ConversionStatus",true).OfType<Label>().Single();
+                            var bar=progress.Controls.Find("ConversionProgress",true).OfType<ProgressBar>().Single();
+                            label.Text=UiText.Get("正在转换…")+" 1234 / 2000";
+                            foreach(float size in new[]{10f,14f,18f})using(var font=new Font("Segoe UI",size)) {
+                                progress.Font=font;progress.PerformLayout();label.Parent.PerformLayout();
+                                var required=label.GetPreferredSize(new Size(label.Width,0));
+                                Assert(label.Height>=required.Height&&label.Bottom<=bar.Top,
+                                    "Office progress: complete "+(english?"English":"Chinese")+" status and separate progress bar at "+size+"pt");
+                            }
+                        }
+                    }
+                    UiText.English=true;
                     string worker=Path.Combine(directory,"word-layout-worker.docx");
                     using(var progress=new OfficeProgress(doc,new OfficeExportOptions{Continuous=true,Equations=true,Pages=new[]{0},MathSettings=new OfficeMathSettings{SymbolGap=.75f}},worker)) {
                         progress.Show();var watch=System.Diagnostics.Stopwatch.StartNew();

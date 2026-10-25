@@ -115,8 +115,14 @@ namespace MiniPdf {
         readonly PdfSource source;readonly string password,path;readonly OfficeExportOptions options;
         readonly Label status;readonly ProgressBar progress;readonly object connectionLock=new object();Process worker;ProcessBudget budget;NamedPipeServerStream pipe;volatile bool canceled;bool completed,sourceReleased;
         internal OfficeProgress(PdfDocument document,OfficeExportOptions settings,string output) {
-            source=document.GetRenderSource().Retain();password=document.Password;options=settings;path=output;options.TempPath=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output)),".minipdf-export-"+Guid.NewGuid().ToString("N")+".tmp");FormUi.Setup(this,"转换文档",new Size(460,150));MinimizeBox=MaximizeBox=false;
-            status=new Label{Dock=DockStyle.Top,Height=40,Padding=new Padding(12),Text=UiText.Get("正在转换…")};progress=new ProgressBar{Dock=DockStyle.Top,Height=22};Controls.Add(FormUi.Button("取消",delegate{canceled=true;Stop();Close();}));Controls[0].Dock=DockStyle.Bottom;Controls.Add(progress);Controls.Add(status);
+            source=document.GetRenderSource().Retain();password=document.Password;options=settings;path=output;options.TempPath=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output)),".minipdf-export-"+Guid.NewGuid().ToString("N")+".tmp");FormUi.Setup(this,"转换文档",new Size(460,160));FormBorderStyle=FormBorderStyle.FixedDialog;MinimizeBox=MaximizeBox=false;
+            var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(14),ColumnCount=1,RowCount=4};
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));Controls.Add(layout);
+            status=new Label{Name="ConversionStatus",AutoSize=true,Dock=DockStyle.Fill,Margin=new Padding(0,0,0,12),UseMnemonic=false,Text=UiText.Get("正在转换…")};
+            progress=new ProgressBar{Name="ConversionProgress",Dock=DockStyle.Top,Height=22,Margin=new Padding(0,0,0,12)};layout.Controls.Add(status,0,0);layout.Controls.Add(progress,0,1);
+            var footer=new FlowLayoutPanel{AutoSize=true,Dock=DockStyle.Fill,FlowDirection=FlowDirection.RightToLeft,Margin=Padding.Empty};
+            var cancel=FormUi.Button("取消",delegate{canceled=true;Stop();Close();});footer.Controls.Add(cancel);layout.Controls.Add(footer,0,3);CancelButton=cancel;
             Shown+=delegate{new Thread(Work){IsBackground=true,Name="MiniPDF Office export"}.Start();};FormClosing+=delegate{if(!completed)canceled=true;Stop();};UiText.Apply(this);
         }
         void Post(Action action){try{if(!IsDisposed&&IsHandleCreated)BeginInvoke(action);}catch(InvalidOperationException){}}

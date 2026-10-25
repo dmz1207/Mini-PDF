@@ -1,13 +1,13 @@
 {
-  "recorded": "2026-10-23",
+  "recorded": "2026-10-25",
   "version": "0.11.0.0",
-  "executable_bytes": 3104256,
-  "executable_sha256": "B121BDDE61B17114ED766B5664F0CEBBC4954D87E6762CC7F52264BAB32A9498",
-  "core_sha256": "57B1DCD25BCFBE8703731F7607DFB1839F8FC518F0B743E563503FB528BFB12F",
+  "executable_bytes": 3111424,
+  "executable_sha256": "2342E5D118EE7928C3E9B92795FDA311322ED49823852A4F6D0744E2056C9859",
+  "core_sha256": "3042C47C89A9C4F785FF313E82238C3EAEEF0E0C7826B2A603F4B324562710EC",
   "pdfium_sha256": "A318C39C137482DC4687C2973B7EC1C27FC1C20253CF2DC31928F922EAB89E8F",
   "platform": "Windows 10 Home Chinese x64, build 19045",
   "checks": {
-    "desktop": 942,
+    "desktop": 966,
     "pdf_preservation": 33,
     "features": 51,
     "signature_watermark_fixes": 23,
@@ -15,10 +15,10 @@
     "selection_fonts": 45,
     "layer_compatibility": 141,
     "text_editing_independent": 64,
-    "office_forms_independent": 340,
+    "office_forms_independent": 352,
     "portable_launcher": 17
   },
-  "total_assertions": 1722,
+  "total_assertions": 1758,
   "physical_print_jobs": false,
   "separate_windows_11_test": false,
   "pdfium_rebuilt": false,
@@ -34,7 +34,10 @@
     "Effective font sizes, column order and common LaTeX body font families",
     "Optional offline OMML inference for simple equations with configurable geometry rules",
     "Complete complex-equation and figure fallback regions",
-    "Native raster-worker preview and temporary-file collision protection"
+    "Native raster-worker preview and temporary-file collision protection",
+    "Readable publisher fonts, structural tags, nested text and containing clips in continuous Word export",
+    "Adaptive academic profiles, actual gutters, section headings and measured vertical margin directions",
+    "Responsive English/Chinese conversion progress status"
   ],
   "word_export_evidence": "word-export-verification.json"
 }
