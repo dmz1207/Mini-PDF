@@ -1,0 +1,89 @@
+name: Offline AI native runtime
+on:
+  push:
+    paths:
+      - '.github/workflows/offline-ai-runtime.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-stq:
+    runs-on: windows-2022
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [baseline, avx2]
+    steps:
+      - name: Fetch pinned STQ kernel and x86 implementation
+        shell: pwsh
+        run: |
+          git init inference
+          git -C inference fetch --depth 1 https://github.com/avariiiiiiiiii/llama.cpp.git c828a2e883defef95fd6121ee1586efcce89ad40
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot fetch pinned source' }
+          git -C inference checkout --detach FETCH_HEAD
+          if ((git -C inference rev-parse HEAD) -ne 'c828a2e883defef95fd6121ee1586efcce89ad40') { throw 'Wrong inference revision' }
+      - name: Build a CPU-only portable server
+        shell: pwsh
+        run: |
+          $fast = '${{ matrix.variant }}' -eq 'avx2'
+          $switch = if ($fast) { 'ON' } else { 'OFF' }
+          cmake -S inference -B build -A x64 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DGGML_AVX=$switch -DGGML_AVX2=$switch -DGGML_FMA=$switch -DGGML_F16C=$switch -DGGML_AVX512=OFF -DGGML_OPENMP=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=ON -DLLAMA_BUILD_EXAMPLES=ON -DLLAMA_BUILD_SERVER=ON
+          if ($LASTEXITCODE -ne 0) { throw 'CMake configuration failed' }
+          cmake --build build --config Release --target llama-server test-quantize-fns --parallel 4
+          if ($LASTEXITCODE -ne 0) { throw 'Native compilation failed' }
+      - name: Check quantization arithmetic
+        shell: pwsh
+        run: |
+          & .\build\bin\Release\test-quantize-fns.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Quantization arithmetic tests failed' }
+      - name: Download and check the exact Hy-MT2 model
+        shell: pwsh
+        run: |
+          $uri = 'https://huggingface.co/AngelSlim/Hy-MT2-1.8B-1.25Bit-GGUF/resolve/0989912c0cc2d3edeeecd76171d1c7d94ee17255/Hy-MT2-1.8B-1.25bit-v2.gguf'
+          curl.exe -fL --retry 3 $uri -o model.gguf
+          if ($LASTEXITCODE -ne 0) { throw 'Model download failed' }
+          if ((Get-FileHash model.gguf -Algorithm SHA256).Hash.ToLower() -ne '13a33fc4f72d5c92c439a65fd343696de4ccd0485bca84de2712bc0d8cc4e773') { throw 'Model checksum mismatch' }
+      - name: Test real Chinese and English inference
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath .\build\bin\Release\llama-server.exe -ArgumentList '-m model.gguf -c 4096 -t 4 -ngl 0 --host 127.0.0.1 --port 17893 --jinja' -WindowStyle Hidden -PassThru -RedirectStandardOutput server-out.txt -RedirectStandardError server-err.txt
+          try {
+            $ready = $false
+            for ($i=0; $i -lt 90; $i++) {
+              try { $null = Invoke-RestMethod http://127.0.0.1:17893/health; $ready = $true; break } catch { if ($process.HasExited) { Get-Content server-err.txt -Tail 30; throw 'Inference server exited' }; Start-Sleep -Seconds 1 }
+            }
+            if (-not $ready) { throw 'Inference server startup timed out' }
+            $results = @()
+            foreach ($case in @(@{source='The control system remains stable.';target='Chinese'},@{source='该系统保持稳定。';target='English'})) {
+              $body = @{messages=@(@{role='user';content="Translate the following text into $($case.target). Only output the translated result without any additional explanation:`n`n$($case.source)"});max_tokens=128;temperature=0.1;top_p=0.6;repeat_penalty=1.05;stream=$false} | ConvertTo-Json -Depth 8 -Compress
+              $reply = Invoke-RestMethod http://127.0.0.1:17893/v1/chat/completions -Method Post -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body)) -TimeoutSec 240
+              $text = $reply.choices[0].message.content
+              if ([string]::IsNullOrWhiteSpace($text)) { throw 'Empty translation' }
+              if ($case.target -eq 'Chinese' -and $text -notmatch '[\u4e00-\u9fff]') { throw 'Chinese inference failed' }
+              if ($case.target -eq 'English' -and $text -notmatch '[a-zA-Z]') { throw 'English inference failed' }
+              $results += @{source=$case.source;target=$case.target;translation=$text;usage=$reply.usage}
+            }
+            $results | ConvertTo-Json -Depth 8 | Set-Content inference-results.json -Encoding utf8
+          } finally { if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force } }
+      - name: Keep the inference engine and provenance
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path package -Force | Out-Null
+          Copy-Item build\bin\Release\llama-server.exe package\
+          Get-ChildItem build\bin\Release\*.dll -ErrorAction SilentlyContinue | Copy-Item -Destination package\
+          Copy-Item inference\LICENSE package\LICENSE-llama.cpp.txt
+          Copy-Item inference-results.json package\
+          'c828a2e883defef95fd6121ee1586efcce89ad40' | Set-Content package\runtime-revision.txt
+          Get-FileHash package\* -Algorithm SHA256 | Format-Table | Out-File package\checksums.txt
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: minipdf-stq-windows-${{ matrix.variant }}
+          path: package/
+          retention-days: 7
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: failure()
+        with:
+          name: minipdf-stq-failure-${{ matrix.variant }}
+          path: '*-err.txt'
+          retention-days: 3
