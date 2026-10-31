@@ -15,7 +15,33 @@
     "miniai_desktop": 5,
     "combined_total": 1602
   },
-  "public_corpus_current_ci": "pending source publication; earlier CI remains historical",
+  "public_corpus_current_ci": {
+    "date": "2026-11-01",
+    "run_id": 41253335938,
+    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/41253335938",
+    "source_commit": "9a47e5581b83be49cb677028811b6c9e5295bca0",
+    "conclusion": "success",
+    "checked": 4211,
+    "distinct_contents": 4206,
+    "new_regressions": 0,
+    "known_exceptions": 61,
+    "classification": {
+      "applicable_checks_pass": 4135,
+      "engine_open_or_page_difference": 14,
+      "password_required": 11,
+      "reference_also_cannot_complete": 21,
+      "no_displayable_pages": 7,
+      "engine_only_merge_difference": 3,
+      "signed_preservation_pass": 15,
+      "xfa_only_unsupported": 2,
+      "native_process_failure": 1,
+      "probe_time_limit": 2
+    },
+    "text_edit_checks": 123,
+    "independent_text_checks": 64,
+    "office_form_checks": 67,
+    "independent_office_form_checks": 352
+  },
   "optional_package": "https://github.com/dmz1207/Mini-AI",
   "word_qa": "Two OCR Word exports opened read-only in installed Word, rendered and visually inspected",
   "limits": [
