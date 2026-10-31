@@ -1,14 +1,25 @@
-# Mini PDF
+﻿# Mini PDF
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 **轻量、原生的 Windows PDF 阅读器与编辑器。**
 
-v0.11.0 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
+v0.12.0 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](.) · [测试记录](测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
 **v0.11.0 本地验证（2026-10-25）：** 1,758 项通过。[最终源码线上检查通过](https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872)：4,211 个公开路径无新增回归，62 个既有异常如实保留；范围与限制见[测试记录](测试记录.md)，另见 [Word 导出验证](word-export-verification.json)。
+
+本版本地两个项目合计 **1,602 项通过**，范围与限制见[测试记录](测试记录.md)，外挂使用见[离线 AI](OfflineAI.md)。
+
+## v0.12.0 更新
+
+搜索改为独立进程，侧栏列出全部匹配与页码/上下文，并兼容常见连字、断行、行末连字符和中文空格。
+
+可选 [MiniAI 离线外挂包](https://github.com/dmz1207/Mini-AI)，内含 PP-OCRv6 medium 与 Hy-MT2 1.25-bit。主 EXE 仍约 3 MiB，模型单独安装，其他 Windows 软件可共用本机 API。加载后划词松开即出现圆角翻译气泡，移开收起、Ctrl 固定，支持切换目标语言与复制。Alt+S 框选屏幕做 OCR 和翻译，识别文字可修正或选句再译。未安装时入口置灰提示安装。
+
+Word 导出可勾选“扫描页先 OCR（MiniAI）”，普通高置信度正文成为可编辑文字；复杂公式、图形和不确定区域保留图片，扫描版式近似重建，需人工核对。导出始终使用副本。推理独立进程，CPU 多核/AVX2，复用模型、KV 前缀和最近译文缓存。
+
 
 ## v0.11.0 新增
 

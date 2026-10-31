@@ -1,4 +1,11 @@
-# Word export / Word 导出
+﻿# Word export / Word 导出
+
+## Optional OCR for scanned pages
+
+Install the separate MiniAI package and enable **OCR scanned pages first (MiniAI)** in Word export. Pages without visible body text are recognized locally at bounded 300-DPI resolution. Confident horizontal prose on plain light paper becomes editable text; native-text pages use the existing conversion rules. The original PDF, scan image and undo history are never rewritten.
+
+Preserve layout places recognized text at measured positions and removes only those accepted text regions from its private background raster, avoiding duplicate visible text. Continuous text reconstructs reading order and ordinary paragraphs, with the remaining artwork as images. Complex formulas, skewed or low-confidence lines, colored/overlapping regions and uncertain content retain the original raster. OCR fonts and layout are approximate; review spelling, numbers, symbols and order. It does not perform mathematical OCR or guarantee publisher-perfect Word output.
+
 
 English first; 简体中文 follows. Updated for v0.11.0.
 
@@ -33,7 +40,7 @@ Recognizable uncertain math regions are rendered by the existing PDFium at up to
 
 **Preserve layout never forces formulas into OMML.** Complex formulas remain artwork; simple standard-font symbols can remain positioned text. Editable equations reflow naturally in continuous paragraphs instead of being clipped to small original text boxes.
 
-There is no learned model, online service, OCR pack, PdfPig or PdfiumViewer dependency. The existing PDFium parser/renderer and Windows ZIP/XML APIs are reused. Word fonts and equation spacing can differ from the PDF.
+The base conversion requires no learned model, online service, PdfPig or PdfiumViewer; optional scan recognition calls the separate local MiniAI pack. The existing PDFium parser/renderer and Windows ZIP/XML APIs are reused. Word fonts and equation spacing can differ from the PDF.
 
 ### Adjustable rules
 

@@ -185,7 +185,7 @@ namespace MiniPdf {
                     paper=new SizeF((float)(paper.Width*paperScale),(float)(paper.Height*paperScale));
                     Part(zip,"_rels/.rels","<Relationships xmlns=\""+P+"\">"+Rel("doc","officeDocument","word/document.xml")+"</Relationships>");
                     for(int i=0;i<options.Pages.Length;i++)using(var copy=PdfDocument.FromBytes(source,document.Password)) {
-                        var page=WordLayout.Read(copy,options.Pages[i],options.Continuous&&options.Equations,options.MathSettings,options.Continuous,publisher);int image=++id;
+                        var page=options.Ocr&&WordOcr.Needed(copy,options.Pages[i])?WordOcr.Read(copy,options.Pages[i],options.MiniAiRoot,options.Stage):WordLayout.Read(copy,options.Pages[i],options.Continuous&&options.Equations,options.MathSettings,options.Continuous,publisher);int image=++id;
                         if(options.Continuous) {
                             FlowPage(page,paper,options,zip,rels,body,ref id);
                             if(i+1==options.Pages.Length)body.Append(PageSection(paper,true,true));

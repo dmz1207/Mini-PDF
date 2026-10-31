@@ -1,10 +1,63 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace MiniPdf {
     internal static partial class UiText {
         static void AddFeatureTranslations(Dictionary<string,string> strings){
             // One entry per line keeps the optional feature vocabulary separate.
-            const string pairs=@"此文字带有替代文本标记，暂不支持保真改写。|This text has ActualText replacement metadata. Faithful rewriting is not supported yet.
+            const string pairs=@"先解压 MiniAI 功能包，然后选择其中包含 MiniAI.exe 的文件夹。只需设置一次。|Extract the MiniAI package, then select the folder containing MiniAI.exe. You only need to do this once.
+翻译|Translate
+识别并翻译|OCR and translate
+未识别出可翻译的文字，请检查页面或扫描清晰度。|No translatable text was recognized. Check the page and scan quality.
+请输入要翻译的文字。|Enter text to translate.
+离线识别扫描页 (Ctrl+Shift+O)|Offline OCR for scanned pages (Ctrl+Shift+O)
+离线翻译所选文字 (Ctrl+Alt+T)|Translate selected text offline (Ctrl+Alt+T)
+离线翻译所选文字…|Translate selected text offline…
+离线识别当前页…|Recognize this page offline…
+离线 OCR 与翻译|Offline OCR & Translation
+加载 MiniAI 功能包…|Load MiniAI package…
+离线 OCR…|Offline OCR…
+离线中英翻译…|Offline Chinese-English translation…
+离线 OCR|Offline OCR
+中英互译|Chinese-English translation
+未加载离线功能包|No offline package loaded
+选择包含 MiniAI.exe 的功能包文件夹|Select the package folder containing MiniAI.exe
+此文件夹不包含 MiniAI.exe。|This folder does not contain MiniAI.exe.
+请先加载 MiniAI 离线功能包。|Please load the MiniAI offline package first.
+MiniAI 本地服务未能启动，请检查功能包。|The MiniAI local service did not start. Please check the package.
+跳过已有文字层的页面|Skip pages with existing text
+开始识别|Run OCR
+添加可搜索文字层|Add searchable text layer
+发送到翻译|Send to translation
+英文 → 中文|English → Chinese
+中文 → 英文|Chinese → English
+开始翻译|Translate
+复制译文|Copy translation
+取消任务|Cancel task
+任务已取消。|Task canceled.
+正在识别…|Recognizing…
+识别完成：{0} 行；跳过 {1} 页已有文字。|OCR complete: {0} lines; skipped {1} pages with existing text.
+文档已更改，请重新识别后再应用。|The document changed. Run OCR again before applying the result.
+已添加文字层；请保存 PDF。页面外观保持原样。|Searchable text added. Save the PDF to keep it. Page appearance is preserved.
+正在加载翻译模型…|Loading the translation model…
+正在翻译…|Translating…
+翻译完成。|Translation complete.
+识别和翻译在本机完成。识别文字可复制核对，再添加到 PDF；译文请结合原文核对。|Recognition and translation run locally. Review recognized text before adding it to the PDF, and check translations against the original.
+查找上一个|Find previous
+搜索结果|Search results
+页|Page
+上下文|Context
+区分大小写|Match case
+全词匹配|Whole words
+搜索内容过长。|The search query is too long.
+正在搜索…|Searching…
+搜索未完成，已保留找到的结果。|Search did not finish. Matches already found are retained.
+已显示前 {0} 处，请缩小搜索范围。|Showing the first {0} matches. Please refine the query.
+没有找到；无文字层的页面请先运行 OCR。|No matches. Run OCR first for pages without a text layer.
+没有找到匹配内容。|No matches found.
+共 {0} 处|{0} matches
+上一个|Previous
+查找上一个 (Shift+F3)|Find previous (Shift+F3)
+此文字带有替代文本标记，暂不支持保真改写。|This text has ActualText replacement metadata. Faithful rewriting is not supported yet.
 竖排文字暂不支持保真改写。|Vertical text rewriting is not yet supported with preservation guarantees.
 此文字用于剪裁，暂不支持安全改写。|This text defines clipping and cannot be safely rewritten yet.
 文字超出页面边界。可启用自动换行并调整宽度。|Text extends beyond the page. Enable wrapping and adjust the width.
@@ -424,6 +477,25 @@ XFA 动态表单暂不支持；请使用标准 PDF 表单。|Dynamic XFA forms a
 无法生成预览。|Cannot generate the preview.
 此文件处于兼容预览，无法转换 Office 文件。|Office conversion is unavailable in compatibility preview.
 使用普通 Word 段落合并正文，可连续编辑全文。可选离线转换简单公式；公式和图片位置可能变化。扫描页不识别文字。|Merge body text into normal Word paragraphs for continuous editing. Optionally infer simple equations offline. Equations and images may move. No OCR for scans.
+请使用对应的 DOCX 或 XLSX 文件扩展名。|Use the matching DOCX or XLSX file extension.
+导出文件不能覆盖原 PDF。|The export cannot overwrite the source PDF.
+扫描页先 OCR（MiniAI）|OCR scanned pages first (MiniAI)
+MiniAI 仅识别缺少可见正文的页面；普通识别文字可编辑，复杂公式、图形和不确定区域保留图片。扫描版式为近似重建，请核对。原 PDF 不会修改。|MiniAI recognizes pages without visible body text. Recognized prose is editable; formulas, artwork and uncertain regions remain images. Scan layouts are approximate. Check the result; the source PDF is unchanged.
+正在识别扫描页…|Recognizing scanned page…
+正在连接 MiniAI…|Connecting to MiniAI…
+复制|Copy
+划词翻译|Translate selection
+截图翻译|Capture & translate
+截图翻译（Alt+S）|Capture & translate (Alt+S)
+框选屏幕区域，识别并翻译（Alt+S）|Select a screen region to recognize and translate (Alt+S)
+安装 AI 外挂包以启用|Install the AI add-on pack to enable
+松开鼠标自动翻译所选文字|Automatically translate selected text on mouse release
+中英自动互译|Auto ZH/EN
+本机翻译 · 移开鼠标收起 · 按住 Ctrl 固定|Offline · Move away to dismiss · Hold Ctrl to keep
+可选中识别文字再译 · Ctrl+Enter 重译 · Ctrl 固定|Select OCR text to translate · Ctrl+Enter retry · Ctrl to keep
+正在识别选区…|Recognizing selection…
+选区内未识别出文字，请重新框选。|No text found. Select another region.
+译文超过输出限制，请缩小选区。|Translation exceeds the output limit. Select less text.
 ";
             foreach(string line in pairs.Split('\n')){string value=line.TrimEnd('\r');int split=-1;for(int i=0;i<value.Length;i++)if(value[i]=='|'&&(i==0||value[i-1]!='\\')){split=i;break;}if(split<0)continue;strings[value.Substring(0,split).Replace("\\|","|").Replace("\\n","\n")]=value.Substring(split+1).Replace("\\|","|").Replace("\\n","\n");}
         }

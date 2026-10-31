@@ -1,4 +1,4 @@
-Mini PDF 0.11.0 使用说明
+﻿Mini PDF 0.12.0 使用说明
 
 English (README.md) | 简体中文 (README.zh-CN.md)
 
@@ -221,3 +221,9 @@ powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 阅读界面及标签交互参考 SumatraPDF (https://github.com/sumatrapdfreader/sumatrapdf)，功能参考 PDF Looker Pro (https://github.com/dongfangxy/pdf-looker-pro) 和 Adobe 的打印/页面操作。应用代码独立实现，没有链接 SumatraPDF、MuPDF、Electron 或 Adobe SDK；MuPDF 仅用于开发中的独立结果验证。
 
 兼容性说明：源代码内 Compatibility.md 记录 4,211 个公开样本路径的实测结果。图层默认、视图及打印状态已覆盖测试，但任意命名的备用配置并非全部保留。向加密目标导入带图层页面会取消并回滚；加密源可合并为新建未加密文件。异常 JPX 会尝试 Windows 内置只读兼容预览，颜色仍可能偏差，禁止编辑、图片导出和打印；另存副本保留原有数据。仍有 3 份原生合并比较差异、部分页树及极端复杂文件限制，未承诺所有 PDF、打印机或系统环境均无缺陷。
+
+可选 MiniAI
+将独立 MiniAI 文件夹放在 EXE 旁边，或通过工具菜单加载功能包。划词松开即译，
+鼠标移开收起，Ctrl 临时/点击固定。Alt+S 截图框选识别翻译，识别文字可修正、
+选句再译，Ctrl+Enter 重译。导出 Word 可勾选扫描页先 OCR；普通高置信度正文可编辑，
+复杂公式和不确定区域保留图片，扫描版式近似重建，需核对。模型在独立进程运行。

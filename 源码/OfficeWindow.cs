@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -15,7 +15,7 @@ namespace MiniPdf {
         readonly bool excel;
         readonly ComboBox range,layoutMode;
         readonly TextBox pages;
-        readonly CheckBox option,equations;
+        readonly CheckBox option,equations,ocr;
         readonly Button mathButton;
         readonly OfficeMathSettings mathSettings=new OfficeMathSettings();
         readonly DataGridView preview;
@@ -36,15 +36,16 @@ namespace MiniPdf {
             layoutMode=FormUi.Combo(240);layoutMode.Name="WordExportMode";layoutMode.Items.AddRange(new object[]{UiText.Get("保留版式（推荐）"),UiText.Get("连续正文（便于编辑）")});layoutMode.SelectedIndex=0;
             equations=new CheckBox{Text=UiText.Get("简单公式可编辑（离线）"),AutoSize=true,Checked=false};
             mathButton=FormUi.Button("公式设置…",delegate{using(var dialog=new OfficeMathWindow(mathSettings))dialog.ShowDialog(this);});
+            ocr=new CheckBox{Name="WordOcr",Text=UiText.Get("扫描页先 OCR（MiniAI）"),AutoSize=true,Enabled=MiniAiClient.Available};
             bar.Controls.AddRange(new Control[]{range,pages});if(!excel)bar.Controls.Add(layoutMode);bar.Controls.Add(option);
-            if(!excel)bar.Controls.AddRange(new Control[]{equations,mathButton});bar.Controls.Add(FormUi.Button("预览第一页",delegate{Preview();}));root.Controls.Add(bar,0,0);
+            if(!excel){bar.Controls.AddRange(new Control[]{equations,mathButton,ocr});bar.Controls.Add(FormUi.Button("加载 MiniAI 功能包…",delegate{if(OfflineWindow.LoadPack(this)){ocr.Enabled=true;ocr.Checked=true;UpdateOptions();}}));}bar.Controls.Add(FormUi.Button("预览第一页",delegate{Preview();}));root.Controls.Add(bar,0,0);
             info=new Label{AutoSize=true,Dock=DockStyle.Fill,Padding=new Padding(0,8,0,10)};root.Controls.Add(info,0,1);
             preview=new DataGridView{Dock=DockStyle.Fill,ReadOnly=true,AllowUserToAddRows=false,AllowUserToDeleteRows=false,RowHeadersVisible=false,AutoSizeColumnsMode=DataGridViewAutoSizeColumnsMode.Fill,BackgroundColor=Color.White,BorderStyle=BorderStyle.None};
             pagePreview=new PictureBox{Dock=DockStyle.Fill,SizeMode=PictureBoxSizeMode.Zoom,BackColor=Color.FromArgb(238,240,243)};
             var host=new Panel{Dock=DockStyle.Fill};host.Controls.Add(preview);host.Controls.Add(pagePreview);root.Controls.Add(host,0,2);
             var footer=new FlowLayoutPanel{AutoSize=true,Dock=DockStyle.Fill,FlowDirection=FlowDirection.RightToLeft};
             footer.Controls.Add(FormUi.Button("取消",delegate{Close();}));footer.Controls.Add(FormUi.Button("导出…",delegate{Export();}));root.Controls.Add(footer,0,3);
-            layoutMode.SelectedIndexChanged+=delegate{UpdateOptions();};equations.CheckedChanged+=delegate{UpdateOptions();};UpdateOptions();UiText.Apply(this);Shown+=delegate{if(!excel)BeginInvoke(new Action(delegate{if(!IsDisposed&&Visible)Preview();}));};
+            layoutMode.SelectedIndexChanged+=delegate{UpdateOptions();};equations.CheckedChanged+=delegate{UpdateOptions();};ocr.CheckedChanged+=delegate{UpdateOptions();};UpdateOptions();UiText.Apply(this);Shown+=delegate{if(!excel)BeginInvoke(new Action(delegate{if(!IsDisposed&&Visible)Preview();}));};
         }
         void UpdateOptions() {
             bool layout=!excel&&layoutMode.SelectedIndex==0;
@@ -53,6 +54,7 @@ namespace MiniPdf {
             info.Text=UiText.Get(excel?"按位置整理为可编辑单元格，每个 PDF 页一个工作表；复杂表格请核对。无文字层的扫描页不识别。":
                 layout?"保留页面位置，普通正文可编辑，公式和图形保留高清外观。下方显示原文参考预览；扫描页不识别文字。":
                 "使用普通 Word 段落合并正文，可连续编辑全文。可选离线转换简单公式；公式和图片位置可能变化。扫描页不识别文字。");
+            if(!excel&&ocr.Checked)info.Text=UiText.Get("MiniAI 仅识别缺少可见正文的页面；普通识别文字可编辑，复杂公式、图形和不确定区域保留图片。扫描版式为近似重建，请核对。原 PDF 不会修改。");
         }
         int[] Pages(){return range.SelectedIndex==1?new[]{document.Index}:range.SelectedIndex==2?PdfDocument.ParsePages(pages.Text,document.Count):PrintEngine.SelectPages(document.Count,0,0,"",0,false);}
         void Preview() {
@@ -81,7 +83,7 @@ namespace MiniPdf {
         }
         void Export() {
             try{PdfDocument.Check(!document.CompatibilityPreview,UiText.Get("此文件处于兼容预览，无法转换 Office 文件。"));var selected=Pages();using(var save=new SaveFileDialog{Filter=excel?"Excel (*.xlsx)|*.xlsx":"Word (*.docx)|*.docx",DefaultExt=excel?"xlsx":"docx",AddExtension=true,RestoreDirectory=true,FileName=Path.GetFileNameWithoutExtension(String.IsNullOrEmpty(document.FilePath)?"document":document.FilePath)+(excel?".xlsx":".docx")})if(save.ShowDialog(this)==DialogResult.OK) {
-                var options=new OfficeExportOptions{Excel=excel,Pages=selected,Images=option.Checked,DetectColumns=option.Checked,Layout=!excel&&layoutMode.SelectedIndex==0,Continuous=!excel&&layoutMode.SelectedIndex==1,Equations=equations.Checked,MathSettings=mathSettings};
+                var options=new OfficeExportOptions{Excel=excel,Pages=selected,Images=option.Checked,DetectColumns=option.Checked,Layout=!excel&&layoutMode.SelectedIndex==0,Continuous=!excel&&layoutMode.SelectedIndex==1,Equations=equations.Checked,MathSettings=mathSettings,Ocr=!excel&&ocr.Checked,MiniAiRoot=MiniAiClient.PackRoot};
                 using(var progress=new OfficeProgress(document,options,save.FileName))if(progress.ShowDialog(this)==DialogResult.OK)DialogResult=DialogResult.OK;
             }}catch(Exception e){MessageBox.Show(this,e.Message,Text,MessageBoxButtons.OK,MessageBoxIcon.Warning);}
         }
@@ -115,6 +117,7 @@ namespace MiniPdf {
         readonly PdfSource source;readonly string password,path;readonly OfficeExportOptions options;
         readonly Label status;readonly ProgressBar progress;readonly object connectionLock=new object();Process worker;ProcessBudget budget;NamedPipeServerStream pipe;volatile bool canceled;bool completed,sourceReleased;
         internal OfficeProgress(PdfDocument document,OfficeExportOptions settings,string output) {
+            PdfDocument.Check(String.IsNullOrEmpty(document.FilePath)||!String.Equals(Path.GetFullPath(output),Path.GetFullPath(document.FilePath),StringComparison.OrdinalIgnoreCase),UiText.Get("导出文件不能覆盖原 PDF。"));
             source=document.GetRenderSource().Retain();password=document.Password;options=settings;path=output;options.TempPath=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output)),".minipdf-export-"+Guid.NewGuid().ToString("N")+".tmp");FormUi.Setup(this,"转换文档",new Size(460,160));FormBorderStyle=FormBorderStyle.FixedDialog;MinimizeBox=MaximizeBox=false;
             var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(14),ColumnCount=1,RowCount=4};
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
@@ -128,6 +131,7 @@ namespace MiniPdf {
         void Post(Action action){try{if(!IsDisposed&&IsHandleCreated)BeginInvoke(action);}catch(InvalidOperationException){}}
         void Work() {
             try {
+                if(options.Ocr){Post(delegate{status.Text=UiText.Get("正在连接 MiniAI…");});MiniAiClient.Ensure(options.MiniAiRoot);if(canceled)return;}
                 string name="MiniPDF-office-"+Guid.NewGuid().ToString("N");var security=new PipeSecurity();using(var identity=WindowsIdentity.GetCurrent())security.AddAccessRule(new PipeAccessRule(identity.User,PipeAccessRights.FullControl,AccessControlType.Allow));
                 var connection=new NamedPipeServerStream(name,PipeDirection.InOut,1,PipeTransmissionMode.Byte,PipeOptions.Asynchronous,4096,4096,security);pipe=connection;
                 var ready=connection.BeginWaitForConnection(null,null);
@@ -137,9 +141,10 @@ namespace MiniPdf {
                     if(!ready.AsyncWaitHandle.WaitOne(15000))throw new TimeoutException(UiText.Get("转换进程启动超时。"));connection.EndWaitForConnection(ready);
                 }finally{ready.AsyncWaitHandle.Close();}
                 using(var writer=new BinaryWriter(connection,Encoding.UTF8,true))using(var reader=new BinaryReader(connection,Encoding.UTF8,true)) {
-                    writer.Write(source.Name);writer.Write(source.Length);writer.Write(password);writer.Write(path);writer.Write(options.TempPath);writer.Write(options.Excel);writer.Write(options.Images);writer.Write(options.DetectColumns);writer.Write(options.Layout);writer.Write(options.Continuous);writer.Write(options.Equations);writer.Write(options.MathSettings.ScriptRatio);writer.Write(options.MathSettings.BaselineOffset);writer.Write(options.MathSettings.SymbolGap);writer.Write(options.MathSettings.BarHeight);writer.Write(options.Pages.Length);foreach(int page in options.Pages)writer.Write(page);writer.Flush();
+                    writer.Write(source.Name);writer.Write(source.Length);writer.Write(password);writer.Write(path);writer.Write(options.TempPath);writer.Write(options.Excel);writer.Write(options.Images);writer.Write(options.DetectColumns);writer.Write(options.Layout);writer.Write(options.Continuous);writer.Write(options.Equations);writer.Write(options.Ocr);writer.Write(options.MiniAiRoot??"");writer.Write(options.MathSettings.ScriptRatio);writer.Write(options.MathSettings.BaselineOffset);writer.Write(options.MathSettings.SymbolGap);writer.Write(options.MathSettings.BarHeight);writer.Write(options.Pages.Length);foreach(int page in options.Pages)writer.Write(page);writer.Flush();
                     while(!canceled) {
                         int code=reader.ReadInt32();if(code==0){int done=reader.ReadInt32(),total=reader.ReadInt32();Post(delegate{progress.Maximum=Math.Max(1,total);progress.Value=Math.Min(done,total);status.Text=UiText.Get("正在转换…")+" "+done+" / "+total;});}
+                        else if(code==2){string stage=reader.ReadString();Post(delegate{status.Text=stage;});}
                         else if(code==1){int skipped=reader.ReadInt32();completed=true;Post(delegate{if(skipped>0)MessageBox.Show(this,UiText.Get("部分图片超过导出限制或无法读取：")+skipped,Text);DialogResult=DialogResult.OK;});return;}
                         else throw new IOException(reader.ReadString());
                     }
@@ -154,7 +159,7 @@ namespace MiniPdf {
         internal static int Run(string name) {
             using(var pipe=new NamedPipeClientStream(".",name,PipeDirection.InOut)) {
                 pipe.Connect(15000);using(var reader=new BinaryReader(pipe,Encoding.UTF8,true))using(var writer=new BinaryWriter(pipe,Encoding.UTF8,true)) {
-                    try{string mapping=reader.ReadString();long length=reader.ReadInt64();string password=reader.ReadString(),path=reader.ReadString(),temp=reader.ReadString();var options=new OfficeExportOptions{TempPath=temp,Excel=reader.ReadBoolean(),Images=reader.ReadBoolean(),DetectColumns=reader.ReadBoolean(),Layout=reader.ReadBoolean(),Continuous=reader.ReadBoolean(),Equations=reader.ReadBoolean(),MathSettings=new OfficeMathSettings{ScriptRatio=reader.ReadSingle(),BaselineOffset=reader.ReadSingle(),SymbolGap=reader.ReadSingle(),BarHeight=reader.ReadSingle()}};options.MathSettings.Validate();int count=reader.ReadInt32();PdfDocument.Check(count>0&&count<=2000,"Invalid export page count.");options.Pages=new int[count];for(int i=0;i<count;i++)options.Pages[i]=reader.ReadInt32();
+                    try{string mapping=reader.ReadString();long length=reader.ReadInt64();string password=reader.ReadString(),path=reader.ReadString(),temp=reader.ReadString();var options=new OfficeExportOptions{TempPath=temp,Excel=reader.ReadBoolean(),Images=reader.ReadBoolean(),DetectColumns=reader.ReadBoolean(),Layout=reader.ReadBoolean(),Continuous=reader.ReadBoolean(),Equations=reader.ReadBoolean(),Ocr=reader.ReadBoolean(),MiniAiRoot=reader.ReadString(),MathSettings=new OfficeMathSettings{ScriptRatio=reader.ReadSingle(),BaselineOffset=reader.ReadSingle(),SymbolGap=reader.ReadSingle(),BarHeight=reader.ReadSingle()}};options.Stage=delegate(string text){writer.Write(2);writer.Write(text);writer.Flush();};options.MathSettings.Validate();int count=reader.ReadInt32();PdfDocument.Check(count>0&&count<=2000,"Invalid export page count.");options.Pages=new int[count];for(int i=0;i<count;i++)options.Pages[i]=reader.ReadInt32();
                         using(var source=PdfSource.OpenShared(mapping,length))using(var document=PdfDocument.FromBytes(source.ReadAll(),password)) {
                             int skipped=OfficeExport.Save(document,options,path,delegate(int done,int total){writer.Write(0);writer.Write(done);writer.Write(total);writer.Flush();});writer.Write(1);writer.Write(skipped);writer.Flush();return 0;
                         }

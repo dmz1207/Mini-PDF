@@ -6,11 +6,23 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.11.0 preview** is one approximately **3 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.12.0 preview** is one approximately **3 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
-[**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
+[**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.11.0 local verification (2026-10-25):** 1,758 assertions pass. [Source CI passed](https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872): 4,211 public paths, zero new regressions and 62 recorded exceptions. Scope and limits remain in the [test record](源码/测试记录.md). [Word export checks](源码/word-export-verification.json).
+Current local verification: **1,602 checks across Mini PDF and Mini-AI passed**. See [scope and limits](源码/测试记录.md). [Offline AI setup](源码/OfflineAI.md).
+
+## New in v0.12.0
+
+- Responsive, isolated-process search lists every occurrence with page/context, next/previous navigation, and matched text highlights. Normalize common PDF line breaks, ligatures, line-end hyphens and CJK spacing.
+- Optional [MiniAI offline package](https://github.com/dmz1207/Mini-AI): PP-OCRv6 medium + Hy-MT2-1.8B 1.25-bit. Models remain outside the small PDF executable; other Windows tools can use the same local API.
+- When the pack is detected, drag-select and release to translate in a compact rounded bubble beside the selection. Hold Ctrl or click its Ctrl control to pin; move away to dismiss. New selections cancel old work. Chinese/English auto direction and additional language targets are available.
+- Alt+S dims the desktop for screen-region OCR and translation. Review/correct the recognized text, select a sentence to translate it, and copy the result. Commands are disabled with an installation hint if the add-on is absent.
+- OCR current/all/selected pages, review results and add an undoable invisible searchable text layer without changing the scanned appearance.
+- Word export can optionally OCR pages without visible body text: confident ordinary prose becomes editable in either export mode; formulas, artwork and uncertain regions retain their raster appearance. Scan layouts are approximate and require review.
+- Separate inference processes, AVX2/generic CPU fallback, shared model lifetime, prompt KV reuse and a bounded memory-only translation cache. No Python or ML runtime is bundled in the reader.
+
+Current verification and limits: [test record](源码/测试记录.md). Historical v0.11.0 verification remains below as prior evidence, not a claim that its full private corpus was rerun.
 
 ## New in v0.11.0
 
@@ -19,7 +31,7 @@ The **v0.11.0 preview** is one approximately **3 MiB executable** for **Windows 
 - Target research papers with publication hints for IEEE, Elsevier, Springer Nature, Wiley, ACM and others, backed by measured columns, actual gutters, body size and spacing on each page. Handle single/asymmetric/staggered columns and full-width title bands.
 - Recover readable publisher fonts, structural tags and nested body text in Continuous text; retain complete complex-equation regions, numbering and figure labels. Narrow vertical margin notices remain readable without page-height blanks.
 - Keep complex equations and artwork as high-resolution images. Continuous text can optionally infer limited simple equations into native OMML using adjustable offline C# geometry rules.
-- Preserve uncertain structures; no OCR, learned model, PdfPig, PdfiumViewer or additional runtime is bundled.
+- Preserve uncertain structures; the base reader bundles no learned model, PdfPig, PdfiumViewer or additional runtime. Optional OCR is provided by the separate MiniAI pack.
 - Use the isolated raster worker for source previews, and preserve existing files on export failure. See [Word export modes and limits](源码/WordExport.md).
 
 ## Refined in v0.10.1

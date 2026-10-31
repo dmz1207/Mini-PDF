@@ -1,4 +1,4 @@
-Mini PDF 0.11.0 - User Guide
+﻿Mini PDF 0.12.0 - User Guide
 Windows 10 / Windows 11 x64
 
 WORD EXPORT
@@ -8,7 +8,7 @@ Word paragraphs for continuous editing; pagination and figure/equation positions
 Optional offline simple equations are available in Continuous text. Complex or uncertain math
 remains artwork. Research-paper checks cover staggered columns, Greek scripts, complex
 formula regions with numbering and complete figure labels. Continuous text flows selected
-pages together; formula-heavy lines may remain images. No OCR or AI model is included;
+pages together; formula-heavy lines may remain images. Without the optional MiniAI package,
 scans remain images. Review the exported DOCX.
 Export reads a private PDF snapshot; the chosen destination is replaced only after package validation.
 Academic profiles recognize IEEE, Elsevier, Springer Nature, Wiley, ACM and other publication hints,
@@ -281,3 +281,13 @@ The source Compatibility.md records 4,211 public PDF paths (4,206 distinct conte
 scope and remaining engine/import limitations. Default/view/print layer states are tested during
 page importing; a complete layer-configuration editor is not included. Malformed image/page-tree and extreme-complexity cases
 remain; passing these fixtures does not guarantee every PDF is free of defects.
+
+OPTIONAL MINIAI
+Extract the independent MiniAI folder beside this EXE, or choose Tools > Load MiniAI package.
+Drag-select text and release to see a small translation bubble. Move away to dismiss;
+hold Ctrl or click Ctrl to keep it. Change target language or copy the result in the bubble.
+Alt+S selects a screen region for OCR and translation. Correct/select the recognized text;
+Ctrl+Enter retries. The menu button remains available if another app owns the hotkey.
+Word export > OCR scanned pages first makes recognized plain prose editable. Complex
+formulas and uncertain areas remain images. The scan layout is approximate; review it.
+Models run locally in a separate service and are not bundled into the reader EXE.

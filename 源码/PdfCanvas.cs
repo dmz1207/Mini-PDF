@@ -354,6 +354,7 @@ namespace MiniPdf
         }
         public void ClearSelection()
         {
+            owner.CloseTranslation();
             if(InlineEditing)EndInlineText();
             Selected = null;
             TextStart = -1;
@@ -767,6 +768,7 @@ namespace MiniPdf
         {
             if(InlineEditing&&!ConfirmInlineText())return;
             base.OnMouseDown(e);
+            owner.CloseTranslation();
             Focus();
             if (Doc == null || pageRects.Length == 0)
                 return;
@@ -894,6 +896,7 @@ namespace MiniPdf
                     owner.OpenLink(startPoint);
                 else if (textEndPage >= 0 && textEndPage != Doc.Index)
                 { owner.ActivatePageFromCanvas(textEndPage,true); SyncPageSize(); }
+                if(distance>=5)owner.SelectionTranslation(e.Location);
                 Invalidate();
                 return;
             }

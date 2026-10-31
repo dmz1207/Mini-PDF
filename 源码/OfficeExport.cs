@@ -11,10 +11,12 @@ using System.Text.RegularExpressions;
 
 namespace MiniPdf {
     internal sealed class OfficeExportOptions {
-        internal bool Excel,Images=true,DetectColumns=true,Layout,Equations,Continuous;
+        internal bool Excel,Images=true,DetectColumns=true,Layout,Equations,Continuous,Ocr;
         internal OfficeMathSettings MathSettings=new OfficeMathSettings();
         internal int[] Pages;
         internal string TempPath;
+        internal string MiniAiRoot;
+        internal Action<string> Stage;
     }
     internal static partial class OfficeExport {
         const string S="http://schemas.openxmlformats.org/spreadsheetml/2006/main";
@@ -98,6 +100,8 @@ namespace MiniPdf {
             PdfDocument.Check(options.Pages!=null&&options.Pages.Length>0&&options.Pages.Length<=2000,UiText.Get("请选择 1 至 2000 页进行转换。"));
             PdfDocument.Check(options.Pages.All(p=>p>=0&&p<document.Count),UiText.Get("页面范围无效。"));
             string full=Path.GetFullPath(path),temp=options.TempPath??Path.Combine(Path.GetDirectoryName(full),".minipdf-export-"+Guid.NewGuid().ToString("N")+".tmp");int skipped=0;bool ownsTemp=false;
+            PdfDocument.Check(String.Equals(Path.GetExtension(full),options.Excel?".xlsx":".docx",StringComparison.OrdinalIgnoreCase),UiText.Get("请使用对应的 DOCX 或 XLSX 文件扩展名。"));
+            PdfDocument.Check(String.IsNullOrEmpty(document.FilePath)||!String.Equals(full,Path.GetFullPath(document.FilePath),StringComparison.OrdinalIgnoreCase),UiText.Get("导出文件不能覆盖原 PDF。"));
             PdfDocument.Check(!String.Equals(full,Path.GetFullPath(temp),StringComparison.OrdinalIgnoreCase),"Temporary output must differ from the destination.");
             if((options.Layout||options.Continuous)&&!options.Excel)return SaveLayout(document,options,full,temp,progress);
             var forms=N.FPDF_GetFormType(document.Handle)==1?PdfForms.Read(document):null;

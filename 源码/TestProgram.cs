@@ -17,6 +17,8 @@ namespace MiniPdf.Tests {
                 N.SetProcessDPIAware();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                if(args.Length>1&&args[1]=="--search-only")return SelfTest.RunSearch(directory);
+                if(args.Length>1&&args[1]=="--offline-only")return SelfTest.RunOffline(directory);
                 if(args.Length>1&&args[1]=="--office-forms")return SelfTest.RunOfficeForms(directory);
                 if(args.Length>1&&args[1]=="--office-forms-core")return SelfTest.RunOfficeForms(directory,false);
                 if(args.Length>1&&args[1]=="--text-edit-core")return SelfTest.RunTextEditing(directory,false);

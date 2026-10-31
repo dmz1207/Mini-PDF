@@ -38,6 +38,7 @@ namespace MiniPdf
     internal sealed class SearchHit
     {
         public int Page, Start, Count;
+        public string Snippet;
         public List<N.Rect> Rectangles;
     }
     internal sealed partial class PdfDocument : IDisposable

@@ -1,4 +1,8 @@
-# Changelog
+﻿# Changelog
+
+## 0.12.0 — 2026-11-01
+
+Isolated search with all matches; optional MiniAI OCR/translation package; selection bubbles, Alt+S region OCR/translation and language targets; optional OCR-to-editable-Word on private snapshots. Persistent inference, KV prompt reuse and bounded result caching. Scan reconstruction and OCR are approximate.
 
 ## 0.11.0 — 2026-10-25
 

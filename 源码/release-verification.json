@@ -1,50 +1,26 @@
 {
-  "recorded": "2026-10-25",
-  "version": "0.11.0.0",
-  "executable_bytes": 3111936,
-  "executable_sha256": "5E6FF1EEBD10A3A6F0906797DA4F3298AED4CE61D352355849AEB2B3D3AA7A84",
-  "core_sha256": "D0CE393D3BBC4F220E98FE8D63E0D828EA67CDD543D4FA064476792D96D97AAC",
+  "recorded": "2026-11-01",
+  "version": "0.12.0.0",
+  "executable_bytes": 3136000,
+  "executable_sha256": "AF38BA0B1C94C06EE1B3290189A5360D2BF79341C1AB586A8BC3C7B2C01B8BB1",
+  "core_sha256": "4C599D16566625B2AEF97491AA10D20CCA80E6F607C1CDF4D245CBB1C7B4D8A6",
   "pdfium_sha256": "A318C39C137482DC4687C2973B7EC1C27FC1C20253CF2DC31928F922EAB89E8F",
-  "platform": "Windows 10 Home Chinese x64, build 19045",
+  "platform": "Windows 10 x64",
   "checks": {
-    "desktop": 966,
-    "pdf_preservation": 33,
-    "features": 51,
-    "signature_watermark_fixes": 23,
-    "merge": 66,
-    "selection_fonts": 45,
-    "layer_compatibility": 141,
-    "text_editing_independent": 64,
-    "office_forms_independent": 352,
-    "portable_launcher": 17
+    "desktop": 897,
+    "independent_files": 610,
+    "launcher": 17,
+    "offline_reader_word": 33,
+    "miniai_service": 40,
+    "miniai_desktop": 5,
+    "combined_total": 1602
   },
-  "total_assertions": 1758,
-  "physical_print_jobs": false,
-  "separate_windows_11_test": false,
-  "pdfium_rebuilt": false,
-  "ocr_included": false,
-  "public_pdf_paths": 4211,
-  "public_distinct_contents": 4206,
-  "public_baseline_evidence": "ci-selection-editing.json",
-  "github_ci": {
-    "status": "success",
-    "run_id": 40164877872,
-    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872",
-    "source_commit": "9426f7624cb77eae0ae35aced6b3273710b3fa25",
-    "new_regressions": 0,
-    "known_exceptions": 62,
-    "evidence": "ci-word-export.json"
-  },
-  "changes": [
-    "Preserve-layout and continuous-paragraph Word export",
-    "Effective font sizes, column order and common LaTeX body font families",
-    "Optional offline OMML inference for simple equations with configurable geometry rules",
-    "Complete complex-equation and figure fallback regions",
-    "Native raster-worker preview and temporary-file collision protection",
-    "Readable publisher fonts, structural tags, nested text and containing clips in continuous Word export",
-    "Adaptive academic profiles, actual gutters, section headings and measured vertical margin directions",
-    "Responsive English/Chinese conversion progress status"
-  ],
-  "word_export_evidence": "word-export-verification.json",
-  "public_ci_evidence": "ci-word-export.json"
+  "public_corpus_current_ci": "pending source publication; earlier CI remains historical",
+  "optional_package": "https://github.com/dmz1207/Mini-AI",
+  "word_qa": "Two OCR Word exports opened read-only in installed Word, rendered and visually inspected",
+  "limits": [
+    "Public fixtures absent locally are not counted as rerun",
+    "No exhaustive OCR or translation accuracy claim",
+    "No tested GPU acceleration"
+  ]
 }

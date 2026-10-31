@@ -6,7 +6,7 @@ Report a bug with the Mini PDF version, Windows build, display scaling, exact st
 
 Keep changes focused, use native Windows APIs, and retain vector/text content and original files. Reproduce a reported failure before changing rendering or save behavior. Add a small regression fixture or pinned public-case test when useful. Compare saved files with an independent parser/renderer; a successful open alone is insufficient.
 
-Build with 源码/build.ps1. Full desktop verification and public-corpus commands are documented in [Compatibility](源码/Compatibility.md). Python dependencies are development-only. All local downloads, build files and test outputs belong in work; never commit test certificates, user PDFs, corpus downloads or unpacked runtimes.
+Build with 源码/build.ps1. Full desktop verification and public-corpus commands are documented in [Compatibility](Compatibility.md). Python dependencies are development-only. All local downloads, build files and test outputs belong in work; never commit test certificates, user PDFs, corpus downloads or unpacked runtimes.
 
 The checked-in workflow runs bounded native preservation checks on Windows after relevant pushes/pull requests. compare_corpus.py rejects new failures against reviewed, content-identical baseline entries. It does not replace desktop interaction, printer/device testing, or review of known exceptions. A timeout can depend on machine load; investigate before changing the baseline.
 
