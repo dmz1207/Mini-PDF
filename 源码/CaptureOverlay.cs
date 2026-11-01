@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace MiniAI.Desktop {
@@ -10,12 +11,35 @@ namespace MiniAI.Desktop {
         readonly Bitmap screen;
         Point start,current;
         bool selecting;
+        IntPtr crossHandle;
+        Cursor crossCursor;
         internal Bitmap Result;
         internal Rectangle SelectedScreen;
         CaptureOverlay(Bitmap image,Rectangle bounds) {
             screen=image;FormBorderStyle=FormBorderStyle.None;StartPosition=FormStartPosition.Manual;Bounds=bounds;
-            TopMost=true;ShowInTaskbar=false;DoubleBuffered=true;Cursor=Cursors.Cross;KeyPreview=true;
+            TopMost=true;ShowInTaskbar=false;DoubleBuffered=true;KeyPreview=true;
+            using(var graphics=Graphics.FromHwnd(IntPtr.Zero)){
+                int size=Math.Max(32,Math.Min(64,(int)Math.Round(32*graphics.DpiX/96)));
+                using(var color=new Bitmap(size,size,PixelFormat.Format32bppArgb))using(var mask=new Bitmap(size,size,PixelFormat.Format1bppIndexed)){
+                    using(var drawing=Graphics.FromImage(color))DrawCrosshair(drawing,size);
+                    IntPtr colorHandle=color.GetHbitmap(Color.FromArgb(0)),maskHandle=mask.GetHbitmap();
+                    try{var info=new CursorInfo{IsIcon=false,X=(uint)(size/2),Y=(uint)(size/2),Color=colorHandle,Mask=maskHandle};crossHandle=CreateIconIndirect(ref info);}finally{DeleteObject(colorHandle);DeleteObject(maskHandle);}
+                }
+            }
+            crossCursor=crossHandle==IntPtr.Zero?null:new Cursor(crossHandle);Cursor=crossCursor??Cursors.Cross;
         }
+        internal static void DrawCrosshair(Graphics graphics,int size){
+            graphics.Clear(Color.Transparent);float middle=size/2f,edge=Math.Max(2,size/12f),width=Math.Max(2,size/16f);
+            using(var outline=new Pen(Color.FromArgb(255,18,24,30),width+3))using(var bright=new Pen(Color.FromArgb(255,40,255,100),width)){
+                graphics.DrawLine(outline,middle,edge,middle,size-edge);graphics.DrawLine(outline,edge,middle,size-edge,middle);
+                graphics.DrawLine(bright,middle,edge,middle,size-edge);graphics.DrawLine(bright,edge,middle,size-edge,middle);
+            }
+        }
+        [StructLayout(LayoutKind.Sequential)]struct CursorInfo{[MarshalAs(UnmanagedType.Bool)]internal bool IsIcon;internal uint X,Y;internal IntPtr Mask,Color;}
+        [DllImport("user32.dll")]static extern IntPtr CreateIconIndirect(ref CursorInfo info);
+        [DllImport("user32.dll")]static extern bool DestroyCursor(IntPtr cursor);
+        [DllImport("gdi32.dll")]static extern bool DeleteObject(IntPtr value);
+        protected override void Dispose(bool disposing){if(disposing&&crossCursor!=null){Cursor=Cursors.Default;crossCursor.Dispose();crossCursor=null;}if(crossHandle!=IntPtr.Zero){DestroyCursor(crossHandle);crossHandle=IntPtr.Zero;}base.Dispose(disposing);}
         internal static Bitmap Pick(IWin32Window owner,out Rectangle selected) {
             selected=Rectangle.Empty;Rectangle area=SystemInformation.VirtualScreen;
             if(area.Width<1||area.Height<1||(long)area.Width*area.Height>80000000)throw new InvalidOperationException("The desktop is too large to capture.");

@@ -1,5 +1,13 @@
-﻿Mini PDF 0.12.0 - User Guide
+﻿Mini PDF 0.12.4 - User Guide
 Windows 10 / Windows 11 x64
+OFFLINE OCR INPUTS
+Open or drop PNG/JPEG/BMP/TIFF/GIF images, one PDF, or TXT/Markdown/CSV/TSV text.
+Multiple images can be recognized together. Screen OCR, screen translation and paste-image
+buttons are available. Alt+Shift+O captures for OCR; Alt+S captures for translation.
+Current PDF returns to the reader document: choose its current page, all pages or a range.
+External images and screenshots cannot be applied as a text layer to an unrelated PDF.
+Move translation bubbles by the header. Every edge and corner supports resizing.
+The screen-selection cursor is bright green with a dark outline.
 
 WORD EXPORT
 Choose Menu > File > Convert PDF to Word. Preserve layout keeps page positions with

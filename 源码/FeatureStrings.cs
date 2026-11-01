@@ -6,6 +6,26 @@ namespace MiniPdf {
             // One entry per line keeps the optional feature vocabulary separate.
             const string pairs=@"先解压 MiniAI 功能包，然后选择其中包含 MiniAI.exe 的文件夹。只需设置一次。|Extract the MiniAI package, then select the folder containing MiniAI.exe. You only need to do this once.
 翻译|Translate
+打开文件…|Open file…
+当前 PDF|Current PDF
+截图识别|Screen OCR
+粘贴图片|Paste image
+屏幕截图|Screenshot
+剪贴板图片|Clipboard image
+MiniAI 已加载|MiniAI loaded
+未打开 PDF|No PDF open
+打开图片、PDF 或文本|Open image, PDF or text
+框选屏幕区域提取文字（Alt+Shift+O）|Capture a region for OCR (Alt+Shift+O)
+可拖入图片、PDF 或文本文件；识别和翻译均在本机完成。|Drop images, a PDF or text file; OCR and translation run locally.
+请拖入图片、单个 PDF 或文本文件；多选时请选择图片。|Drop images, one PDF or one text file. Multiple selection supports images.
+找不到文件。|File not found.
+文本文件过大，请分段导入。|The text file is too large. Import it in smaller sections.
+文字已加载，可直接发送到翻译。|Text loaded and ready to translate.
+未能打开 PDF。|Could not open the PDF.
+剪贴板中没有图片或支持的文件。|The clipboard has no image or supported file.
+图片过大，请缩小后重试。|The image is too large. Resize it and try again.
+识别完成：{0} 行。|OCR complete: {0} lines.
+支持的文件\|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff;*.gif;*.pdf;*.txt;*.md;*.csv;*.tsv\|图片\|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff;*.gif\|PDF\|*.pdf\|文本\|*.txt;*.md;*.csv;*.tsv|Supported files\|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff;*.gif;*.pdf;*.txt;*.md;*.csv;*.tsv\|Images\|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff;*.gif\|PDF\|*.pdf\|Text\|*.txt;*.md;*.csv;*.tsv
 识别并翻译|OCR and translate
 未识别出可翻译的文字，请检查页面或扫描清晰度。|No translatable text was recognized. Check the page and scan quality.
 请输入要翻译的文字。|Enter text to translate.

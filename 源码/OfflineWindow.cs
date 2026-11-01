@@ -6,9 +6,9 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace MiniPdf {
-    internal sealed class OfflineWindow : Form {
+    internal sealed partial class OfflineWindow : Form {
         readonly MainWindow owner;
-        readonly PdfDocument document;
+        PdfDocument document;
         readonly TabControl tabs;
         readonly Label pack,status;
         readonly ComboBox range,direction,quality;
@@ -22,8 +22,8 @@ namespace MiniPdf {
         internal OfflineWindow(MainWindow window,bool translate,string selection) {
             owner=window;document=window.Document;FormUi.Setup(this,"离线 OCR 与翻译",new Size(900,670));MinimumSize=new Size(720,520);
             var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(12),ColumnCount=1,RowCount=4};root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.Percent,100));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));root.RowStyles.Add(new RowStyle(SizeType.AutoSize));Controls.Add(root);
-            var header=new FlowLayoutPanel{AutoSize=true,Dock=DockStyle.Fill};header.Controls.Add(FormUi.Button("选择 MiniAI EXE…",delegate{LoadPack(this);}));pack=new Label{AutoSize=true,Margin=new Padding(3,8,0,6),MaximumSize=new Size(600,0)};header.Controls.Add(pack);root.Controls.Add(header,0,0);
-            tabs=new TabControl{Dock=DockStyle.Fill,Font=Font};var ocrTab=new TabPage(UiText.Get("离线 OCR")){Padding=new Padding(8)};var translateTab=new TabPage(UiText.Get("中英互译")){Padding=new Padding(8)};tabs.TabPages.AddRange(new[]{ocrTab,translateTab});root.Controls.Add(tabs,0,1);
+            var header=new TableLayoutPanel{AutoSize=true,Dock=DockStyle.Fill,ColumnCount=1,RowCount=2};var actions=new FlowLayoutPanel{AutoSize=true,Dock=DockStyle.Fill};var sources=new FlowLayoutPanel{AutoSize=true,Dock=DockStyle.Fill};InitializeFiles(actions,sources);sources.Controls.Add(FormUi.Button("MiniAI…",delegate{LoadPack(this);}));pack=new Label{AutoSize=true,Margin=new Padding(3,8,0,6),MaximumSize=new Size(150,0)};sources.Controls.Add(pack);header.Controls.Add(actions,0,0);header.Controls.Add(sources,0,1);root.Controls.Add(header,0,0);
+            tabs=new TabControl{Dock=DockStyle.Fill,Font=Font};var ocrTab=new TabPage(UiText.Get("离线 OCR")){Padding=new Padding(8)};var translateTab=new TabPage(UiText.Get("翻译")){Padding=new Padding(8)};tabs.TabPages.AddRange(new[]{ocrTab,translateTab});root.Controls.Add(tabs,0,1);
             var ocrLayout=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=3};ocrLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));ocrLayout.RowStyles.Add(new RowStyle(SizeType.Percent,100));ocrLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));ocrTab.Controls.Add(ocrLayout);
             var options=new FlowLayoutPanel{AutoSize=true,Dock=DockStyle.Fill};range=FormUi.Combo(140,"当前页面","所有页面","页面范围");pages=new TextBox{Width=120,Text=document==null?"1":(document.Index+1).ToString(),Enabled=false};range.SelectedIndexChanged+=delegate{pages.Enabled=!busy&&range.SelectedIndex==2;};skipText=FormUi.Check("跳过已有文字层的页面",true);options.Controls.AddRange(new Control[]{range,pages,skipText});ocrButton=FormUi.Button("开始识别",delegate{StartOcr();});options.Controls.Add(ocrButton);options.Controls.Add(FormUi.Button("识别并翻译",delegate{if(!busy){skipText.Checked=false;StartOcr(true);}}));ocrLayout.Controls.Add(options,0,0);
             recognized=TextArea(true);recognized.Name="OcrText";ocrLayout.Controls.Add(recognized,0,1);var ocrFooter=new FlowLayoutPanel{AutoSize=true,Dock=DockStyle.Fill};applyButton=FormUi.Button("添加可搜索文字层",delegate{ApplyOcr();});applyButton.Enabled=false;ocrFooter.Controls.Add(applyButton);ocrFooter.Controls.Add(FormUi.Button("复制文字",delegate{CopyText(recognized.Text);}));ocrFooter.Controls.Add(FormUi.Button("发送到翻译",delegate{input.Text=recognized.Text;tabs.SelectedIndex=1;}));ocrLayout.Controls.Add(ocrFooter,0,2);
@@ -34,11 +34,13 @@ namespace MiniPdf {
             tabs.SelectedIndex=translate?1:0;tabs.SelectedIndexChanged+=delegate{RefreshPack();};RefreshPack();UiText.Apply(this);
             root.SizeChanged+=delegate{status.MaximumSize=new Size(Math.Max(180,root.ClientSize.Width-root.Padding.Horizontal-8),0);};
             Shown+=delegate{textPanels.SplitterDistance=Math.Max(70,(textPanels.ClientSize.Height-textPanels.SplitterWidth)/2);};
+            textPanels.SizeChanged+=delegate{int available=textPanels.ClientSize.Height-textPanels.SplitterWidth;if(available>=140)textPanels.SplitterDistance=Math.Max(70,Math.Min(available-70,textPanels.SplitterDistance));};
+            EnableFileDrop(this);UpdateFileSource();direction.DropDownWidth=240;
         }
         TextBox TextArea(bool readOnly){return new TextBox{Dock=DockStyle.Fill,Font=Font,Multiline=true,ReadOnly=readOnly,ScrollBars=ScrollBars.Vertical,AcceptsReturn=true,WordWrap=true,BorderStyle=BorderStyle.FixedSingle,MaxLength=100000};}
         static bool ContainsChinese(string text){if(text==null)return false;int chinese=0,latin=0;foreach(char c in text){if(c>=0x4e00&&c<=0x9fff)chinese++;else if(Char.IsLetter(c))latin++;}return chinese>latin/3&&chinese>0;}
         static void CopyText(string text){if(!String.IsNullOrEmpty(text))Clipboard.SetText(text);}
-        void RefreshPack(){pack.Text=MiniAiClient.Available?"MiniAI · PP-OCRv6 medium · CTranslate2 INT8":UiText.Get("请选择 MiniAI-Portable.exe（完整离线包）");ocrButton.Enabled=!busy&&document!=null&&MiniAiClient.Available;translateButton.Enabled=!busy&&MiniAiClient.Available;if(!busy)status.Text=UiText.Get("可直接选择完整 EXE，首次使用时自动准备。识别和翻译均在本机完成。");}
+        void RefreshPack(){pack.Text=MiniAiClient.Available?UiText.Get("MiniAI 已加载"):UiText.Get("请选择 MiniAI-Portable.exe（完整离线包）");SetBusy(busy);if(!busy)status.Text=UiText.Get("可拖入图片、PDF 或文本文件；识别和翻译均在本机完成。");}
         internal static bool LoadPack(IWin32Window parent) {
             using(var dialog=new OpenFileDialog{Title=UiText.Get("选择 MiniAI-Portable.exe（完整离线包）"),Filter=UiText.Get("MiniAI 可执行程序|*.exe"),InitialDirectory=MiniAiClient.Home,RestoreDirectory=true,CheckFileExists=true,Multiselect=false}) {
                 if(dialog.ShowDialog(parent)!=DialogResult.OK)return false;
@@ -46,9 +48,11 @@ namespace MiniPdf {
                 var window=parent as OfflineWindow;if(window!=null)window.RefreshPack();return true;
             }
         }
-        void SetBusy(bool value){busy=value;cancelButton.Enabled=value;ocrButton.Enabled=!value&&document!=null&&MiniAiClient.Available;translateButton.Enabled=!value&&MiniAiClient.Available;range.Enabled=skipText.Enabled=direction.Enabled=!value;input.ReadOnly=value;pages.Enabled=!value&&range.SelectedIndex==2;applyButton.Enabled=!value&&lines.Count>0&&document!=null&&document.CanEdit;}
+        void SetBusy(bool value){busy=value;cancelButton.Enabled=value;ocrButton.Enabled=!value&&!textFile&&(document!=null||HasPhoto)&&MiniAiClient.Available;translateButton.Enabled=!value&&MiniAiClient.Available;range.Enabled=skipText.Enabled=!value&&!HasPhoto&&!textFile&&document!=null;direction.Enabled=quality.Enabled=!value;input.ReadOnly=value;pages.Enabled=range.Enabled&&range.SelectedIndex==2;applyButton.Enabled=!value&&!HasPhoto&&!textFile&&lines.Count>0&&document!=null&&document.CanEdit;if(documentButton!=null)documentButton.Enabled=owner.Document!=null;}
         void Cancel(){generation++;if(job!=null){job.Dispose();job=null;}SetBusy(false);status.Text=UiText.Get("任务已取消。");}
         void StartOcr(bool translateAfter=false) {
+            if(HasPhoto){StartPhotoOcr(translateAfter);return;}
+            if(textFile){status.Text=UiText.Get("文字已加载，可直接发送到翻译。");return;}
             if(document==null||busy)return;
             try {
                 string root=MiniAiClient.PackRoot;PdfDocument.Check(MiniAiClient.AvailableAt(root),UiText.Get("请先加载 MiniAI 离线功能包。"));int[] selected=range.SelectedIndex==0?new[]{document.Index}:range.SelectedIndex==1?PrintEngine.SelectPages(document.Count,document.Index,0,"",0,false):PdfDocument.ParsePages(pages.Text,document.Count);PdfDocument.Check(selected.Length<=2000,"OCR supports up to 2000 pages per task.");
@@ -59,19 +63,19 @@ namespace MiniPdf {
             }catch(Exception error){SetBusy(false);status.Text=error.Message;}
         }
         void ApplyOcr() {
-            try{PdfDocument.Check(!busy&&lines.Count>0&&document==owner.Document&&document.RenderEpoch==epoch,UiText.Get("文档已更改，请重新识别后再应用。"));owner.Run(delegate{document.AddOcrLayer(lines);});if(document.RenderEpoch!=epoch){applyButton.Enabled=false;lines.Clear();status.Text=UiText.Get("已添加文字层；请保存 PDF。页面外观保持原样。");}}catch(Exception error){status.Text=error.Message;}
+            try{PdfDocument.Check(!HasPhoto&&!textFile&&!busy&&lines.Count>0&&document==owner.Document&&document.RenderEpoch==epoch,UiText.Get("文档已更改，请重新识别后再应用。"));owner.Run(delegate{document.AddOcrLayer(lines);});if(document.RenderEpoch!=epoch){applyButton.Enabled=false;lines.Clear();status.Text=UiText.Get("已添加文字层；请保存 PDF。页面外观保持原样。");}}catch(Exception error){status.Text=error.Message;}
         }
         void StartTranslation() {
             if(busy)return;
-            if(String.IsNullOrWhiteSpace(input.Text)){if(document==null){status.Text=UiText.Get("请输入要翻译的文字。");return;}range.SelectedIndex=0;skipText.Checked=false;StartOcr(true);return;}
+            if(String.IsNullOrWhiteSpace(input.Text)){if(textFile||document==null&&!HasPhoto){status.Text=UiText.Get("请输入要翻译的文字。");return;}range.SelectedIndex=0;skipText.Checked=false;StartOcr(true);return;}
             try {
-                string root=MiniAiClient.PackRoot;PdfDocument.Check(MiniAiClient.AvailableAt(root),UiText.Get("请先加载 MiniAI 离线功能包。"));string text=input.SelectionLength>0?input.SelectedText:input.Text,target=MiniAiClient.LanguageCodes[direction.SelectedIndex];Cancel();translated.Clear();SetBusy(true);int current=generation;var worker=new PdfJob(this,null);job=worker;status.Text=UiText.Get("正在加载翻译模型…");
+                string root=MiniAiClient.PackRoot;PdfDocument.Check(MiniAiClient.AvailableAt(root),UiText.Get("请先加载 MiniAI 离线功能包。"));string text=input.SelectionLength>0?input.SelectedText:input.Text,target=MiniAiClient.LanguageCodes[direction.SelectedIndex];Cancel();translated.Clear();translated.RightToLeft=MiniAI.Desktop.LanguageCatalog.IsRightToLeft(target)?RightToLeft.Yes:RightToLeft.No;SetBusy(true);int current=generation;var worker=new PdfJob(this,null);job=worker;status.Text=UiText.Get("正在加载翻译模型…");
                 string mode=quality.SelectedIndex==1?"quality":"fast";worker.Start(delegate(BinaryWriter writer){MiniAiClient.Ensure(root);writer.Write("translate");writer.Write(root);writer.Write(target);writer.Write(mode);writer.Write(text);},delegate(BinaryReader reader) {
                     var completed=new System.Text.StringBuilder();while(true){int code=reader.ReadInt32();if(code<0)throw new IOException(reader.ReadString());if(code==1)return;if(code==0){int done=reader.ReadInt32(),total=reader.ReadInt32();worker.Post(delegate{if(current==generation)status.Text=UiText.Get("正在翻译…")+" "+done+" / "+total;});}else if(code==4||code==5){string result=reader.ReadString(),value=completed.ToString()+result;if(code==4)completed.Append(result);worker.Post(delegate{if(current==generation)translated.Text=value;});}else throw new IOException("Invalid translation result.");}
                 },delegate(Exception error){if(current!=generation)return;job=null;SetBusy(false);status.Text=error==null?UiText.Get("翻译完成。"):error.Message;},700);
             }catch(Exception error){SetBusy(false);status.Text=error.Message;}
         }
-        protected override void Dispose(bool disposing){if(disposing&&job!=null){job.Dispose();job=null;}base.Dispose(disposing);}
+        protected override void Dispose(bool disposing){if(disposing){if(job!=null){job.Dispose();job=null;}if(fileTip!=null)fileTip.Dispose();}base.Dispose(disposing);}
         internal void OcrForTest(){StartOcr();}
         internal bool BusyForTest {get{return busy;}}
         internal List<OcrLine> OcrLinesForTest {get{return lines;}}

@@ -70,7 +70,9 @@ namespace MiniPdf {
                         using(var source=PdfSource.OpenShared(mapping,length))using(var document=PdfDocument.FromShared(source.Retain(),password))SearchText.Work(document,reader,writer);
                     } else if(operation=="ocr") {
                         using(var source=PdfSource.OpenShared(mapping,length))using(var document=PdfDocument.FromShared(source.Retain(),password))MiniAiWorker.Ocr(document,reader,writer);
-                    } else if(operation=="translate")MiniAiWorker.Translate(reader,writer);
+                    } else if(operation=="ocr-files")MiniAiWorker.OcrFiles(reader,writer);
+                    else if(operation=="ocr-image")MiniAiWorker.OcrImage(reader,writer);
+                    else if(operation=="translate")MiniAiWorker.Translate(reader,writer);
                     else throw new IOException("Unknown text operation.");
                     return 0;
                 }catch(Exception error){try{writer.Write(-1);writer.Write(error.Message);writer.Flush();}catch(IOException){}return 1;}

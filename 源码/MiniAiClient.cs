@@ -112,7 +112,7 @@ namespace MiniPdf {
         internal void Write(BinaryWriter writer){writer.Write(Page);writer.Write(Text);writer.Write(Confidence);foreach(var p in Corners){writer.Write(p.X);writer.Write(p.Y);}}
         internal static OcrLine Read(BinaryReader reader){var line=new OcrLine{Page=reader.ReadInt32(),Text=reader.ReadString(),Confidence=reader.ReadSingle(),Corners=new PointF[4]};PdfDocument.Check(line.Text.Length<=10000,"Invalid OCR text length.");for(int i=0;i<4;i++)line.Corners[i]=new PointF(reader.ReadSingle(),reader.ReadSingle());return line;}
     }
-    internal static class MiniAiWorker {
+    internal static partial class MiniAiWorker {
         internal static void Ocr(PdfDocument document,BinaryReader reader,BinaryWriter writer) {
             string root=reader.ReadString();bool skipText=reader.ReadBoolean();int count=reader.ReadInt32();PdfDocument.Check(count>0&&count<=2000,"Invalid OCR page count.");var pages=new int[count];for(int i=0;i<count;i++){pages[i]=reader.ReadInt32();PdfDocument.Check(pages[i]>=0&&pages[i]<document.Count,"Invalid OCR page.");}MiniAiClient.Ensure(root);
             for(int n=0;n<pages.Length;n++) {
