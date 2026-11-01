@@ -1,4 +1,8 @@
-﻿# Changelog
+# Changelog
+
+## 0.12.2 — 2026-11-01
+
+Select a complete MiniAI portable EXE directly, including renamed packages outside the reader folder. Enable actual OCR/translation windows before extraction and prepare models on first use. Retain extracted-EXE and folder compatibility, reject unrelated executables, and verify both cold paths with nine reader UI/inference checks. Mini-AI 0.1.2 supplies the Mini application icon.
 
 ## 0.12.1 — 2026-11-01
 

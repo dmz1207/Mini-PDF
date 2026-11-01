@@ -1,4 +1,4 @@
-﻿param([switch]$Test,[ValidateSet('All','Offline','Search')][string]$TestSuite='All',[string]$OutputDirectory)
+﻿param([switch]$Test,[ValidateSet('All','Offline','Search','Portable')][string]$TestSuite='All',[string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path -Parent $PSScriptRoot
 $buildWork = Join-Path $projectDir 'work'
@@ -89,6 +89,7 @@ if ($Test) {
     $testArguments = @(('"' + $testFolder + '"'))
     $testLog = 'self-test.txt'
     if ($TestSuite -eq 'Offline') { $testArguments += '--offline-only'; $testLog = 'offline-tests.txt' }
+    if ($TestSuite -eq 'Portable') { $testArguments += '--portable-package-only'; $testLog = 'portable-package-tests.txt' }
     if ($TestSuite -eq 'Search') { $testArguments += '--search-only'; $testLog = 'search-tests.txt' }
     $testProcess = Start-Process -FilePath $testRunner -ArgumentList $testArguments -WorkingDirectory $projectDir -WindowStyle Hidden -PassThru
     if (-not $testProcess.WaitForExit(600000)) { throw 'Regression process exceeded its deadline.' }

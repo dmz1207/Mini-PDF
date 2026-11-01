@@ -9,6 +9,39 @@ using System.Windows.Forms;
 
 namespace MiniPdf {
     internal static partial class SelfTest {
+        internal static int RunPortablePackage(string directory) {
+            Directory.CreateDirectory(directory);logPath=Path.Combine(directory,"portable-package-tests.txt");
+            string previous=Environment.GetEnvironmentVariable("MINIPDF_LAUNCHER"),active=null;
+            Action<string> stop=delegate(string package){try{var c=MiniAiClient.Serializer().Deserialize<System.Collections.Generic.Dictionary<string,object>>(File.ReadAllText(Path.Combine(package,"state","connection.json")));MiniAiClient.Request(package,"/v1/shutdown",new{stop=true},5);try{using(var p=System.Diagnostics.Process.GetProcessById(Convert.ToInt32(c["pid"])))p.WaitForExit(10000);}catch(ArgumentException){}}catch(IOException){}catch(System.Net.WebException){}};
+            try {
+                string project=Directory.GetParent(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).FullName).FullName;
+                string isolated=Path.Combine(directory,"portable-"+Guid.NewGuid().ToString("N"));string home=Path.Combine(isolated,"reader"),external=Path.Combine(isolated,"external software");Directory.CreateDirectory(home);Directory.CreateDirectory(external);
+                File.Copy(Path.Combine(project,"Mini PDF.exe"),Path.Combine(home,"Mini PDF.exe"),true);File.Copy(Path.Combine(project,"MiniAI-Portable.exe"),Path.Combine(home,"MiniAI-Portable.exe"),true);
+                Environment.SetEnvironmentVariable("MINIPDF_LAUNCHER",Path.Combine(home,"Mini PDF.exe"));active=Path.Combine(home,"MiniAI");
+                Assert(!Directory.Exists(active)&&MiniAiClient.Available,"unextracted EXE enables the actual reader UI");
+                using(var form=new MainWindow(null))using(var dialog=new OfflineWindow(form,true,"The control system remains stable.")) {
+                    form.StartPosition=dialog.StartPosition=FormStartPosition.Manual;form.Location=dialog.Location=new Point(-20000,-20000);form.ShowInTaskbar=dialog.ShowInTaskbar=false;
+                    form.Show();dialog.Show(form);dialog.TranslateForTest();Assert(dialog.BusyForTest,"translation UI starts before model files have been extracted");PumpOffline(delegate{return !dialog.BusyForTest;});
+                    if(!dialog.IsDisposed&&!dialog.TranslationForTest.Contains("稳定"))using(var snapshot=new Bitmap(dialog.Width,dialog.Height)){dialog.DrawToBitmap(snapshot,new Rectangle(Point.Empty,dialog.Size));snapshot.Save(Path.Combine(directory,"portable-translation-failure.png"));}
+                    Assert(dialog.TranslationForTest.Contains("稳定"),"first-use translation UI prepares the EXE and completes real inference: busy="+dialog.BusyForTest+"; disposed="+dialog.IsDisposed+"; status="+dialog.StatusForTest+"; text="+dialog.TranslationForTest);
+                }
+                stop(active);active=null;
+                string selected=Path.Combine(external,"Mini OCR.exe");File.Copy(Path.Combine(project,"MiniAI-Portable.exe"),selected,true);MiniAiClient.SelectPackage(selected);active=Path.Combine(external,"MiniAI");
+                Assert(MiniAiClient.PackRoot==active&&!Directory.Exists(active)&&MiniAiClient.Available,"file selection accepts a renamed external portable EXE without a cache folder");
+                bool rejected=false;try{MiniAiClient.SelectPackage(Path.Combine(Environment.SystemDirectory,"cmd.exe"));}catch(InvalidOperationException){rejected=true;}
+                Assert(rejected&&MiniAiClient.PackRoot==active,"unrelated EXE is rejected without replacing the selected package");
+                string image=Path.Combine(directory,"photo.png");using(var bitmap=new Bitmap(1400,240)){using(var g=Graphics.FromImage(bitmap))using(var font=new Font("Arial",44)){g.Clear(Color.White);g.DrawString("CONTROL SYSTEM 12345",font,Brushes.Black,30,60);}bitmap.Save(image,ImageFormat.Png);}
+                using(var form=new MainWindow(null)) {
+                    form.StartPosition=FormStartPosition.Manual;form.Location=new Point(-20000,-20000);form.ShowInTaskbar=false;
+                    form.Show();var document=PdfDocument.New();document.AddImage(image,new N.Rect(30,600,565,770));form.LoadForTest(document);
+                    using(var dialog=new OfflineWindow(form,false,"")){dialog.StartPosition=FormStartPosition.Manual;dialog.Location=new Point(-20000,-20000);dialog.ShowInTaskbar=false;dialog.Show(form);dialog.OcrForTest();Assert(dialog.BusyForTest,"OCR UI starts from an external EXE before extraction");PumpOffline(delegate{return !dialog.BusyForTest;});string read=String.Join(" ",dialog.OcrLinesForTest.Select(l=>l.Text));Assert(read.IndexOf("CONTROL",StringComparison.OrdinalIgnoreCase)>=0&&read.Contains("12345"),"first-use OCR UI prepares the chosen EXE and reads the scan: "+dialog.StatusForTest+"; text="+read);}
+                }
+                MiniAiClient.SelectPackage(Path.Combine(active,"MiniAI.exe"));Assert(MiniAiClient.PackRoot==active&&MiniAiClient.Available,"existing extracted MiniAI.exe remains supported");
+                File.WriteAllText(Path.Combine(home,"MiniPDF.MiniAI.txt"),active);Assert(MiniAiClient.PackRoot==active&&MiniAiClient.Available,"existing folder settings remain compatible");
+                File.AppendAllText(logPath,"\r\nAssertions: "+assertions);return 0;
+            }catch(Exception error){File.AppendAllText(logPath,"\r\n"+error);return 1;}
+            finally{if(active!=null)stop(active);Environment.SetEnvironmentVariable("MINIPDF_LAUNCHER",previous);}
+        }
         static bool SameOcrPixels(Bitmap a,Bitmap b) {
             if(a.Size!=b.Size)return false;var area=new Rectangle(Point.Empty,a.Size);var x=a.LockBits(area,ImageLockMode.ReadOnly,PixelFormat.Format32bppArgb);var y=b.LockBits(area,ImageLockMode.ReadOnly,PixelFormat.Format32bppArgb);
             try{var one=new byte[Math.Abs(x.Stride)*a.Height];var two=new byte[Math.Abs(y.Stride)*b.Height];Marshal.Copy(x.Scan0,one,0,one.Length);Marshal.Copy(y.Scan0,two,0,two.Length);return one.SequenceEqual(two);}finally{a.UnlockBits(x);b.UnlockBits(y);}

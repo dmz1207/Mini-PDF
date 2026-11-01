@@ -1,0 +1,13 @@
+{
+  "reader_version": "0.12.2.0",
+  "reader_bytes": 3137024,
+  "reader_sha256": "ceaf73109d7df82f55843ad52cc2228d5e7c668a5edfc56ef519b925b243d3e3",
+  "new_reader_ui_checks": 9,
+  "scope": [
+    "unextracted package beside reader: real translation window and inference",
+    "renamed complete external EXE: file selection, real OCR window and inference",
+    "reject unrelated EXE without losing selection",
+    "retain extracted MiniAI.exe and legacy folder settings"
+  ],
+  "mini_ai_release_ci": "https://github.com/dmz1207/Mini-AI/actions/runs/41259862751"
+}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -11,14 +12,35 @@ using System.Windows.Forms;
 
 namespace MiniPdf {
     internal static class MiniAiClient {
+        static readonly object packageGate=new object();
+        static string cachedSelection,cachedRoot,cachedExecutable;
+        static DateTime cachedWrite;
+        static string Selection {get{string settings=Path.Combine(Home,"MiniPDF.MiniAI.txt");return File.Exists(settings)?File.ReadAllText(settings).Trim():"";}}
+        static bool HasPortablePayload(string path) {
+            try{using(var stream=File.OpenRead(path)){if(stream.ReadByte()!='M'||stream.ReadByte()!='Z')return false;using(var zip=new ZipArchive(stream,ZipArchiveMode.Read))return zip.GetEntry("MiniAI/package-checksums.json")!=null&&zip.GetEntry("MiniAI/MiniAI.exe")!=null&&zip.GetEntry("MiniAI/models/translation/hy-mt2.gguf")!=null&&zip.GetEntry("MiniAI/models/ocr/rec.onnx")!=null;}}
+            catch(IOException){return false;}catch(InvalidDataException){return false;}catch(UnauthorizedAccessException){return false;}
+        }
+        static bool ResolveSelection(string path,out string root,out string executable) {
+            root=executable=null;if(String.IsNullOrWhiteSpace(path))return false;
+            if(Directory.Exists(path)){root=Path.GetFullPath(path);return true;}
+            if(!File.Exists(path))return false;path=Path.GetFullPath(path);DateTime write=File.GetLastWriteTimeUtc(path);
+            lock(packageGate){if(path==cachedSelection&&write==cachedWrite){root=cachedRoot;executable=cachedExecutable;return true;}
+                bool portable=HasPortablePayload(path);string folder=Path.GetDirectoryName(path);
+                if(!portable&&(!String.Equals(Path.GetFileName(path),"MiniAI.exe",StringComparison.OrdinalIgnoreCase)||!Installed(folder)))return false;
+                root=portable?Path.Combine(folder,"MiniAI"):folder;executable=portable?path:null;
+                cachedSelection=path;cachedWrite=write;cachedRoot=root;cachedExecutable=executable;return true;}
+        }
+        static bool Installed(string root){return File.Exists(Path.Combine(root,"MiniAI.exe"))&&File.Exists(Path.Combine(root,"models","translation","hy-mt2.gguf"))&&File.Exists(Path.Combine(root,"models","ocr","rec.onnx"));}
+        internal static void SelectPackage(string path){string root,executable;PdfDocument.Check(ResolveSelection(path,out root,out executable)&&(executable!=null||Installed(root)),UiText.Get("请选择完整的 MiniAI-Portable.exe，或已解包目录中的 MiniAI.exe。"));File.WriteAllText(Path.Combine(Home,"MiniPDF.MiniAI.txt"),Path.GetFullPath(path),new UTF8Encoding(false));}
         internal static string Home {get{string launcher=Environment.GetEnvironmentVariable("MINIPDF_LAUNCHER");return String.IsNullOrEmpty(launcher)?Path.GetDirectoryName(Application.ExecutablePath):Path.GetDirectoryName(launcher);}}
         internal static string PackRoot {
-            get{string settings=Path.Combine(Home,"MiniPDF.MiniAI.txt");if(File.Exists(settings)){string path=File.ReadAllText(settings).Trim();if(Directory.Exists(path))return Path.GetFullPath(path);}string beside=Path.Combine(Home,"MiniAI");if(Directory.Exists(beside))return beside;string parentDirectory=Path.GetDirectoryName(Home);if(String.IsNullOrEmpty(parentDirectory))return beside;string parent=Path.Combine(parentDirectory,"MiniAI");return Directory.Exists(parent)?parent:beside;}
+            get{string root,executable;if(ResolveSelection(Selection,out root,out executable))return root;string beside=Path.Combine(Home,"MiniAI");if(Directory.Exists(beside)||File.Exists(Path.Combine(Home,"MiniAI-Portable.exe")))return beside;string parentDirectory=Path.GetDirectoryName(Home);if(String.IsNullOrEmpty(parentDirectory))return beside;string parent=Path.Combine(parentDirectory,"MiniAI");return Directory.Exists(parent)||File.Exists(Path.Combine(parentDirectory,"MiniAI-Portable.exe"))?parent:beside;}
         }
         internal static JavaScriptSerializer Serializer(){return new JavaScriptSerializer{MaxJsonLength=32*1024*1024,RecursionLimit=32};}
         static Dictionary<string,object> Connection(string root){var data=Serializer().Deserialize<Dictionary<string,object>>(File.ReadAllText(Path.Combine(root,"state","connection.json"),Encoding.UTF8));Uri url;PdfDocument.Check(data.ContainsKey("url")&&Uri.TryCreate(Convert.ToString(data["url"]),UriKind.Absolute,out url)&&url.Scheme=="http"&&url.Host=="127.0.0.1"&&url.AbsolutePath=="/"&&String.IsNullOrEmpty(url.UserInfo),"Invalid MiniAI local address.");return data;}
-        static string PortablePath(string root){string parent=Path.GetDirectoryName(Path.GetFullPath(root));return String.Equals(Path.GetFileName(root.TrimEnd('\\','/')),"MiniAI",StringComparison.OrdinalIgnoreCase)&&!String.IsNullOrEmpty(parent)?Path.Combine(parent,"MiniAI-Portable.exe"):"";}
-        internal static bool Available {get{return File.Exists(PortablePath(PackRoot))||File.Exists(Path.Combine(PackRoot,"MiniAI.exe"))&&File.Exists(Path.Combine(PackRoot,"models","translation","hy-mt2.gguf"))&&File.Exists(Path.Combine(PackRoot,"models","ocr","rec.onnx"));}}
+        static string PortablePath(string root){string selectedRoot,selectedExecutable;if(ResolveSelection(Selection,out selectedRoot,out selectedExecutable)&&selectedExecutable!=null&&String.Equals(Path.GetFullPath(root),selectedRoot,StringComparison.OrdinalIgnoreCase))return selectedExecutable;string parent=Path.GetDirectoryName(Path.GetFullPath(root));return String.Equals(Path.GetFileName(root.TrimEnd('\\','/')),"MiniAI",StringComparison.OrdinalIgnoreCase)&&!String.IsNullOrEmpty(parent)?Path.Combine(parent,"MiniAI-Portable.exe"):"";}
+        internal static bool AvailableAt(string root){return File.Exists(PortablePath(root))||Installed(root);}
+        internal static bool Available {get{return AvailableAt(PackRoot);}}
         internal static Dictionary<string,object> Request(string root,string path,object body,int seconds=300,Func<bool> canceled=null) {
             for(int attempt=0;;attempt++)try{return RequestOnce(root,path,body,seconds,canceled);}catch(WebException error){var reply=error.Response as HttpWebResponse;if(reply==null||reply.StatusCode!=(HttpStatusCode)429||attempt>=20)throw;reply.Dispose();if(canceled!=null&&canceled())throw new OperationCanceledException();Thread.Sleep(75);}
         }

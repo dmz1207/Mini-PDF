@@ -6,11 +6,15 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.12.1 preview** is one approximately **3 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.12.2 preview** is one approximately **3 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
 Local verification: **97 checks for the 0.12.1 / Mini-AI 0.1.1 package repair passed**; the earlier 0.12.0 baseline passed 1,602 checks across both projects. See [scope and limits](源码/测试记录.md). [Offline AI setup](源码/OfflineAI.md).
+
+## New in v0.12.2
+
+- Choose the complete **MiniAI-Portable.exe** directly in the package dialog, including a renamed EXE in another folder. OCR and translation prepare it automatically on first use. Extracted MiniAI.exe and folder settings remain supported; unrelated EXEs are rejected. Nine new checks exercise actual first-use reader windows and real inference. Mini-AI 0.1.2 adds the **Mini** application icon.
 
 ## New in v0.12.1
 
