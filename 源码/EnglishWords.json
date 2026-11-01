@@ -1,0 +1,8 @@
+{
+  "source": "https://github.com/cmusphinx/cmudict/tree/74790861f652b15e4ac49015a90074ad62a27690",
+  "modification": "Sorted unique alphabetic words and hyphenated compounds; pronunciation and numbered variants removed. Used only for offline PDF line-wrap restoration.",
+  "words": 118489,
+  "compressed_bytes": 330489,
+  "sha256": "e43fc447505b8c56c2169e9cac14bf72b238c3da0b4b8450951cd9b3ae03d348",
+  "original_sha256": "81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22"
+}

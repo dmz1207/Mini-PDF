@@ -66,8 +66,8 @@ namespace MiniPdf {
             try{if(canceled!=null&&canceled())throw new OperationCanceledException();using(var response=request.GetResponse())using(var reader=new StreamReader(response.GetResponseStream(),Encoding.UTF8))return Serializer().Deserialize<Dictionary<string,object>>(reader.ReadToEnd());}
             catch(WebException error){if(canceled!=null&&canceled())throw new OperationCanceledException();var response=error.Response;if(response is HttpWebResponse&&((HttpWebResponse)response).StatusCode==(HttpStatusCode)429)throw;if(response!=null)using(response)using(var reader=new StreamReader(response.GetResponseStream(),Encoding.UTF8)){var bodyText=reader.ReadToEnd();if(bodyText.Length<8192)throw new IOException(bodyText,error);}throw;}
         }
-        internal static readonly string[] LanguageCodes={"zh","en","zh-Hant"};
-        internal static readonly string[] LanguageLabels={"简体中文","English","繁體中文"};
+        internal static readonly string[] LanguageCodes=MiniAI.Desktop.LanguageCatalog.Codes;
+        internal static string[] LanguageLabels {get{return MiniAI.Desktop.LanguageCatalog.Labels(UiText.English);}}
         internal static string AutoTarget(string text){int chinese=0,letters=0;foreach(char c in text??""){if(c>=0x4e00&&c<=0x9fff)chinese++;else if(Char.IsLetter(c))letters++;}return chinese>0&&chinese>letters/3?"en":"zh";}
         internal static List<OcrLine> Recognize(string root,byte[] image,int page=0,Func<bool> canceled=null,string mode="quality") {
             var response=Request(root,"/v1/ocr",new{image_base64=Convert.ToBase64String(image),mode=mode},300,canceled);var items=response["lines"] as System.Collections.IList;
@@ -79,7 +79,7 @@ namespace MiniPdf {
         }
         internal static string TranslateStreaming(string root,string text,string target,Func<bool> canceled,Action<string> progress,string mode="fast") {
             Ensure(root);var state=Connection(root);var output=new StringBuilder();
-            foreach(string part in MiniAiWorker.Parts(text)){if(canceled())throw new OperationCanceledException();string previous=output.ToString();string value=MiniAI.Desktop.TranslationStream.Read(Convert.ToString(state["url"]),Convert.ToString(state["token"]),part,target,canceled,delegate(string partial){progress(previous+partial);},mode);output.Append(value).AppendLine().AppendLine();}return output.ToString().TrimEnd();
+            foreach(var chunk in MiniAI.Desktop.TranslationText.Chunks(text)){string part=chunk.Text;if(canceled())throw new OperationCanceledException();string previous=output.ToString();string value=MiniAI.Desktop.TranslationStream.Read(Convert.ToString(state["url"]),Convert.ToString(state["token"]),part,target,canceled,delegate(string partial){progress(previous+partial);},mode);output.Append(value).Append(chunk.After);}return output.ToString().TrimEnd();
         }
         internal static void KeepResult(string root,string kind,string source,string target,string text) {
             if(String.IsNullOrWhiteSpace(text))return;try{Request(root,"/v1/results",new{kind=kind,source=source,target=target,text=text},10);}catch(IOException error){var web=error.InnerException as WebException;var response=web==null?null:web.Response as HttpWebResponse;if(response==null||response.StatusCode!=HttpStatusCode.NotFound)throw;response.Dispose();}
@@ -126,8 +126,8 @@ namespace MiniPdf {
             writer.Write(1);writer.Flush();
         }
         internal static void Translate(BinaryReader reader,BinaryWriter writer) {
-            string root=reader.ReadString(),target=reader.ReadString(),mode=reader.ReadString(),text=reader.ReadString();PdfDocument.Check(text.Length>0&&text.Length<=100000,"Translation input exceeds 100000 characters.");MiniAiClient.Ensure(root);var blocks=Parts(text);
-            var complete=new StringBuilder();for(int i=0;i<blocks.Count;i++){writer.Write(0);writer.Write(i+1);writer.Write(blocks.Count);writer.Flush();string result=MiniAiClient.TranslateStreaming(root,blocks[i],target,delegate{return false;},delegate(string partial){writer.Write(5);writer.Write(partial);writer.Flush();},mode);writer.Write(4);writer.Write(result);writer.Flush();complete.AppendLine(result).AppendLine();}MiniAiClient.KeepResult(root,"translation",text,target,complete.ToString().TrimEnd());
+            string root=reader.ReadString(),target=reader.ReadString(),mode=reader.ReadString(),text=reader.ReadString();PdfDocument.Check(text.Length>0&&text.Length<=100000,"Translation input exceeds 100000 characters.");MiniAiClient.Ensure(root);var blocks=MiniAI.Desktop.TranslationText.Chunks(text);
+            var complete=new StringBuilder();for(int i=0;i<blocks.Count;i++){writer.Write(0);writer.Write(i+1);writer.Write(blocks.Count);writer.Flush();string result=MiniAiClient.TranslateStreaming(root,blocks[i].Text,target,delegate{return false;},delegate(string partial){writer.Write(5);writer.Write(partial);writer.Flush();},mode);writer.Write(4);writer.Write(result+blocks[i].After);writer.Flush();complete.Append(result).Append(blocks[i].After);}MiniAiClient.KeepResult(root,"translation",text,target,complete.ToString().TrimEnd());
             writer.Write(1);writer.Flush();
         }
         internal static List<string> Parts(string text) {

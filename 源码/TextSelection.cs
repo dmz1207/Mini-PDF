@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
@@ -74,6 +74,7 @@ namespace MiniPdf
             int got = N.FPDFText_GetText(Text, start, count, bytes);
             return got <= 0 ? "" : Encoding.Unicode.GetString(bytes, 0, Math.Min(bytes.Length, got * 2)).TrimEnd((char)0);
         }
+        internal string ReadForTranslation(int start,int count){var result=new StringBuilder();int end=Math.Min(Count,start+count);for(int i=Math.Max(0,start);i<end;i++){uint ch=N.FPDFText_GetUnicode(Text,i);if(N.FPDFText_IsHyphen(Text,i)==1){result.Append('-');uint next=i+1<end?N.FPDFText_GetUnicode(Text,i+1):0;if(next!=10&&next!=13)result.Append('\n');}else if(ch>0&&ch<=0x10ffff&&ch!=0xfffe&&ch!=0xffff&&!(ch>=0xd800&&ch<=0xdfff))result.Append(Char.ConvertFromUtf32((int)ch));}return result.ToString();}
         internal List<N.Rect> Rectangles(int start, int count)
         {
             var rectangles = new List<N.Rect>();
@@ -252,6 +253,7 @@ namespace MiniPdf
                     foreach (var shape in Doc.SelectionPage(range.Page).Rectangles(range.Start, range.Count))
                         graphics.FillRectangle(brush, SelectionRectangle(range.Page, shape));
         }
+        internal string TranslationSelection(){if(Doc==null)return "";var selected=new StringBuilder();var context=new StringBuilder();foreach(var range in TextRanges()){var page=Doc.SelectionPage(range.Page);selected.AppendLine(page.ReadForTranslation(range.Start,range.Count));if(context.Length<200000)context.AppendLine(page.ReadForTranslation(0,Math.Min(page.Count,200000-context.Length)));}if(selected.Length==0&&Selected!=null&&Selected.Type==1)selected.Append(Selected.Text);return MiniAI.Desktop.TranslationText.Normalize(selected.ToString(),context.ToString());}
         string SelectionText()
         {
             if (Doc == null) return "";

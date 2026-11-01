@@ -67,7 +67,7 @@ namespace MiniPdf {
             try {
                 string root=MiniAiClient.PackRoot;PdfDocument.Check(MiniAiClient.AvailableAt(root),UiText.Get("请先加载 MiniAI 离线功能包。"));string text=input.SelectionLength>0?input.SelectedText:input.Text,target=MiniAiClient.LanguageCodes[direction.SelectedIndex];Cancel();translated.Clear();SetBusy(true);int current=generation;var worker=new PdfJob(this,null);job=worker;status.Text=UiText.Get("正在加载翻译模型…");
                 string mode=quality.SelectedIndex==1?"quality":"fast";worker.Start(delegate(BinaryWriter writer){MiniAiClient.Ensure(root);writer.Write("translate");writer.Write(root);writer.Write(target);writer.Write(mode);writer.Write(text);},delegate(BinaryReader reader) {
-                    var completed=new System.Text.StringBuilder();while(true){int code=reader.ReadInt32();if(code<0)throw new IOException(reader.ReadString());if(code==1)return;if(code==0){int done=reader.ReadInt32(),total=reader.ReadInt32();worker.Post(delegate{if(current==generation)status.Text=UiText.Get("正在翻译…")+" "+done+" / "+total;});}else if(code==4||code==5){string result=reader.ReadString(),value=completed.ToString()+result;if(code==4)completed.Append(result).AppendLine().AppendLine();worker.Post(delegate{if(current==generation)translated.Text=value;});}else throw new IOException("Invalid translation result.");}
+                    var completed=new System.Text.StringBuilder();while(true){int code=reader.ReadInt32();if(code<0)throw new IOException(reader.ReadString());if(code==1)return;if(code==0){int done=reader.ReadInt32(),total=reader.ReadInt32();worker.Post(delegate{if(current==generation)status.Text=UiText.Get("正在翻译…")+" "+done+" / "+total;});}else if(code==4||code==5){string result=reader.ReadString(),value=completed.ToString()+result;if(code==4)completed.Append(result);worker.Post(delegate{if(current==generation)translated.Text=value;});}else throw new IOException("Invalid translation result.");}
                 },delegate(Exception error){if(current!=generation)return;job=null;SetBusy(false);status.Text=error==null?UiText.Get("翻译完成。"):error.Message;},700);
             }catch(Exception error){SetBusy(false);status.Text=error.Message;}
         }
@@ -84,7 +84,7 @@ namespace MiniPdf {
     internal sealed partial class MainWindow {
         bool EnsureMiniAiPackage(){if(MiniAiClient.Available)return true;MessageBox.Show(this,UiText.Get("将 MiniAI-Portable.exe 放在阅读器旁边，或直接选择完整 EXE。无需预先解包。"),"MiniAI",MessageBoxButtons.OK,MessageBoxIcon.Information);return OfflineWindow.LoadPack(this);}
         void ShowOcr(){if(!EnsureMiniAiPackage())return;using(var dialog=new OfflineWindow(this,false,""))dialog.ShowDialog(this);}
-        void ShowTranslation(){if(!EnsureMiniAiPackage())return;string text=Document==null?"":canvas.CopiedText();if(String.IsNullOrWhiteSpace(text)&&Document!=null)text=Document.SelectedText(0,Math.Min(100000,N.FPDFText_CountChars(Document.TextPage)));using(var dialog=new OfflineWindow(this,true,text))dialog.ShowDialog(this);}
+        void ShowTranslation(){if(!EnsureMiniAiPackage())return;string text=Document==null?"":canvas.TranslationSelection();if(String.IsNullOrWhiteSpace(text)&&Document!=null)text=Document.SelectedText(0,Math.Min(100000,N.FPDFText_CountChars(Document.TextPage)));using(var dialog=new OfflineWindow(this,true,text)){dialog.Shown+=delegate{if(!String.IsNullOrWhiteSpace(text))dialog.TranslateForTest();};dialog.ShowDialog(this);}}
         void LoadMiniAi(){if(OfflineWindow.LoadPack(this))RefreshAiAvailability();}
     }
 }

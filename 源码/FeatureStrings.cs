@@ -492,6 +492,7 @@ MiniAI 仅识别缺少可见正文的页面；普通识别文字可编辑，复�
 正在连接 MiniAI…|Connecting to MiniAI…
 复制|Copy
 划词翻译|Translate selection
+自动划词翻译|Automatic selection translation
 截图翻译|Capture & translate
 截图翻译（Alt+S）|Capture & translate (Alt+S)
 框选屏幕区域，识别并翻译（Alt+S）|Select a screen region to recognize and translate (Alt+S)

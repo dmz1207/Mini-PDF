@@ -768,7 +768,7 @@ namespace MiniPdf
         {
             if(InlineEditing&&!ConfirmInlineText())return;
             base.OnMouseDown(e);
-            owner.CloseTranslation();
+            owner.DismissTranslation();
             Focus();
             if (Doc == null || pageRects.Length == 0)
                 return;
