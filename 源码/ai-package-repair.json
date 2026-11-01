@@ -11,5 +11,17 @@
   "repair_total_assertions": 97,
   "previous_reader_baseline_version": "0.12.0",
   "previous_combined_assertions": 1602,
-  "public_corpus": "See CI record; a document-engine accuracy claim is not implied by OCR/translation checks."
+  "public_corpus": "See CI record; a document-engine accuracy claim is not implied by OCR/translation checks.",
+  "public_corpus_ci": {
+    "run_id": 41256680250,
+    "url": "https://github.com/dmz1207/Mini-PDF/actions/runs/41256680250",
+    "source_commit": "1ee00ab8ce0660e5f5ead047e82298b97521029e",
+    "conclusion": "success",
+    "checked": 4211,
+    "new_regressions": 0,
+    "known_exceptions": 62,
+    "text_edit_assertions": 123,
+    "office_form_assertions": 67
+  },
+  "miniai_release_ci": "https://github.com/dmz1207/Mini-AI/actions/runs/41256680942"
 }
