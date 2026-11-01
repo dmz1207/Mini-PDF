@@ -4,13 +4,19 @@
 
 **轻量、原生的 Windows PDF 阅读器与编辑器。**
 
-v0.12.2 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
+v0.12.3 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](.) · [测试记录](测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
 **v0.11.0 本地验证（2026-10-25）：** 1,758 项通过。[最终源码线上检查通过](https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872)：4,211 个公开路径无新增回归，62 个既有异常如实保留；范围与限制见[测试记录](测试记录.md)，另见 [Word 导出验证](word-export-verification.json)。
 
-本次 0.12.1 / Mini-AI 0.1.1 修复通过 **97 项检查**；此前 0.12.0 基线两个项目合计 1,602 项通过。范围与限制见[测试记录](测试记录.md)，外挂使用见[离线 AI](OfflineAI.md)。
+本次 0.12.3 / Mini-AI 0.2.0 优化通过 **177 项检查**；此前 0.12.0 基线两个项目合计 1,602 项通过。范围与限制见[测试记录](测试记录.md)，外挂使用见[离线 AI](OfflineAI.md)。
+
+## v0.12.3 更新
+
+支持极速／高精度两档、译图与文字提取，切换原图、选择复制及保存。最后一个 AI 客户端退出时清理运行文件，普通结果单独保留，划词／即时截图不自动保存。
+
+适配 Mini-AI 0.2.0：划词气泡和翻译面板支持流式输出、后台预热、选中输入范围翻译。等待时气泡不关闭，完成后保留阅读时间；可展开原文继续选取、复制、Ctrl 固定。支持新 CTranslate2 完整包，并保留旧包加载兼容。模型与硬件要求见 [OfflineAI.md](OfflineAI.md)。
 
 ## v0.12.2 更新
 

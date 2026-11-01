@@ -291,3 +291,5 @@ Ctrl+Enter retries. The menu button remains available if another app owns the ho
 Word export > OCR scanned pages first makes recognized plain prose editable. Complex
 formulas and uncertain areas remain images. The scan layout is approximate; review it.
 Models run locally in a separate service and are not bundled into the reader EXE.
+
+AI: choose Fast or High quality in translation controls. Image translate offers Original/translated, Extract text, Copy and Save. Normal AI results are retained in MiniAI Results; instant selection/screenshot translations are not auto-saved. Last-client exit removes verified AI runtime files; the next launch extracts again.

@@ -32,12 +32,12 @@ namespace MiniPdf {
                 Assert(rejected&&MiniAiClient.PackRoot==active,"unrelated EXE is rejected without replacing the selected package");
                 string image=Path.Combine(directory,"photo.png");using(var bitmap=new Bitmap(1400,240)){using(var g=Graphics.FromImage(bitmap))using(var font=new Font("Arial",44)){g.Clear(Color.White);g.DrawString("CONTROL SYSTEM 12345",font,Brushes.Black,30,60);}bitmap.Save(image,ImageFormat.Png);}
                 using(var form=new MainWindow(null)) {
-                    form.StartPosition=FormStartPosition.Manual;form.Location=new Point(-20000,-20000);form.ShowInTaskbar=false;
-                    form.Show();var document=PdfDocument.New();document.AddImage(image,new N.Rect(30,600,565,770));form.LoadForTest(document);
-                    using(var dialog=new OfflineWindow(form,false,"")){dialog.StartPosition=FormStartPosition.Manual;dialog.Location=new Point(-20000,-20000);dialog.ShowInTaskbar=false;dialog.Show(form);dialog.OcrForTest();Assert(dialog.BusyForTest,"OCR UI starts from an external EXE before extraction");PumpOffline(delegate{return !dialog.BusyForTest;});string read=String.Join(" ",dialog.OcrLinesForTest.Select(l=>l.Text));Assert(read.IndexOf("CONTROL",StringComparison.OrdinalIgnoreCase)>=0&&read.Contains("12345"),"first-use OCR UI prepares the chosen EXE and reads the scan: "+dialog.StatusForTest+"; text="+read);}
+                    form.StartPosition=FormStartPosition.Manual;form.Location=new Point(-24000,-24000);form.ShowInTaskbar=false;form.Show();var document=PdfDocument.New();document.AddImage(image,new N.Rect(30,600,565,770));form.LoadForTest(document);
+                    using(var dialog=new OfflineWindow(form,false,"")){dialog.StartPosition=FormStartPosition.Manual;dialog.Location=new Point(-24000,-24000);dialog.ShowInTaskbar=false;dialog.Show(form);dialog.OcrForTest();Assert(dialog.BusyForTest,"OCR UI starts from an external EXE before extraction");PumpOffline(delegate{return !dialog.BusyForTest;});string read=String.Join(" ",dialog.OcrLinesForTest.Select(l=>l.Text));Assert(read.IndexOf("CONTROL",StringComparison.OrdinalIgnoreCase)>=0&&read.Contains("12345"),"first-use OCR UI prepares the chosen EXE and reads the scan: "+dialog.StatusForTest+"; text="+read);}
+                    MiniAiClient.SelectPackage(Path.Combine(active,"MiniAI.exe"));Assert(MiniAiClient.PackRoot==active&&MiniAiClient.Available,"existing extracted MiniAI.exe remains supported");
+                    File.WriteAllText(Path.Combine(home,"MiniPDF.MiniAI.txt"),active);Assert(MiniAiClient.PackRoot==active&&MiniAiClient.Available,"existing folder settings remain compatible");
                 }
-                MiniAiClient.SelectPackage(Path.Combine(active,"MiniAI.exe"));Assert(MiniAiClient.PackRoot==active&&MiniAiClient.Available,"existing extracted MiniAI.exe remains supported");
-                File.WriteAllText(Path.Combine(home,"MiniPDF.MiniAI.txt"),active);Assert(MiniAiClient.PackRoot==active&&MiniAiClient.Available,"existing folder settings remain compatible");
+                PumpOffline(delegate{return !Directory.Exists(active);},30000);Assert(!Directory.Exists(active),"the final reader exit releases the portable service and cleans its runtime folder");
                 File.AppendAllText(logPath,"\r\nAssertions: "+assertions);return 0;
             }catch(Exception error){File.AppendAllText(logPath,"\r\n"+error);return 1;}
             finally{if(active!=null)stop(active);Environment.SetEnvironmentVariable("MINIPDF_LAUNCHER",previous);}
@@ -50,14 +50,17 @@ namespace MiniPdf {
             Directory.CreateDirectory(directory);logPath=Path.Combine(directory,"offline-tests.txt");
             try {
                 string root=Directory.GetParent(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).FullName).FullName;
-                Environment.SetEnvironmentVariable("MINIPDF_LAUNCHER",Path.Combine(root,"Mini PDF.exe"));
+                string readerHome=Path.Combine(directory,"installed-reader");Directory.CreateDirectory(readerHome);
+                Environment.SetEnvironmentVariable("MINIPDF_LAUNCHER",Path.Combine(readerHome,"Mini PDF.exe"));
+                MiniAiClient.SelectPackage(Path.Combine(root,"MiniAI","MiniAI.exe"));
+                Environment.SetEnvironmentVariable("MINIAI_RESULTS_DIR",Path.Combine(directory,"results"));
                 var parts=MiniAiWorker.Parts(new String('a',1900));Assert(parts.Sum(p=>p.Length)==1900&&parts.All(p=>p.Length<=900),"translation segmentation retains long inputs");
                 Assert(MiniAiWorker.Parts("con-\r\ntrol systems")[0]=="control systems","translation joins PDF line-end hyphenation");
                 string image=Path.Combine(root,"work","ai-tests","ocr-bilingual.png");Assert(File.Exists(image),"bilingual OCR fixture is available");
                 using(var form=new MainWindow(null)) {
-                    form.Show();var document=PdfDocument.New();document.AddImage(image,new N.Rect(30,560,565,770));form.LoadForTest(document);
+                    form.StartPosition=FormStartPosition.Manual;form.Location=new Point(-24000,-24000);form.ShowInTaskbar=false;form.Show();var document=PdfDocument.New();document.AddImage(image,new N.Rect(30,560,565,770));form.LoadForTest(document);
                     using(var before=document.Render(0,720,1020))using(var dialog=new OfflineWindow(form,false,"")) {
-                        dialog.Show(form);dialog.OcrForTest();var watch=System.Diagnostics.Stopwatch.StartNew();while(dialog.BusyForTest&&watch.ElapsedMilliseconds<60000){Application.DoEvents();System.Threading.Thread.Sleep(10);}Application.DoEvents();
+                        dialog.StartPosition=FormStartPosition.Manual;dialog.Location=new Point(-24000,-24000);dialog.ShowInTaskbar=false;dialog.Show(form);dialog.OcrForTest();var watch=System.Diagnostics.Stopwatch.StartNew();while(dialog.BusyForTest&&watch.ElapsedMilliseconds<60000){Application.DoEvents();System.Threading.Thread.Sleep(10);}Application.DoEvents();
                         Assert(!dialog.BusyForTest,"PDF OCR finishes in an isolated worker without blocking UI input");Assert(dialog.OcrLinesForTest.Count>=5,"OCR returns all bilingual scan lines: "+dialog.StatusForTest);
                         var health=MiniAiClient.Request(Path.Combine(root,"MiniAI"),"/health",null);Assert(Convert.ToInt32(health["api_version"])==1,"the PDF toolbar automatically starts MiniAI and the shared service survives its PDF worker exiting");
                         Assert(dialog.OcrLinesForTest.Any(l=>l.Text.Contains("control system"))&&dialog.OcrLinesForTest.Any(l=>l.Text.Contains("中英文翻译")),"standalone OCR recognizes Chinese and English rendered from a scanned PDF");
@@ -69,7 +72,7 @@ namespace MiniPdf {
                         using(var snapshot=new Bitmap(dialog.Width,dialog.Height)){dialog.DrawToBitmap(snapshot,new Rectangle(0,0,dialog.Width,dialog.Height));snapshot.Save(Path.Combine(directory,"offline-window.png"),ImageFormat.Png);}dialog.Close();
                     }
                     using(var translation=new OfflineWindow(form,true,"The control system remains stable.")) {
-                        translation.Show(form);translation.TranslateForTest();var watch=System.Diagnostics.Stopwatch.StartNew();while(translation.BusyForTest&&watch.ElapsedMilliseconds<180000){Application.DoEvents();System.Threading.Thread.Sleep(10);}Application.DoEvents();
+                        translation.StartPosition=FormStartPosition.Manual;translation.Location=new Point(-24000,-24000);translation.ShowInTaskbar=false;translation.Show(form);translation.TranslateForTest();var watch=System.Diagnostics.Stopwatch.StartNew();while(translation.BusyForTest&&watch.ElapsedMilliseconds<180000){Application.DoEvents();System.Threading.Thread.Sleep(10);}Application.DoEvents();
                         Assert(!translation.BusyForTest&&translation.TranslationForTest.Any(c=>c>=0x4e00&&c<=0x9fff),"selected PDF text is translated through the real background UI worker: "+translation.StatusForTest);
                         using(var snapshot=new Bitmap(translation.Width,translation.Height)){translation.DrawToBitmap(snapshot,new Rectangle(0,0,translation.Width,translation.Height));snapshot.Save(Path.Combine(directory,"translation-window.png"),ImageFormat.Png);}translation.Close();
                     }
@@ -89,7 +92,7 @@ namespace MiniPdf {
             var selection=MiniAI.Desktop.CaptureOverlay.Selection(new Point(190,130),new Point(-20,20),new Size(200,160));Assert(selection==new Rectangle(0,20,190,110),"screen selection accepts reverse drags and clips to desktop bounds");
             using(var image=new Bitmap(fixture))using(var crop=MiniAI.Desktop.CaptureOverlay.Crop(image,new Rectangle(50,50,1200,180)))Assert(crop.Width==1200&&crop.Height==180,"screen OCR receives only the selected crop");
             using(var window=new MainWindow(null)) {
-                window.Show();var document=PdfDocument.New();document.AddText("The control system remains stable.",60,760,14,"Arial",Color.Black);window.LoadForTest(document);Application.DoEvents();Assert(window.QuickTranslationEnabledForTest,"installed MiniAI lights up selection and screen translation");
+                window.StartPosition=FormStartPosition.Manual;window.Location=new Point(-24000,-24000);window.ShowInTaskbar=false;window.Show();var document=PdfDocument.New();document.AddText("The control system remains stable.",60,760,14,"Arial",Color.Black);window.LoadForTest(document);Application.DoEvents();Assert(window.QuickTranslationEnabledForTest,"installed MiniAI lights up selection and screen translation");
                 var canvas=window.CanvasForTest;var textPage=document.SelectionPage(0);var shape=textPage.Rectangles(0,textPage.Count).First();Rectangle area=canvas.DeviceRect(shape);var left=new Point(area.Left+1,area.Top+area.Height/2);var right=new Point(area.Right-1,left.Y);
                 var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
                 typeof(PdfCanvas).GetMethod("OnMouseDown",flags).Invoke(canvas,new object[]{new MouseEventArgs(MouseButtons.Left,1,left.X,left.Y,0)});
@@ -98,7 +101,7 @@ namespace MiniPdf {
                 var bubble=window.TranslationBubbleForTest;Assert(bubble!=null,"real text drag and mouse release open the translation bubble");bubble.PinForTest();PumpOffline(delegate{return !bubble.BusyForTest;});Assert(bubble.ResultForTest.Contains("稳定"),"selection bubble translates the actual selected text into Chinese: "+bubble.ResultForTest);
                 Assert(!bubble.Region.IsVisible(0,0)&&bubble.FormBorderStyle==FormBorderStyle.None&&bubble.Width<700,"translation uses a compact rounded bubble without a window caption");
                 bubble.Translate(new String('a',1900));bubble.Translate("The system remains stable.");PumpOffline(delegate{return !bubble.BusyForTest;});Assert(bubble.ResultForTest.Contains("稳定")&&bubble.ResultForTest.Length<100,"a new selection cancels stale work and only its translation is shown");
-                bubble.TargetForTest(6);PumpOffline(delegate{return !bubble.BusyForTest;});Assert(bubble.ResultForTest.ToLowerInvariant().Contains("stabil"),"the same offline model supports a German target: "+bubble.ResultForTest);
+                bubble.TargetForTest(3);PumpOffline(delegate{return !bubble.BusyForTest;});Assert(bubble.ResultForTest.Contains("穩定"),"the installed translation model supports Traditional Chinese: "+bubble.ResultForTest);
                 using(var picture=new Bitmap(bubble.Width,bubble.Height)){bubble.DrawToBitmap(picture,new Rectangle(Point.Empty,bubble.Size));picture.Save(Path.Combine(directory,"translation-bubble.png"));}
                 canvas.ClearSelection();Application.DoEvents();Assert(bubble.IsDisposed,"clearing the selection cancels and dismisses its bubble");
                 using(var scan=new MiniAI.Desktop.TranslationBubble(MainWindow.TranslationBackend(),new Rectangle(100,100,10,10),true)) {

@@ -498,6 +498,27 @@ MiniAI 仅识别缺少可见正文的页面；普通识别文字可编辑，复�
 安装 AI 外挂包以启用|Install the AI add-on pack to enable
 松开鼠标自动翻译所选文字|Automatically translate selected text on mouse release
 中英自动互译|Auto ZH/EN
+图片翻译与文字提取|Image translation and text extraction
+翻译图片|Translate image
+提取文字|Extract text
+原图／译图|Original / translated
+复制图片|Copy image
+保存译图…|Save image…
+翻译图片可切换原图；提取文字可选择复制。|Translate the image or extract selectable text.
+已取消|Canceled
+提取完成，可选择和复制文字。|Text extracted. Select and copy it.
+正在识别并翻译图片…|Recognizing and translating the image…
+译图已完成，长译文附在图片下方。|Image translated. Long text is attached below.
+译图已完成，可切换原图、复制或保存。|Image translated. Switch, copy or save it.
+翻译当前页图片|Translate current page image
+译图|Image
+复制文字|Copy text
+取消|Cancel
+极速翻译|Fast
+高精度翻译|Quality
+原文|Source
+简体中文|Simplified Chinese
+可选原文再译 · Ctrl 固定 · Esc 关闭|Select source to translate · Ctrl pin · Esc close
 本机翻译 · 移开鼠标收起 · 按住 Ctrl 固定|Offline · Move away to dismiss · Hold Ctrl to keep
 可选中识别文字再译 · Ctrl+Enter 重译 · Ctrl 固定|Select OCR text to translate · Ctrl+Enter retry · Ctrl to keep
 正在识别选区…|Recognizing selection…

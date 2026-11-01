@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.3 — 2026-11-01
+
+Streaming Mini-AI 0.2.0 integration, background prewarming, precise selected-input translation and bubble lifetime/selection/copy fixes. Fast/High quality modes, image-translation overlays and selectable OCR extraction; last-client runtime cleanup with retained regular results. Accept new CTranslate2 portable payloads while retaining legacy package loading, without downgrading an already newer installed service.
+
 ## 0.12.2 — 2026-11-01
 
 Select a complete MiniAI portable EXE directly, including renamed packages outside the reader folder. Enable actual OCR/translation windows before extraction and prepare models on first use. Retain extracted-EXE and folder compatibility, reject unrelated executables, and verify both cold paths with nine reader UI/inference checks. Mini-AI 0.1.2 supplies the Mini application icon.
