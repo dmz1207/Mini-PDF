@@ -4,13 +4,17 @@
 
 **轻量、原生的 Windows PDF 阅读器与编辑器。**
 
-v0.12.0 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
+v0.12.1 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](.) · [测试记录](源码/测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
 **v0.11.0 本地验证（2026-10-25）：** 1,758 项通过。[最终源码线上检查通过](https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872)：4,211 个公开路径无新增回归，62 个既有异常如实保留；范围与限制见[测试记录](源码/测试记录.md)，另见 [Word 导出验证](源码/word-export-verification.json)。
 
-本版本地两个项目合计 **1,602 项通过**，范围与限制见[测试记录](源码/测试记录.md)，外挂使用见[离线 AI](源码/OfflineAI.md)。
+本次 0.12.1 / Mini-AI 0.1.1 修复通过 **97 项检查**；此前 0.12.0 基线两个项目合计 1,602 项通过。范围与限制见[测试记录](源码/测试记录.md)，外挂使用见[离线 AI](源码/OfflineAI.md)。
+
+## v0.12.1 更新
+
+把完整 [MiniAI-Portable.exe](https://github.com/dmz1207/Mini-AI/releases/latest/download/MiniAI-Portable.exe) 放在阅读器旁边，即可检测并在首次使用时自动准备离线包。新 AI 包补齐 OCR 运行库并移除多余 OpenSSL 依赖；独立窗口支持打开照片、拖入图片、粘贴图片和截图识别，文字可编辑、复制和保存。
 
 ## v0.12.0 更新
 

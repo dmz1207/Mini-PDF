@@ -1,0 +1,15 @@
+{
+  "version": "0.12.1",
+  "date": "2026-11-01",
+  "reader_bytes": 3136000,
+  "reader_sha256": "563c4a8f7a54aaca82113c81f28a0f5ea9a70a014b9d1e38692660c0cc030b63",
+  "reader_ai_integration_assertions": 33,
+  "reader_single_exe_ai_assertions": 4,
+  "miniai_service_assertions": 39,
+  "miniai_desktop_assertions": 11,
+  "miniai_portable_assertions": 10,
+  "repair_total_assertions": 97,
+  "previous_reader_baseline_version": "0.12.0",
+  "previous_combined_assertions": 1602,
+  "public_corpus": "See CI record; a document-engine accuracy claim is not implied by OCR/translation checks."
+}

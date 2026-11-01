@@ -1,5 +1,9 @@
 ﻿# Changelog
 
+## 0.12.1 — 2026-11-01
+
+Detect the complete MiniAI-Portable.exe beside the reader and prepare it automatically on first use. Allow time for verified first-run extraction. Mini-AI 0.1.1 fixes missing OpenSSL/OCR runtime dependencies and adds standalone photo, clipboard, drag-and-drop and screenshot OCR with editable text results.
+
 ## 0.12.0 — 2026-11-01
 
 Isolated search with all matches; optional MiniAI OCR/translation package; selection bubbles, Alt+S region OCR/translation and language targets; optional OCR-to-editable-Word on private snapshots. Persistent inference, KV prompt reuse and bounded result caching. Scan reconstruction and OCR are approximate.

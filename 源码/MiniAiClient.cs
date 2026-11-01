@@ -17,7 +17,8 @@ namespace MiniPdf {
         }
         internal static JavaScriptSerializer Serializer(){return new JavaScriptSerializer{MaxJsonLength=32*1024*1024,RecursionLimit=32};}
         static Dictionary<string,object> Connection(string root){var data=Serializer().Deserialize<Dictionary<string,object>>(File.ReadAllText(Path.Combine(root,"state","connection.json"),Encoding.UTF8));Uri url;PdfDocument.Check(data.ContainsKey("url")&&Uri.TryCreate(Convert.ToString(data["url"]),UriKind.Absolute,out url)&&url.Scheme=="http"&&url.Host=="127.0.0.1"&&url.AbsolutePath=="/"&&String.IsNullOrEmpty(url.UserInfo),"Invalid MiniAI local address.");return data;}
-        internal static bool Available {get{return File.Exists(Path.Combine(PackRoot,"MiniAI.exe"))&&File.Exists(Path.Combine(PackRoot,"models","translation","hy-mt2.gguf"))&&File.Exists(Path.Combine(PackRoot,"models","ocr","rec.onnx"));}}
+        static string PortablePath(string root){string parent=Path.GetDirectoryName(Path.GetFullPath(root));return String.Equals(Path.GetFileName(root.TrimEnd('\\','/')),"MiniAI",StringComparison.OrdinalIgnoreCase)&&!String.IsNullOrEmpty(parent)?Path.Combine(parent,"MiniAI-Portable.exe"):"";}
+        internal static bool Available {get{return File.Exists(PortablePath(PackRoot))||File.Exists(Path.Combine(PackRoot,"MiniAI.exe"))&&File.Exists(Path.Combine(PackRoot,"models","translation","hy-mt2.gguf"))&&File.Exists(Path.Combine(PackRoot,"models","ocr","rec.onnx"));}}
         internal static Dictionary<string,object> Request(string root,string path,object body,int seconds=300,Func<bool> canceled=null) {
             for(int attempt=0;;attempt++)try{return RequestOnce(root,path,body,seconds,canceled);}catch(WebException error){var reply=error.Response as HttpWebResponse;if(reply==null||reply.StatusCode!=(HttpStatusCode)429||attempt>=20)throw;reply.Dispose();if(canceled!=null&&canceled())throw new OperationCanceledException();Thread.Sleep(75);}
         }
@@ -40,15 +41,17 @@ namespace MiniPdf {
             var output=new StringBuilder();foreach(string part in MiniAiWorker.Parts(text)){if(canceled!=null&&canceled())throw new OperationCanceledException();var reply=Request(root,"/v1/translate",new{text=part,target=target},600,canceled);PdfDocument.Check(!Convert.ToBoolean(reply["truncated"]),UiText.Get("译文超过输出限制，请缩小选区。"));if(output.Length>0)output.AppendLine().AppendLine();output.Append(Convert.ToString(reply["text"]));}return output.ToString();
         }
         internal static void Ensure(string root) {
-            PdfDocument.Check(File.Exists(Path.Combine(root,"MiniAI.exe")),UiText.Get("请先加载 MiniAI 离线功能包。"));
+            string portable=PortablePath(root),executable=File.Exists(portable)?portable:Path.Combine(root,"MiniAI.exe");
+            PdfDocument.Check(File.Exists(executable),UiText.Get("请先加载 MiniAI 离线功能包。"));
             try{Request(root,"/health",null,2);return;}catch(IOException){}catch(WebException){}catch(ArgumentException){}
             string state=Path.Combine(root,"state");Directory.CreateDirectory(state);FileStream lease=null;
-            for(int i=0;i<100&&lease==null;i++){try{lease=new FileStream(Path.Combine(state,"start.lock"),FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None);}catch(IOException){Thread.Sleep(100);}}
+            int limit=executable==portable?120000:10000;var leaseWatch=Stopwatch.StartNew();
+            while(lease==null&&leaseWatch.ElapsedMilliseconds<limit){try{lease=new FileStream(Path.Combine(state,"start.lock"),FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None);}catch(IOException){Thread.Sleep(100);}}
             PdfDocument.Check(lease!=null,"Another MiniAI instance is still starting.");
             using(lease) {
                 try{Request(root,"/health",null,2);return;}catch(IOException){}catch(WebException){}catch(ArgumentException){}
-                using(var process=Process.Start(new ProcessStartInfo(Path.Combine(root,"MiniAI.exe"),"--headless --port 0"){UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden,WorkingDirectory=root})) {
-                    for(int i=0;i<100;i++){Thread.Sleep(100);if(process.HasExited)break;try{Request(root,"/health",null,2);return;}catch(IOException){}catch(WebException){}catch(ArgumentException){}}
+                using(var process=Process.Start(new ProcessStartInfo(executable,"--headless --port 0"){UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden,WorkingDirectory=Path.GetDirectoryName(executable)})) {
+                    var startupWatch=Stopwatch.StartNew();while(startupWatch.ElapsedMilliseconds<limit){Thread.Sleep(100);try{Request(root,"/health",null,2);return;}catch(IOException){}catch(WebException){}catch(ArgumentException){}if(process.HasExited)break;}
                     throw new IOException(UiText.Get("MiniAI 本地服务未能启动，请检查功能包。"));
                 }
             }
