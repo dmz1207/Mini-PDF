@@ -6,11 +6,19 @@
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.12.3 preview** is one approximately **3 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.12.4** release is one approximately **3.33 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-Local verification: **147 focused checks for 0.12.3 / Mini-AI 0.2.0 passed**; the earlier 0.12.0 baseline passed 1,602 checks across both projects. See [scope and limits](测试记录.md). [Offline AI setup](OfflineAI.md).
+Verification: **847 reader regression assertions**, **21 photo/file/screenshot checks** and **10 final portable-reader integration checks** passed locally. [GitHub checks passed](https://github.com/dmz1207/Mini-PDF/actions/runs/41366981239), including 4,211 public PDF paths, text editing, Office conversion and forms. See [scope and limits](测试记录.md). [Offline AI setup](OfflineAI.md).
+
+## New in v0.12.4
+
+- The offline OCR panel accepts dropped photos, multiple image files, PDFs and text files. Open or paste a photo, capture a screen region, or recognize current/all/range PDF pages from the same workspace. Photo results cannot accidentally be added as a text layer to an unrelated PDF.
+- Screen capture uses a bright green crosshair. Translation bubbles can be dragged at the top and resized from every edge and corner.
+- Integrates Mini-AI 1.0.0: Hy-MT2 translation, 38 target choices, streaming, background preparation and separate fast/quality caches. PP-OCRv6 medium remains the PDF OCR default. Models stay in the optional package.
+
+The entries below describe earlier releases.
 
 ## New in v0.12.3
 

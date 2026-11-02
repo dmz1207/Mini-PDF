@@ -4,13 +4,19 @@
 
 **轻量、原生的 Windows PDF 阅读器与编辑器。**
 
-v0.12.3 预览版，单 EXE 约 **3 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
+v0.12.4，单 EXE 约 **3.33 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
 [下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](.) · [测试记录](源码/测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
-**v0.11.0 本地验证（2026-10-25）：** 1,758 项通过。[最终源码线上检查通过](https://github.com/dmz1207/Mini-PDF/actions/runs/40164877872)：4,211 个公开路径无新增回归，62 个既有异常如实保留；范围与限制见[测试记录](源码/测试记录.md)，另见 [Word 导出验证](源码/word-export-verification.json)。
+本次通过 **847 项阅读器回归断言、21 项照片／文件／截图检查及 10 项最终便携版集成检查**。[GitHub 检查通过](https://github.com/dmz1207/Mini-PDF/actions/runs/41366981239)，涵盖 4,211 个公开 PDF 路径、文字编辑、Office 转换和表单。范围与限制见[测试记录](源码/测试记录.md)，外挂使用见[离线 AI](源码/OfflineAI.md)。
 
-本次 0.12.3 / Mini-AI 0.2.0 优化通过 **177 项检查**；此前 0.12.0 基线两个项目合计 1,602 项通过。范围与限制见[测试记录](源码/测试记录.md)，外挂使用见[离线 AI](源码/OfflineAI.md)。
+## v0.12.4 更新
+
+- 离线 OCR 面板支持拖入照片、多张图片、PDF 和文本；也能打开或粘贴图片、截图识别、截图翻译，直接识别 PDF 本页／全部／指定页。外部照片结果不会误加到当前 PDF 的文字层。
+- 截图十字改成醒目的绿色。翻译气泡可从顶部拖动，四边和四角均可调整大小。
+- 对接 Mini-AI 1.0.0：Hy-MT2 翻译、38 种目标语言、流式输出、后台准备及极速／高精度独立缓存。PDF 默认使用 PP-OCRv6 medium；模型继续由可选外挂包提供。
+
+以下为历史版本记录。
 
 ## v0.12.3 更新
 
