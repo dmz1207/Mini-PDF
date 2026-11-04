@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.5 — 2026-11-04
+
+可选 PDF 截取识别：正文保留可编辑文字，公式返回 TeX / MathML。Word 支持公式图片、可编辑 Office 公式、流式 TeX 文本三种模式；行内原生公式保留在句中，独立代码另起一段。合并分式几何区域并保护正文，失败时保留原图；修正公式和代码字号。缩短重复功能包探测，复用 MiniAI 1.0.2 的离线识别与推理服务。
+
+Optional PDF capture-to-text/TeX, MathML copy and selectable image/native-equation/flowing-TeX Word output. Preserve native inline order, reconnect complete scanned fractions without crossing prose, retain uncertain images, fit Office math and keep literal code readable. Short cached package probes and MiniAI 1.0.2 integration keep models outside the reader.
+
 ## 0.12.3 — 2026-11-01
 
 Streaming Mini-AI 0.2.0 integration, background prewarming, precise selected-input translation and bubble lifetime/selection/copy fixes. Fast/High quality modes, image-translation overlays and selectable OCR extraction; last-client runtime cleanup with retained regular results. Accept new CTranslate2 portable payloads while retaining legacy package loading, without downgrading an already newer installed service.

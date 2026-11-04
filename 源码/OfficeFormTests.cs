@@ -13,6 +13,7 @@ namespace MiniPdf {
         static void OfficeFormsCoverage(string directory,bool withUi=true) {
             UiText.English=true;
             WordLayoutCoverage(directory,withUi);
+            WordFormulaCoverage();
             bool hasCjk;
             using(var fonts=new System.Drawing.Text.InstalledFontCollection())hasCjk=fonts.Families.Any(f=>f.GetName(1033)=="Microsoft YaHei");
             string firstName=hasCjk?"张三 Alice":"Alice",secondName=hasCjk?"李四 Bob":"Bob",noteText=hasCjk?"First line\n第二行":"First line\nSecond line",countryLabel=hasCjk?"中国":"China";
@@ -118,6 +119,32 @@ using(var shot=new Bitmap(window.Width,window.Height)){window.DrawToBitmap(shot,
             }
             using(var xfa=PdfDocument.Open(Path.Combine(directory,"forms-xfa.pdf"),"")){bool rejected=false;try{PdfForms.Read(xfa);}catch(InvalidOperationException){rejected=true;}Assert(rejected&&!xfa.Dirty,"forms: unsupported dynamic XFA is reported without modifying the PDF");}
             UiText.English=false;
+        }
+        static void WordFormulaCoverage(){
+            System.Xml.Linq.XNamespace math="http://schemas.openxmlformats.org/officeDocument/2006/math";string xml;
+            Assert(WordFormula.TryOmml(@"\frac{x_i^2}{\sqrt{y}}=\alpha",out xml)&&System.Xml.Linq.XElement.Parse(xml).Descendants(math+"f").Any()&&System.Xml.Linq.XElement.Parse(xml).Descendants(math+"sSubSup").Any(),"AI Word: fractions, roots and combined scripts become native Office equations");
+            Assert(WordFormula.TryOmml(@"\begin{aligned}x&=1\\y&=2\end{aligned}",out xml)&&System.Xml.Linq.XElement.Parse(xml).Descendants(math+"mr").Count()==2,"AI Word: multiline formulas retain rows and separate alignment cells");
+            Assert(WordFormula.TryOmml(@"\mathcal{L}V_{i,1}=\dot{x}+\overline{y}",out xml)&&xml.Contains("V")&&xml.Contains("script")&&xml.Contains("acc")&&xml.Contains("bar"),"AI Word: calligraphic notation, adjacent V, accents and bars remain editable");
+            Assert(!WordFormula.TryOmml(@"\unknownmacro{x}",out xml)&&!WordFormula.TryOmml(@"\frac{x}",out xml),"AI Word: unsupported or malformed formulas require an unchanged image fallback");
+            WordFormula.TryOmml(@"\frac{x^2}{a^2}-\frac{y^2}{b^2}=1",out xml);float fitted;string sized=WordFormula.FitMath(xml,480,180,out fitted);Assert(fitted>30&&fitted<96&&sized.Contains("szCs"),"AI Word: equation font size follows the measured region instead of a tiny default font");
+            Func<string,float,float,OcrLine> fragment=delegate(string value,float x,float y){return new OcrLine{Text=value,Confidence=.98f,Corners=new[]{new PointF(x,y),new PointF(x+.08f,y),new PointF(x+.08f,y+.05f),new PointF(x,y+.05f)}};};
+            var pieces=new List<OcrLine>{fragment("x²",.1f,.1f),fragment("a²",.1f,.18f),fragment("=1",.22f,.14f)};
+            Assert(FormulaRegions.Groups(pieces,new Size(1000,1000)).Any(g=>g.Count==3),"AI Word: numerator, denominator and adjacent operators form one geometric expression");
+            pieces.Add(fragment("must",.19f,.14f));Assert(!FormulaRegions.Groups(pieces,new Size(1000,1000)).Any(g=>g.Count>=3),"AI Word: prose between math fragments prevents a cross-word merge");
+            var sentence=new WordPage();sentence.Text.Add(new WordText{Text="The state ",Y=100,Size=12});sentence.Text.Add(new WordText{Math="<m:oMath><m:sSup><m:e><m:r><m:t>α</m:t></m:r></m:e><m:sup><m:r><m:t>2</m:t></m:r></m:sup></m:sSup></m:oMath>",Y=100,Size=12});WordFormula.NativeAsTex(sentence);Assert(sentence.Text[1].Math==null&&!sentence.Text[1].Block&&sentence.Text[1].Text.Contains(@"\alpha")&&sentence.Text[1].Text.Contains("^{2}"),"AI Word: native inline geometry becomes literal TeX while retaining its paragraph");
+            using(var image=new Bitmap(900,300)){
+                using(var graphics=Graphics.FromImage(image)){graphics.Clear(Color.White);graphics.DrawString("x + y = z",SystemFonts.DefaultFont,Brushes.Black,40,80);}
+                var line=new OcrLine{Text="x+y=z",Kind="formula",Tex=@"x^2+y^2=z^2",Confidence=.98f,FormulaConfidence=.97f,Corners=new[]{new PointF(.04f,.2f),new PointF(.8f,.2f),new PointF(.8f,.7f),new PointF(.04f,.7f)}};
+                var original=OfficePixels(image);var picture=WordOcr.Prepare(image,new SizeF(600,200),new List<OcrLine>{line});
+                Assert(picture.Text.Count==0&&picture.Equations==0,"AI Word: the default image mode never converts scanned equations");
+                var editable=WordOcr.Prepare(image,new SizeF(600,200),new List<OcrLine>{line},true);
+                var tex=WordOcr.Prepare(image,new SizeF(600,200),new List<OcrLine>{line},true,true);Assert(tex.Text.Count==1&&tex.Text[0].Math==null&&tex.Text[0].Text.Contains("$$x^2+y^2=z^2$$")&&tex.Text[0].Block,"AI Word: TeX mode keeps standalone scanned formula code as an editable paragraph");
+                Assert(editable.Equations==1&&editable.Text[0].Math.Contains("sSup"),"AI Word: enabled scan conversion produces native editable equations");
+                Assert(OfficePixels(image).SequenceEqual(original),"AI Word: scanned equation conversion never changes its input bitmap");
+                int id=0;Assert(WordLayout.Boxes(editable,ref id).Contains("oMath"),"AI Word: positioned export includes Office math inside the original text region");
+                line.Tex=@"\unsupported{x}";var fallback=WordOcr.Prepare(image,new SizeF(600,200),new List<OcrLine>{line},true);
+                using(var stream=new MemoryStream(fallback.Background))using(var kept=new Bitmap(stream))Assert(fallback.Text.Count==0&&OfficePixels(kept).SequenceEqual(original),"AI Word: an unsupported scanned formula retains every original pixel");
+            }
         }
         static void WordLayoutCoverage(string directory,bool withUi) {
             using(var doc=PdfDocument.Open(Path.Combine(directory,"word-academic-source.pdf"),"")) {

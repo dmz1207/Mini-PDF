@@ -90,7 +90,7 @@ namespace MiniPdf {
         static void FlowPage(WordPage page,SizeF paper,OfficeExportOptions options,ZipArchive zip,StringBuilder rels,StringBuilder body,ref int id) {
             var profile=page.Profile??new AcademicLayout{Split=page.Size.Width/2,BodySize=10,LineStep=12,Indent=5.5f};
             float middle=profile.Split;bool columns=profile.Columns;
-            var items=page.Text.Select(t=>new FlowItem{Text=t,X=t.X,Y=t.Y,Width=t.Width,Height=t.Height,Size=t.Size}).ToList();
+            var items=page.Text.Select(t=>new FlowItem{Text=t,X=t.X,Y=t.Y,Width=t.Width,Height=t.Height,Size=t.Size,Block=t.Block}).ToList();
             var artwork=page.Text.Count==0&&page.Pictures.Count==0?new List<WordPicture>{new WordPicture{Width=page.Size.Width,Height=page.Size.Height,Data=page.Background,Block=true}}:Artwork(page,columns,middle);
             if(options.Images)foreach(var picture in page.Pictures.Concat(artwork)) {
                 float baseline=picture.Baseline;

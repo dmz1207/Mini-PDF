@@ -301,3 +301,15 @@ formulas and uncertain areas remain images. The scan layout is approximate; revi
 Models run locally in a separate service and are not bundled into the reader EXE.
 
 AI: choose Fast or High quality in translation controls. Image translate offers Original/translated, Extract text, Copy and Save. Normal AI results are retained in MiniAI Results; instant selection/screenshot translations are not auto-saved. Last-client exit removes verified AI runtime files; the next launch extracts again.
+
+CAPTURE TEXT OR EQUATIONS (optional MiniAI)
+With MiniAI-Portable.exe beside the reader, Capture OCR appears in the toolbar,
+Tools menu and context menu. Without a detected package these new actions are hidden.
+Alt+Shift+O selects a region. Auto detect keeps text as text and formulas as LaTeX.
+Mixed regions retain both and list equations separately. Override with Text only
+or Equation only. Edit before copying; choose LaTeX or MathType / MathML for equations.
+Only Save writes a result file. Capturing does not edit the PDF.
+
+Word equations: with MiniAI installed, choose editable equations or keep images (default). Both layouts and optional scanned-page OCR are supported. Without the add-on, the choice is hidden. Unsupported/low-confidence math retains its original image; review symbols and layout.
+
+Choose output TeX text for flowing Word paragraphs, with $...$ inline code and $$...$$ display code. Tight inline captures work; complex mixed OCR lines and symbols require review.

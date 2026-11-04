@@ -1,0 +1,21 @@
+{
+  "version": "0.12.5",
+  "date": "2026-11-04",
+  "bytes": 3510272,
+  "sha256": "1a6bc9eaa8311b7f27aa699dcc0495880e505e118403cedc3b15f257617f7ba4",
+  "core_checks": 911,
+  "capture_word_checks": 54,
+  "independent_office_checks": 352,
+  "models_changed": false,
+  "capture": "auto text/TeX with exact-image reuse; tight inline crops; original retained",
+  "word_modes": [
+    "keep formula images (default)",
+    "native editable Office math",
+    "literal TeX in flowing paragraphs"
+  ],
+  "limits": [
+    "OCR symbol confidence is not correctness.",
+    "Native inline geometry is tested; arbitrary mixed screenshot sentences are not guaranteed to split perfectly.",
+    "MathType was unavailable. Word opened and exported all four controls. No new physical GPU benchmark."
+  ]
+}

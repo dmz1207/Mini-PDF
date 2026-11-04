@@ -110,6 +110,7 @@ def fixtures(root):
  research_fixtures(root)
  reflow_fixtures(root)
  academic_fixtures(root)
+ b=io.BytesIO();c=canvas.Canvas(b,pagesize=(600,800));c.setFont('Times-Roman',12);c.drawString(40,700,'The state ');c.setFont('Symbol',12);c.drawString(95,700,'α');c.setFont('Times-Italic',8);c.drawString(104,696,'i');c.setFont('Times-Roman',8);c.drawString(104,706,'2');c.setFont('Times-Roman',12);c.drawString(117,700,' remains bounded.');c.showPage();c.save();(root/'word-inline-source.pdf').write_bytes(b.getvalue())
  b=io.BytesIO();c=canvas.Canvas(b,pagesize=(600,800));c.setFont('Times-Roman',20);c.drawString(45,750,'Mini PDF export sample')
  c.setFont('STSong-Light',14);c.drawString(45,714,'可编辑文字与表格')
  c.setFont('Helvetica',12)

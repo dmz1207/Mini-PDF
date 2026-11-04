@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -19,7 +19,33 @@ namespace MiniPdf {
         static readonly Dictionary<string,FileStream> clientLeases=new Dictionary<string,FileStream>(StringComparer.OrdinalIgnoreCase);
         static string cachedSelection,cachedRoot,cachedExecutable;
         static DateTime cachedWrite;
-        static string Selection {get{string settings=Path.Combine(Home,"MiniPDF.MiniAI.txt");return File.Exists(settings)?File.ReadAllText(settings).Trim():"";}}
+        sealed class PackageProbe {
+            internal string Home,Root,Portable;
+            internal bool Available;
+            internal long Stamp;
+        }
+        static readonly object probeGate=new object();
+        static PackageProbe probe;
+        // A short snapshot keeps mouse/menu events off the filesystem. It is
+        // keyed by reader location and expires so adding/removing a pack is seen.
+        static PackageProbe Probe() {
+            string home=Home;long now=Stopwatch.GetTimestamp();
+            lock(probeGate){
+                if(probe!=null&&probe.Home==home&&now-probe.Stamp<Stopwatch.Frequency/2)return probe;
+                string settings=Path.Combine(home,"MiniPDF.MiniAI.txt"),selection="";
+                try{if(File.Exists(settings))selection=File.ReadAllText(settings).Trim();}catch(IOException){}catch(UnauthorizedAccessException){}
+                string root,executable;
+                if(!ResolveSelection(selection,out root,out executable)){
+                    root=Path.Combine(home,"MiniAI");string parent=Path.GetDirectoryName(home);
+                    if(!Directory.Exists(root)&&!File.Exists(Path.Combine(home,"MiniAI-Portable.exe"))&&!String.IsNullOrEmpty(parent)){
+                        string beside=Path.Combine(parent,"MiniAI");if(Directory.Exists(beside)||File.Exists(Path.Combine(parent,"MiniAI-Portable.exe")))root=beside;
+                    }
+                    executable=Path.Combine(Path.GetDirectoryName(root),"MiniAI-Portable.exe");
+                }
+                probe=new PackageProbe{Home=home,Root=root,Portable=executable??"",Available=File.Exists(executable??"")||Installed(root),Stamp=now};return probe;
+            }
+        }
+        internal static void InvalidatePackage(){lock(probeGate){probe=null;}}
         static bool HasPortablePayload(string path) {
             try{using(var stream=File.OpenRead(path)){if(stream.ReadByte()!='M'||stream.ReadByte()!='Z')return false;using(var zip=new ZipArchive(stream,ZipArchiveMode.Read))return zip.GetEntry("MiniAI/package-checksums.json")!=null&&zip.GetEntry("MiniAI/MiniAI.exe")!=null&&(zip.GetEntry("MiniAI/models/translation/hy-mt2.gguf")!=null||zip.GetEntry("MiniAI/models/translation/eng-zho/model.bin")!=null&&zip.GetEntry("MiniAI/models/translation/zho-eng/model.bin")!=null)&&zip.GetEntry("MiniAI/models/ocr/rec.onnx")!=null;}}
             catch(IOException){return false;}catch(InvalidDataException){return false;}catch(UnauthorizedAccessException){return false;}
@@ -35,16 +61,16 @@ namespace MiniPdf {
                 cachedSelection=path;cachedWrite=write;cachedRoot=root;cachedExecutable=executable;return true;}
         }
         static bool Installed(string root){return File.Exists(Path.Combine(root,"MiniAI.exe"))&&(File.Exists(Path.Combine(root,"models/translation/hy-mt2.gguf"))||File.Exists(Path.Combine(root,"models/translation/eng-zho/model.bin"))&&File.Exists(Path.Combine(root,"models/translation/zho-eng/model.bin")))&&File.Exists(Path.Combine(root,"models/ocr/rec.onnx"));}
-        internal static void SelectPackage(string path){string root,executable;PdfDocument.Check(ResolveSelection(path,out root,out executable)&&(executable!=null||Installed(root)),UiText.Get("请选择完整的 MiniAI-Portable.exe，或已解包目录中的 MiniAI.exe。"));File.WriteAllText(Path.Combine(Home,"MiniPDF.MiniAI.txt"),Path.GetFullPath(path),new UTF8Encoding(false));}
+        internal static void SelectPackage(string path){string root,executable;PdfDocument.Check(ResolveSelection(path,out root,out executable)&&(executable!=null||Installed(root)),UiText.Get("请选择完整的 MiniAI-Portable.exe，或已解包目录中的 MiniAI.exe。"));File.WriteAllText(Path.Combine(Home,"MiniPDF.MiniAI.txt"),Path.GetFullPath(path),new UTF8Encoding(false));InvalidatePackage();}
         internal static string Home {get{string launcher=Environment.GetEnvironmentVariable("MINIPDF_LAUNCHER");return String.IsNullOrEmpty(launcher)?Path.GetDirectoryName(Application.ExecutablePath):Path.GetDirectoryName(launcher);}}
         internal static string PackRoot {
-            get{string root,executable;if(ResolveSelection(Selection,out root,out executable))return root;string beside=Path.Combine(Home,"MiniAI");if(Directory.Exists(beside)||File.Exists(Path.Combine(Home,"MiniAI-Portable.exe")))return beside;string parentDirectory=Path.GetDirectoryName(Home);if(String.IsNullOrEmpty(parentDirectory))return beside;string parent=Path.Combine(parentDirectory,"MiniAI");return Directory.Exists(parent)||File.Exists(Path.Combine(parentDirectory,"MiniAI-Portable.exe"))?parent:beside;}
+            get{return Probe().Root;}
         }
         internal static JavaScriptSerializer Serializer(){return new JavaScriptSerializer{MaxJsonLength=32*1024*1024,RecursionLimit=32};}
         static Dictionary<string,object> Connection(string root){var data=Serializer().Deserialize<Dictionary<string,object>>(File.ReadAllText(Path.Combine(root,"state","connection.json"),Encoding.UTF8));Uri url;PdfDocument.Check(data.ContainsKey("url")&&Uri.TryCreate(Convert.ToString(data["url"]),UriKind.Absolute,out url)&&url.Scheme=="http"&&url.Host=="127.0.0.1"&&url.AbsolutePath=="/"&&String.IsNullOrEmpty(url.UserInfo),"Invalid MiniAI local address.");return data;}
-        static string PortablePath(string root){string selectedRoot,selectedExecutable;if(ResolveSelection(Selection,out selectedRoot,out selectedExecutable)&&String.Equals(Path.GetFullPath(root),selectedRoot,StringComparison.OrdinalIgnoreCase))return selectedExecutable??"";string parent=Path.GetDirectoryName(Path.GetFullPath(root));return String.Equals(Path.GetFileName(root.TrimEnd('\\','/')),"MiniAI",StringComparison.OrdinalIgnoreCase)&&!String.IsNullOrEmpty(parent)?Path.Combine(parent,"MiniAI-Portable.exe"):"";}
+        static string PortablePath(string root){var found=Probe();if(String.Equals(Path.GetFullPath(root),found.Root,StringComparison.OrdinalIgnoreCase))return found.Portable;string parent=Path.GetDirectoryName(Path.GetFullPath(root));return String.Equals(Path.GetFileName(root.TrimEnd('\\','/')),"MiniAI",StringComparison.OrdinalIgnoreCase)&&!String.IsNullOrEmpty(parent)?Path.Combine(parent,"MiniAI-Portable.exe"):"";}
         internal static bool AvailableAt(string root){return File.Exists(PortablePath(root))||Installed(root);}
-        internal static bool Available {get{return AvailableAt(PackRoot);}}
+        internal static bool Available {get{return Probe().Available;}}
         internal static void AttachReader(){lock(packageGate){readers++;}}
         internal static void ReleaseReader() {
             var roots=new List<string>();lock(packageGate){if(readers>0)readers--;if(readers>0)return;foreach(var item in clientLeases){item.Value.Dispose();roots.Add(item.Key);}clientLeases.Clear();warmRoot=null;}
@@ -69,10 +95,15 @@ namespace MiniPdf {
         internal static readonly string[] LanguageCodes=MiniAI.Desktop.LanguageCatalog.Codes;
         internal static string[] LanguageLabels {get{return MiniAI.Desktop.LanguageCatalog.Labels(UiText.English);}}
         internal static string AutoTarget(string text){int chinese=0,letters=0;foreach(char c in text??""){if(c>=0x4e00&&c<=0x9fff)chinese++;else if(Char.IsLetter(c))letters++;}return chinese>0&&chinese>letters/3?"en":"zh";}
-        internal static List<OcrLine> Recognize(string root,byte[] image,int page=0,Func<bool> canceled=null,string mode="quality") {
-            var response=Request(root,"/v1/ocr",new{image_base64=Convert.ToBase64String(image),mode=mode},300,canceled);var items=response["lines"] as System.Collections.IList;
-            PdfDocument.Check(items!=null&&items.Count<=5000,"Invalid MiniAI OCR response.");var result=new List<OcrLine>();
-            foreach(Dictionary<string,object> item in items){var line=new OcrLine{Page=page,Text=Convert.ToString(item["text"]),Confidence=Convert.ToSingle(item["confidence"]),Corners=new PointF[4]};var corners=(System.Collections.IList)item["box"];PdfDocument.Check(corners.Count==4&&line.Text.Length<=10000,"Invalid OCR result.");for(int i=0;i<4;i++){var pair=(System.Collections.IList)corners[i];float x=Convert.ToSingle(pair[0]),y=Convert.ToSingle(pair[1]);PdfDocument.Check(!Single.IsNaN(x)&&!Single.IsNaN(y)&&x>=-1&&x<=2&&y>=-1&&y<=2,"Invalid OCR coordinates.");line.Corners[i]=new PointF(Math.Max(0,Math.Min(1,x)),Math.Max(0,Math.Min(1,y)));}result.Add(line);}return result;
+        internal static List<OcrLine> Recognize(string root,byte[] image,int page=0,Func<bool> canceled=null,string mode="quality",bool formulas=false) {
+            var response=Request(root,"/v1/ocr",new{image_base64=Convert.ToBase64String(image),mode=mode,formula=formulas},300,canceled);
+            var result=ReadOcr(response,page);
+            if(formulas)using(var stream=new MemoryStream(image))using(var bitmap=new Bitmap(stream))return FormulaRegions.Refine(bitmap,result,root,canceled);
+            return result;
+        }
+        internal static List<OcrLine> ReadOcr(Dictionary<string,object> response,int page=0){
+            var items=response["lines"] as System.Collections.IList;PdfDocument.Check(items!=null&&items.Count<=5000,"Invalid MiniAI OCR response.");var result=new List<OcrLine>();
+            foreach(Dictionary<string,object> item in items){object tex,kind,score;var line=new OcrLine{Page=page,Text=Convert.ToString(item["text"]),Confidence=Convert.ToSingle(item["confidence"]),Tex=item.TryGetValue("tex",out tex)?Convert.ToString(tex):"",Kind=item.TryGetValue("kind",out kind)?Convert.ToString(kind):"text",FormulaConfidence=item.TryGetValue("formula_confidence",out score)?Convert.ToSingle(score):0,Corners=new PointF[4]};var corners=(System.Collections.IList)item["box"];PdfDocument.Check(corners.Count==4&&line.Text.Length<=10000&&line.Tex.Length<=20000,"Invalid OCR result.");for(int i=0;i<4;i++){var pair=(System.Collections.IList)corners[i];float x=Convert.ToSingle(pair[0]),y=Convert.ToSingle(pair[1]);PdfDocument.Check(!Single.IsNaN(x)&&!Single.IsNaN(y)&&x>=-1&&x<=2&&y>=-1&&y<=2,"Invalid OCR coordinates.");line.Corners[i]=new PointF(Math.Max(0,Math.Min(1,x)),Math.Max(0,Math.Min(1,y)));}result.Add(line);}return result;
         }
         internal static string TranslateText(string root,string text,string target,Func<bool> canceled=null) {
             var output=new StringBuilder();foreach(string part in MiniAiWorker.Parts(text)){if(canceled!=null&&canceled())throw new OperationCanceledException();var reply=Request(root,"/v1/translate",new{text=part,target=target},600,canceled);PdfDocument.Check(!Convert.ToBoolean(reply["truncated"]),UiText.Get("译文超过输出限制，请缩小选区。"));if(output.Length>0)output.AppendLine().AppendLine();output.Append(Convert.ToString(reply["text"]));}return output.ToString();
@@ -106,8 +137,8 @@ namespace MiniPdf {
     }
     internal sealed class OcrLine {
         internal int Page;
-        internal string Text;
-        internal float Confidence;
+        internal string Text,Tex="",Kind="text";
+        internal float Confidence,FormulaConfidence;
         internal PointF[] Corners;
         internal void Write(BinaryWriter writer){writer.Write(Page);writer.Write(Text);writer.Write(Confidence);foreach(var p in Corners){writer.Write(p.X);writer.Write(p.Y);}}
         internal static OcrLine Read(BinaryReader reader){var line=new OcrLine{Page=reader.ReadInt32(),Text=reader.ReadString(),Confidence=reader.ReadSingle(),Corners=new PointF[4]};PdfDocument.Check(line.Text.Length<=10000,"Invalid OCR text length.");for(int i=0;i<4;i++)line.Corners[i]=new PointF(reader.ReadSingle(),reader.ReadSingle());return line;}

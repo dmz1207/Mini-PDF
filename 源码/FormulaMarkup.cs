@@ -1,0 +1,60 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Xml.Linq;
+using System.Windows.Forms;
+
+namespace MiniAI.Desktop {
+    // A bounded presentation-MathML converter. Unsupported TeX remains editable
+    // and copyable as TeX; it is never silently exported as a different equation.
+    internal static class FormulaMarkup {
+        static readonly XNamespace Math="http://www.w3.org/1998/Math/MathML";
+        internal static string Clean(string value){value=(value??"").Trim();if(value.StartsWith("$$")&&value.EndsWith("$$")&&value.Length>=4)return value.Substring(2,value.Length-4).Trim();if(value.StartsWith("$")&&value.EndsWith("$")&&value.Length>=2)return value.Substring(1,value.Length-2).Trim();if((value.StartsWith(@"\[")&&value.EndsWith(@"\]"))||(value.StartsWith(@"\(")&&value.EndsWith(@"\)")))return value.Substring(2,value.Length-4).Trim();return value;}
+        internal static string Convert(string source){string tex=Clean(source);if(tex.Length==0||tex.Length>20000)throw new FormatException("Select one formula of at most 20000 characters.");var parser=new Parser(tex);var body=parser.Sequence(null);parser.Space();if(!parser.End)throw new FormatException("Unexpected formula delimiter.");return new XElement(Math+"math",new XAttribute("display","block"),new XElement(Math+"semantics",body,new XElement(Math+"annotation",new XAttribute("encoding","application/x-tex"),tex))).ToString(SaveOptions.DisableFormatting);}
+        internal static void CopyMathML(string source){string xml=Convert(source);var data=new DataObject();data.SetData(DataFormats.UnicodeText,xml);data.SetData(DataFormats.Text,xml);byte[] bytes=Encoding.UTF8.GetBytes(xml+"\0");data.SetData("MathML",false,new MemoryStream(bytes));data.SetData("MathML Presentation",false,new MemoryStream(bytes));data.SetData("application/mathml+xml",false,new MemoryStream(bytes));Clipboard.SetDataObject(data,true);}
+        sealed class Parser {
+            readonly string text;int pos,nodes,depth;
+            internal Parser(string value){text=value;}
+            internal bool End{get{return pos>=text.Length;}}
+            internal void Space(){while(!End&&Char.IsWhiteSpace(text[pos]))pos++;}
+            bool At(string value){return pos+value.Length<=text.Length&&String.CompareOrdinal(text,pos,value,0,value.Length)==0;}
+            XElement N(string name,params object[] values){if(++nodes>4096)throw new FormatException("Formula is too complex.");return new XElement(Math+name,values);}
+            XElement Row(IEnumerable<XElement> items){return N("mrow",items);}
+            string Word(){int begin=pos;while(!End&&Char.IsLetter(text[pos]))pos++;if(begin==pos&&!End)pos++;return text.Substring(begin,pos-begin);}
+            string Raw(){Space();if(End||text[pos]!='{')throw new FormatException("Missing formula argument.");int begin=++pos,nesting=1;while(!End){char c=text[pos++];if(c=='\\'&&!End){pos++;continue;}if(c=='{')nesting++;if(c=='}'&&--nesting==0)return text.Substring(begin,pos-begin-1);}throw new FormatException("Unclosed formula argument.");}
+            XElement Arg(){Space();if(End)throw new FormatException("Missing formula argument.");if(text[pos]=='{'){pos++;var value=Sequence("}");if(End||text[pos++]!='}')throw new FormatException("Unclosed formula group.");return value;}return Atom();}
+            internal XElement Sequence(string stop){if(++depth>64)throw new FormatException("Formula nesting exceeds the limit.");try{var items=new List<XElement>();while(true){Space();if(End||stop!=null&&(At(stop)||stop=="table"&&(At("&")||At(@"\\")||At(@"\end"))||stop=="style"&&(At("}")||At("&")||At(@"\\")||At(@"\end"))))break;if(text[pos]=='^'||text[pos]=='_'){char script=text[pos++];if(items.Count==0)throw new FormatException("Script has no base.");var previous=items[items.Count-1];items.RemoveAt(items.Count-1);var value=Arg();string kind=previous.Name.LocalName;if(kind=="msub"&&script=='^')items.Add(N("msubsup",previous.Elements().Select(x=>new XElement(x)),value));else if(kind=="msup"&&script=='_'){var parts=previous.Elements().ToArray();items.Add(N("msubsup",new XElement(parts[0]),value,new XElement(parts[1])));}else items.Add(N(script=='^'?"msup":"msub",previous,value));continue;}if(At(@"\over")&&(pos+5==text.Length||!Char.IsLetter(text[pos+5]))){pos+=5;return N("mfrac",Row(items),Sequence(stop));}items.Add(Atom());}return Row(items);}finally{depth--;}}
+            XElement Atom(){Space();if(End)throw new FormatException("Incomplete formula.");char c=text[pos++];if(c=='{'){var grouped=Sequence("}");if(End||text[pos++]!='}')throw new FormatException("Unclosed formula group.");return grouped;}if(c=='}'||c=='&'||c=='$')throw new FormatException("Unexpected formula delimiter.");if(c!='\\'){if(Char.IsDigit(c)){int begin=pos-1;while(!End&&(Char.IsDigit(text[pos])||text[pos]=='.'))pos++;return N("mn",text.Substring(begin,pos-begin));}return N(Char.IsLetter(c)?"mi":"mo",c.ToString());}
+                string command=Word(),symbol;if(Symbols.TryGetValue(command,out symbol))return N(Char.IsLetter(symbol,0)?"mi":"mo",symbol);
+                if(command=="frac"||command=="dfrac"||command=="tfrac")return N("mfrac",Arg(),Arg());
+                if(command=="binom"||command=="dbinom"||command=="tbinom")return Fence(N("mfrac",new XAttribute("linethickness","0"),Arg(),Arg()),"(",")");
+                if(command=="sqrt"){Space();XElement degree=null;if(!End&&text[pos]=='['){pos++;degree=Sequence("]");if(End||text[pos++]!=']')throw new FormatException("Unclosed root index.");}var value=Arg();return degree==null?N("msqrt",value):N("mroot",value,degree);}
+                if(command=="text"||command=="mbox"||command=="operatorname"){if(At("*"))pos++;return N(command=="operatorname"?"mi":"mtext",new XAttribute("mathvariant","normal"),Raw().Replace(@"\ "," "));}
+                if(command=="cal"||command=="bf"||command=="rm"||command=="it")return N("mstyle",new XAttribute("mathvariant",command=="cal"?"script":command=="bf"?"bold":command=="it"?"italic":"normal"),Sequence("style"));
+                if(command=="mathscr")command="mathcal";
+                if(command=="scriptstyle"||command=="scriptscriptstyle")return N("mstyle",new XAttribute("displaystyle","false"),new XAttribute("scriptlevel",command=="scriptstyle"?"1":"2"),Sequence("style"));
+                if(command=="mathrm"||command=="mathit"||command=="mathbf"||command=="mathbb"||command=="mathcal"||command=="mathsf"||command=="mathtt"||command=="boldsymbol")return N("mstyle",new XAttribute("mathvariant",command=="mathbf"||command=="boldsymbol"?"bold":command=="mathit"?"italic":command=="mathbb"?"double-struck":command=="mathcal"?"script":command=="mathsf"?"sans-serif":command=="mathtt"?"monospace":"normal"),Arg());
+                if(command=="left"){string left=Delimiter();var content=Sequence(@"\right");if(!At(@"\right"))throw new FormatException("Missing right delimiter.");pos+=6;return Fence(content,left,Delimiter());}
+                if(command=="begin")return Environment(Raw());
+                if(command=="hat"||command=="widehat"||command=="bar"||command=="overline"||command=="vec"||command=="dot"||command=="ddot"||command=="tilde"||command=="widetilde")return N("mover",new XAttribute("accent","true"),Arg(),N("mo",command=="dot"?"˙":command=="ddot"?"¨":command=="vec"?"→":command=="tilde"||command=="widetilde"?"~":command=="bar"||command=="overline"?"¯":"^"));
+                if(command=="underline")return N("munder",new XAttribute("accentunder","true"),Arg(),N("mo","_"));
+                if(command=="overset"||command=="stackrel"||command=="underset"){var annotation=Arg();return N(command=="underset"?"munder":"mover",Arg(),annotation);}
+                if(command=="quad"||command=="qquad"||command==","||command==":"||command==";"||command==" "||command=="!")return N("mspace",new XAttribute("width",command=="qquad"?"2em":command=="quad"?"1em":command=="!"?"-0.167em":"0.167em"));
+                if(command=="displaystyle"||command=="textstyle"||command=="limits"||command=="nolimits"||command=="big"||command=="Big"||command=="bigg"||command=="Bigg")return N("mrow");
+                if(command=="label"){Raw();return N("mrow");}if(command=="tag")return Fence(N("mtext",Raw()),"(",")");
+                if(command=="{"||command=="}"||command=="_"||command=="%"||command=="#"||command=="$"||command=="&"||command=="|")return N("mo",command);
+                if(Functions.Contains(command))return N("mi",new XAttribute("mathvariant","normal"),command);
+                throw new NotSupportedException("Unsupported TeX command: \\"+command);
+            }
+            string Delimiter(){Space();if(End)throw new FormatException("Missing formula delimiter.");char c=text[pos++];if(c=='.')return "";if(c!='\\')return c.ToString();string name=Word(),value;if(Symbols.TryGetValue(name,out value))return value;if(name=="{"||name=="}"||name=="|")return name;if(name=="lvert"||name=="rvert"||name=="vert")return "|";if(name=="lVert"||name=="rVert"||name=="Vert")return "‖";throw new NotSupportedException("Unsupported formula delimiter: \\"+name);}
+            XElement Fence(XElement body,string left,string right){return N("mrow",N("mo",new XAttribute("fence","true"),new XAttribute("stretchy","true"),left),body,N("mo",new XAttribute("fence","true"),new XAttribute("stretchy","true"),right));}
+            XElement Environment(string name){if(!Environments.Contains(name))throw new NotSupportedException("Unsupported TeX environment: "+name);if(name=="array")Raw();var rows=new List<XElement>();var cells=new List<XElement>();while(true){cells.Add(N("mtd",Sequence("table")));if(At("&")){pos++;continue;}rows.Add(N("mtr",cells));cells=new List<XElement>();if(At(@"\\")){pos+=2;Space();if(At(@"\end"))break;continue;}break;}if(!At(@"\end"))throw new FormatException("Unclosed formula environment.");pos+=4;if(Raw()!=name)throw new FormatException("Mismatched formula environment.");var table=N("mtable",rows);if(name=="pmatrix")return Fence(table,"(",")");if(name=="bmatrix")return Fence(table,"[","]");if(name=="Bmatrix")return Fence(table,"{","}");if(name=="vmatrix")return Fence(table,"|","|");if(name=="Vmatrix")return Fence(table,"‖","‖");if(name=="cases")return Fence(table,"{","");return table;}
+        }
+        static readonly HashSet<string> Functions=new HashSet<string>(("sin cos tan cot sec csc sinh cosh tanh arcsin arccos arctan log ln exp lim max min sup inf det dim ker arg gcd deg Pr mod bmod pmod").Split(' '));
+        static readonly HashSet<string> Environments=new HashSet<string>(("matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array aligned align align* gathered gather gather* cases split equation equation* displaymath").Split(' '));
+        static readonly Dictionary<string,string> Symbols=MakeSymbols();
+        static Dictionary<string,string> MakeSymbols(){var result=new Dictionary<string,string>();foreach(string item in ("alpha=α beta=β gamma=γ delta=δ epsilon=ϵ varepsilon=ε zeta=ζ eta=η theta=θ vartheta=ϑ iota=ι kappa=κ lambda=λ mu=μ nu=ν xi=ξ pi=π varpi=ϖ rho=ρ varrho=ϱ sigma=σ varsigma=ς tau=τ upsilon=υ phi=ϕ varphi=φ chi=χ psi=ψ omega=ω Gamma=Γ Delta=Δ Theta=Θ Lambda=Λ Xi=Ξ Pi=Π Sigma=Σ Upsilon=Υ Phi=Φ Psi=Ψ Omega=Ω sum=∑ prod=∏ int=∫ iint=∬ iiint=∭ oint=∮ partial=∂ nabla=∇ infty=∞ pm=± mp=∓ times=× cdot=⋅ div=÷ ast=∗ le=≤ leq=≤ ge=≥ geq=≥ ne=≠ neq=≠ approx=≈ equiv=≡ sim=∼ simeq=≃ propto=∝ in=∈ notin=∉ ni=∋ subset=⊂ supset=⊃ subseteq=⊆ supseteq=⊇ cup=∪ cap=∩ emptyset=∅ varnothing=∅ forall=∀ exists=∃ neg=¬ land=∧ lor=∨ wedge=∧ vee=∨ to=→ rightarrow=→ leftarrow=← leftrightarrow=↔ Rightarrow=⇒ Leftarrow=⇐ Leftrightarrow=⇔ mapsto=↦ uparrow=↑ downarrow=↓ ldots=… cdots=⋯ vdots=⋮ ddots=⋱ ldotp=. angle=∠ perp=⊥ parallel=∥ lceil=⌈ rceil=⌉ lfloor=⌊ rfloor=⌋ langle=⟨ rangle=⟩ degree=° circ=∘ prime=′ ell=ℓ hbar=ℏ Re=ℜ Im=ℑ aleph=ℵ top=⊤ bot=⊥ otimes=⊗ oplus=⊕ bigcup=⋃ bigcap=⋂ because=∵ therefore=∴ ").Split(new[]{' '},StringSplitOptions.RemoveEmptyEntries)){int split=item.IndexOf('=');result.Add(item.Substring(0,split),item.Substring(split+1));}return result;}
+    }
+}

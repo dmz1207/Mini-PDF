@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace MiniPdf {
     internal sealed class OfficeExportOptions {
-        internal bool Excel,Images=true,DetectColumns=true,Layout,Equations,Continuous,Ocr;
+        internal bool Excel,Images=true,DetectColumns=true,Layout,Equations,Continuous,Ocr,AiEquations,TexEquations;
         internal OfficeMathSettings MathSettings=new OfficeMathSettings();
         internal int[] Pages;
         internal string TempPath;
@@ -97,6 +97,7 @@ namespace MiniPdf {
         }
         static FileStream CreateTemp(string path,out bool owned) {owned=false;var file=new FileStream(path,FileMode.CreateNew,FileAccess.ReadWrite,FileShare.None);owned=true;return file;}
         internal static int Save(PdfDocument document,OfficeExportOptions options,string path,Action<int,int> progress) {
+            if(options.TexEquations&&!options.Excel){PdfDocument.Check(options.AiEquations&&!String.IsNullOrEmpty(options.MiniAiRoot),UiText.Get("安装 AI 外挂包以启用"));options.Continuous=true;options.Layout=false;options.Equations=true;}
             PdfDocument.Check(options.Pages!=null&&options.Pages.Length>0&&options.Pages.Length<=2000,UiText.Get("请选择 1 至 2000 页进行转换。"));
             PdfDocument.Check(options.Pages.All(p=>p>=0&&p<document.Count),UiText.Get("页面范围无效。"));
             string full=Path.GetFullPath(path),temp=options.TempPath??Path.Combine(Path.GetDirectoryName(full),".minipdf-export-"+Guid.NewGuid().ToString("N")+".tmp");int skipped=0;bool ownsTemp=false;

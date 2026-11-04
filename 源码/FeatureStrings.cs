@@ -1,10 +1,39 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace MiniPdf {
     internal static partial class UiText {
         static void AddFeatureTranslations(Dictionary<string,string> strings){
             // One entry per line keeps the optional feature vocabulary separate.
-            const string pairs=@"先解压 MiniAI 功能包，然后选择其中包含 MiniAI.exe 的文件夹。只需设置一次。|Extract the MiniAI package, then select the folder containing MiniAI.exe. You only need to do this once.
+            const string pairs=@"截取识别 · 文字 / 公式|Capture text or equations
+截取识别（文字 / 公式）|Capture text or equations
+截取识别|Capture OCR
+保存…|Save…
+公式：保留图片（默认）|Equations: keep images (default)
+公式：自动转为可编辑公式|Equations: convert to editable math
+公式：输出 TeX 文本|Equations: output TeX text
+TeX 文本使用连续正文；行内公式保留在句中，独立公式另起一段。|TeX text uses continuous paragraphs: inline math stays in its sentence; display math gets a separate paragraph.
+正在转换公式…|Converting equations…
+MiniAI 自动转换公式；不支持或低置信度的公式保留原图，请核对符号。|MiniAI converts equations; unsupported or low-confidence regions retain the original image. Check symbols.
+自动识别文字或公式（Alt+Shift+O）|Capture text or equations (Alt+Shift+O)
+自动识别|Auto detect
+部分公式结构不确定，可缩小选区或切换“仅公式”重试；原图已保留。|Some equation structures are uncertain. Select a tighter region or use Equation only. The original image is retained.
+仅文字|Text only
+仅公式|Equation only
+全部识别结果|All recognized content
+识别文字|Recognized text
+公式|Equation
+行内 LaTeX|Inline LaTeX
+独立 LaTeX|Display LaTeX
+正在识别文字和公式…|Recognizing text and equations…
+当前功能包未提供公式识别，已保留普通 OCR 文字。|This package does not provide equation OCR. Ordinary recognized text is retained.
+公式已转为代码，请结合原图核对符号和上下标。|Equation code is editable. Check symbols and scripts against the original.
+正文保留文字，公式使用 LaTeX；可单独选择每个公式。|Text remains text and equations use LaTeX. Select an equation to copy it separately.
+识别完成，可修改和复制文字。|Recognized text is ready to edit and copy.
+未识别出内容，可切换识别方式或重新框选。|No content recognized. Change the mode or select another region.
+取消识别|Cancel OCR
+已取消识别，可切换识别方式重试。|Recognition canceled. Change the mode to try again.
+已复制|Copied
+先解压 MiniAI 功能包，然后选择其中包含 MiniAI.exe 的文件夹。只需设置一次。|Extract the MiniAI package, then select the folder containing MiniAI.exe. You only need to do this once.
 翻译|Translate
 打开文件…|Open file…
 当前 PDF|Current PDF

@@ -1,5 +1,20 @@
 # Mini PDF
 
+TeX 文本模式：加载 AI 包后还可选择“公式：输出 TeX 文本”。程序使用连续正文，原生文字层中能可靠分离的行内公式以 `$...$` 代码放在同一句中，独立公式以 `$$...$$` 单独成段。普通正文仍是可编辑文字。截图/OCR 的公式位置和符号仍受识别质量限制，请核对；不是将任意混合截图的每个行内符号都准确分解的保证。
+
+TeX text mode adds literal LaTeX to ordinary flowing Word paragraphs: separable native inline equations stay between their surrounding words; display equations get their own paragraph. This differs from native Office math. Tight captures of inline equations are supported; arbitrary mixed screenshot sentences and uncertain glyphs still require review.
+
+## 0.12.5 — 截取识别与 Word 公式 / Capture OCR and Word equations
+
+AI 包在阅读器旁边或已加载时，显示“截取识别”（Alt+Shift+O）。框选正文得到可编辑文字，框选公式得到 LaTeX；混合区域按顺序保留正文和公式，可分别修改、复制为 LaTeX 或 MathML。未加载 AI 包时隐藏入口。复制到 MathType 后请核对符号。
+
+转 Word 增加“公式：保留图片（默认）”和“公式：自动转为可编辑公式”。有 AI 包时可选择，支持保留版式、连续正文及启用 OCR 的扫描页；不支持的语法和低置信度公式保留原图。无 AI 包默认保留图片。转换的是导出副本，不修改原 PDF。
+
+With MiniAI installed, **Capture OCR** (Alt+Shift+O) returns editable prose and equation LaTeX, with separate formulas and MathML copy. Word offers image preservation or automatic conversion to native editable Office math in both export layouts. Unsupported or uncertain equations retain their image. Without the add-on, capture is hidden and Word defaults to equation images.
+
+Package availability uses a short location-aware snapshot; repeated menu and mouse events do not reopen the package. MiniAI 1.0.2 adds ordinary-OCR prewarming, lazy formula initialization and a bounded in-memory image-result cache. Detection heuristics and the existing formula model can still substitute symbols: review the result against the source.
+
+
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 **A small, native Windows PDF reader and editor.**
@@ -8,7 +23,7 @@ Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, o
 
 The **v0.12.4** release is one approximately **3.33 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
-[**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
+[**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码/.) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
 Verification: **847 reader regression assertions**, **21 photo/file/screenshot checks** and **10 final portable-reader integration checks** passed locally. [GitHub checks passed](https://github.com/dmz1207/Mini-PDF/actions/runs/41366981239), including 4,211 public PDF paths, text editing, Office conversion and forms. See [scope and limits](源码/测试记录.md). [Offline AI setup](源码/OfflineAI.md).
 
@@ -20,7 +35,7 @@ Verification: **847 reader regression assertions**, **21 photo/file/screenshot c
 
 The entries below describe earlier releases.
 
-## New in v0.12.4
+## New in v0.12.3
 
 Mini-AI 0.2.0 integration adds streaming translation in bubbles and the translation panel, physical-core inference through CTranslate2, background prewarming, and precise selected-input translation. Bubbles stay open while waiting, retain completed results for reading, and support selectable source text, copying and Ctrl pinning. Complete new-format portable EXEs and legacy packages remain loadable. Fast/High quality switching is shared with text and image translation. Image OCR supports selectable extraction, translated-image overlays, original switching, copy and save. The last AI client exit cleans verified runtime files while keeping regular results. See [OfflineAI.md](源码/OfflineAI.md) for details.
 

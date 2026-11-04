@@ -1,10 +1,24 @@
-﻿# Word export / Word 导出
+# Word equations in 0.12.5 / 公式模式
+
+TeX 文本模式：加载 AI 包后还可选择“公式：输出 TeX 文本”。程序使用连续正文，原生文字层中能可靠分离的行内公式以 `$...$` 代码放在同一句中，独立公式以 `$$...$$` 单独成段。普通正文仍是可编辑文字。截图/OCR 的公式位置和符号仍受识别质量限制，请核对；不是将任意混合截图的每个行内符号都准确分解的保证。
+
+TeX text mode adds literal LaTeX to ordinary flowing Word paragraphs: separable native inline equations stay between their surrounding words; display equations get their own paragraph. This differs from native Office math. Tight captures of inline equations are supported; arbitrary mixed screenshot sentences and uncertain glyphs still require review.
+
+有 MiniAI 包时，公式模式下拉框提供“保留图片”和“自动转为可编辑公式”；默认图片。没有包时隐藏下拉框并保留原公式图片。自动模式支持两种 Word 排版及启用 OCR 的扫描页：优先使用已有文字/几何信息，再对候选公式图片调用现有公式模型，生成原生 Office Math（OMML），不是在 Word 中粘贴 LaTeX 文本。普通图形不会整体当作公式转换。
+
+支持分式、根式、上下标、矩阵/多行、常见希腊字母、字体和重音。语法不支持或置信度不足时保留原图；置信度不是正确率。复杂公式和花体符号仍需核对。保留版式使用原区域中的可编辑公式，字体和公式布局可能与 PDF 有差别。连续正文中的公式可随段落编辑。
+
+With MiniAI present, choose equation images (default) or automatic native OMML equations. Both Word layouts and optional scanned-page OCR are supported. Native geometry is preferred before recognition; unsupported syntax and low-confidence regions retain the original raster. The base reader adds no model or Office dependency. Confidence is not correctness, and positioning is approximate.
+
+---
+
+# Word export / Word 导出
 
 ## Optional OCR for scanned pages
 
 Install the separate MiniAI package and enable **OCR scanned pages first (MiniAI)** in Word export. Pages without visible body text are recognized locally at bounded 300-DPI resolution. Confident horizontal prose on plain light paper becomes editable text; native-text pages use the existing conversion rules. The original PDF, scan image and undo history are never rewritten.
 
-Preserve layout places recognized text at measured positions and removes only those accepted text regions from its private background raster, avoiding duplicate visible text. Continuous text reconstructs reading order and ordinary paragraphs, with the remaining artwork as images. Complex formulas, skewed or low-confidence lines, colored/overlapping regions and uncertain content retain the original raster. OCR fonts and layout are approximate; review spelling, numbers, symbols and order. It does not perform mathematical OCR or guarantee publisher-perfect Word output.
+Preserve layout places recognized text at measured positions and removes only those accepted text regions from its private background raster, avoiding duplicate visible text. Continuous text reconstructs reading order and ordinary paragraphs, with the remaining artwork as images. Complex formulas, skewed or low-confidence lines, colored/overlapping regions and uncertain content retain the original raster. OCR fonts and layout are approximate; review spelling, numbers, symbols and order. Mathematical OCR is available only in the optional editable-equation mode described above; publisher-perfect Word output is not guaranteed.
 
 
 English first; 简体中文 follows. Updated for v0.11.0.
@@ -75,8 +89,11 @@ The user-supplied eight-page paper is a private local quality sample and is not 
 
 “保留版式”保留原页位置，普通文字通过文本框编辑，公式与图形保留高清外观。“连续正文”把行合并成普通 Word 段落，便于全文连续修改、重新换行，但页数、表格、脚注、图片与公式位置可能变化。两种模式不能同时保证原稿外观和完全自由的全文重排。
 
-连续正文可选离线简单公式转换：复用 PDFium 读取符号、实际字号、基线和坐标，用 C# 几何规则生成 OMML。常见 Computer Modern、Latin Modern、Nimbus 正文字体映射到 Word 标准字体；这是字体替代，不是嵌入原字体。首版支持明确的简单等式、上下标和简单分式。根号、矩阵、复杂算子、编码或结构不明确的内容保留图像；能够安全分离的公式区域用最高 300 DPI 图像保留。保留版式模式始终保留公式外观，避免小文本框裁切公式。
+连续正文可选离线简单公式转换：复用 PDFium 读取符号、实际字号、基线和坐标，用 C# 几何规则生成 OMML。常见 Computer Modern、Latin Modern、Nimbus 正文字体映射到 Word 标准字体；这是字体替代，不是嵌入原字体。首版支持明确的简单等式、上下标和简单分式。根号、矩阵、复杂算子、编码或结构不明确的内容保留图像；能够安全分离的公式区域用最高 300 DPI 图像保留。默认图片模式保留公式外观；加载 MiniAI 后可在两种排版中选择自动生成可编辑公式。
 
-参数可在本次导出窗口调整，范围与默认值见上表。放宽阈值可能增加误判，不能保证公式语义正确。重点面向科研论文：内置 IEEE、Elsevier、Springer Nature、Wiley、ACM 等出版标记与 DOI 线索，结合每页实际栏数、栏缝、正文字号、行距和缩进自动匹配。出版社名称不会强制套用栏数；单栏、非居中或交错双栏、跨栏标题与摘要使用同一套有界几何规则，未知出版商也走几何检测。能识别的独立外侧细长竖排文字先单独裁图，按测得的文字方向旋转后保留到正文之后；组合或未识别的边注可能仍需人工整理。连续正文支持可读的出版商字体替代、普通结构标签、嵌套 Form 容器及完整包围文字的矩形裁剪；部分裁剪和不明确的映射仍保留图像。先识别双栏再提取公式和图形，复杂公式及可安全分离的编号整体保留，图表标注跟随图表。连续正文里含复杂公式的行或段落可能仍保留为图像，页眉、页脚和题注可能需要整理。没有 AI 模型、联网服务或 OCR，也不额外引入 PdfPig/PdfiumViewer。已有文字层的正文重建不需要 OCR；扫描页仍是图片。
+参数可在本次导出窗口调整，范围与默认值见上表。放宽阈值可能增加误判，不能保证公式语义正确。重点面向科研论文：内置 IEEE、Elsevier、Springer Nature、Wiley、ACM 等出版标记与 DOI 线索，结合每页实际栏数、栏缝、正文字号、行距和缩进自动匹配。出版社名称不会强制套用栏数；单栏、非居中或交错双栏、跨栏标题与摘要使用同一套有界几何规则，未知出版商也走几何检测。能识别的独立外侧细长竖排文字先单独裁图，按测得的文字方向旋转后保留到正文之后；组合或未识别的边注可能仍需人工整理。连续正文支持可读的出版商字体替代、普通结构标签、嵌套 Form 容器及完整包围文字的矩形裁剪；部分裁剪和不明确的映射仍保留图像。先识别双栏再提取公式和图形，复杂公式及可安全分离的编号整体保留，图表标注跟随图表。连续正文里含复杂公式的行或段落可能仍保留为图像，页眉、页脚和题注可能需要整理。基础阅读器不包含 AI 模型，也不额外引入 PdfPig/PdfiumViewer。已有文字层的正文重建不需要 OCR；扫描页可保留图片，也可显式启用外置 MiniAI 的离线 OCR。
 
 极端页面和不支持的文字状态可能以图像保留。普通正文、原生公式、图像分别具有不同的可编辑程度。转换从私有副本读取，不修改打开的原始 PDF；确认导出后才替换用户选择的目标文件。复杂行内公式仍可能分散或移位，需要人工整理。导出后请在 Word 中核对实际内容。
+
+
+0.12.5 verification refinement: fragmented scanned fractions are grouped in pixel geometry before a complete formula crop is decoded. Prose between fragments prevents a merge; failed connected groups keep their original image instead of replacing a lone numerator. Editable Office math is sized to its region, while literal TeX uses a readable body font. This still does not establish correctness of every recognized symbol.

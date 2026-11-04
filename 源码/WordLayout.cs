@@ -13,7 +13,7 @@ namespace MiniPdf {
         internal IntPtr[] Objects;
         internal float X,Y,Top,Width,Size,Height;
         internal Color Color;
-        internal bool Bold,Italic;
+        internal bool Bold,Italic,Block,FormulaCode;
     }
     internal sealed class WordPage {
         internal SizeF Size;
@@ -58,7 +58,7 @@ namespace MiniPdf {
             return RectangleF.FromLTRB(Math.Min(a.X,z.X),Math.Min(a.Y,z.Y),Math.Max(a.X,z.X),Math.Max(a.Y,z.Y));
         }
         internal static RectangleF Bounds(IntPtr obj,WordPage page,PdfDocument document){RectangleF box;return page.ObjectBounds.TryGetValue(obj,out box)?box:Bounds(obj,page.Size,document);}
-        internal static WordPage Read(PdfDocument document,int index,bool equations,OfficeMathSettings settings=null,bool flowing=false,string publisher=null) {
+        internal static WordPage Read(PdfDocument document,int index,bool equations,OfficeMathSettings settings=null,bool flowing=false,string publisher=null,string aiRoot=null,Action<string> status=null,bool texOnly=false) {
             var result=new WordPage{Size=document.PageSize(index)};var glyphs=OfficeGeometry.Read(document,index);
             result.Profile=AcademicLayout.Read(glyphs,result.Size,publisher);result.Columns=result.Profile.Columns;
             var grouped=glyphs.GroupBy(g=>g.Object).ToDictionary(g=>g.Key,g=>g.ToList());
@@ -85,7 +85,7 @@ namespace MiniPdf {
             }
             if(positioned&&flowing)WordRegions.Figures(document,result,glyphs,objects,removed);
             if(positioned)OfficeMath.Read(document,result,glyphs,objects,removed,equations,settings??new OfficeMathSettings());
-            if(positioned&&flowing)WordRegions.Equations(document,result,glyphs,objects,removed);
+            if(positioned&&(flowing||aiRoot!=null))WordRegions.Equations(document,result,glyphs,objects,removed);
             var covers=new List<RectangleF>();
             foreach(IntPtr obj in objects.OrderByDescending(p=>p.Value).Select(p=>p.Key)) {
                 if(!positioned)break;List<OfficeGlyph> chars;
@@ -121,6 +121,7 @@ namespace MiniPdf {
                 result.Text.AddRange(lines);
                 removed.Add(obj);
             }
+            if(aiRoot!=null){WordFormula.ConvertPictures(result,aiRoot,status,texOnly);if(texOnly)WordFormula.NativeAsTex(result);}
             result.Text.Sort((a,b)=>{int y=a.Y.CompareTo(b.Y);return y!=0?y:a.X.CompareTo(b.X);});
             document.RemoveWordText(removed,result.Parents);
             // One page at a time, up to 300 dpi, with a bounded pixel budget.
@@ -133,14 +134,14 @@ namespace MiniPdf {
         internal static string Boxes(WordPage page,ref int id) {
             var xml=new StringBuilder();
             foreach(var line in page.Text) {
-                PdfDocument.Check(line.Math==null,"Editable equations require continuous text mode.");
                 int number=++id;float em=(float)Math.Round(line.Size*2)/2;
                 float top=line.Y-em*.807f;
                 xml.Append("<w:r><w:pict><v:shape id=\"text").Append(number).Append("\" type=\"#_x0000_t202\" filled=\"f\" stroked=\"f\" style=\"position:absolute;margin-left:")
                     .Append(OfficeExport.F(line.X)).Append("pt;margin-top:").Append(OfficeExport.F(top)).Append("pt;width:")
                     .Append(OfficeExport.F(Math.Max(line.Width+2,em))).Append("pt;height:").Append(OfficeExport.F(Math.Max(line.Height,em*2.5))).Append("pt;z-index:10;mso-position-horizontal-relative:page;mso-position-vertical-relative:page\"><v:textbox inset=\"0,0,0,0\" style=\"mso-fit-shape-to-text:t\"><w:txbxContent><w:p><w:pPr><w:spacing w:before=\"0\" w:after=\"0\" w:line=\"")
-                    .Append(Math.Round(em*20)).Append("\" w:lineRule=\"exact\"/><w:jc w:val=\"left\"/><w:contextualSpacing/><w:snapToGrid w:val=\"0\"/></w:pPr>");
-                {
+                    .Append(Math.Round((line.Math==null?em:Math.Max(em,line.Height))*20)).Append("\" w:lineRule=\"").Append(line.Math==null?"exact":"atLeast").Append("\"/><w:jc w:val=\"left\"/><w:contextualSpacing/><w:snapToGrid w:val=\"0\"/></w:pPr>");
+                if(line.Math!=null)xml.Append(line.Math);
+                else {
                     xml.Append("<w:r><w:rPr><w:rFonts w:ascii=\"").Append(OfficeExport.Xml(line.Font)).Append("\" w:hAnsi=\"").Append(OfficeExport.Xml(line.Font)).Append("\" w:eastAsia=\"").Append(OfficeExport.Xml(line.Font)).Append("\"/><w:sz w:val=\"").Append(Math.Round(em*2)).Append("\"/><w:szCs w:val=\"").Append(Math.Round(em*2)).Append("\"/><w:color w:val=\"").Append(line.Color.R.ToString("X2")).Append(line.Color.G.ToString("X2")).Append(line.Color.B.ToString("X2")).Append("\"/><w:fitText w:val=\"").Append(Math.Max(1,Math.Round(line.Width*20))).Append("\" w:id=\"").Append(number).Append("\"/>");
                     if(line.Bold)xml.Append("<w:b/>");if(line.Italic)xml.Append("<w:i/>");
                     xml.Append("</w:rPr><w:t xml:space=\"preserve\">").Append(OfficeExport.Xml(line.Text)).Append("</w:t></w:r>");
@@ -185,7 +186,7 @@ namespace MiniPdf {
                     paper=new SizeF((float)(paper.Width*paperScale),(float)(paper.Height*paperScale));
                     Part(zip,"_rels/.rels","<Relationships xmlns=\""+P+"\">"+Rel("doc","officeDocument","word/document.xml")+"</Relationships>");
                     for(int i=0;i<options.Pages.Length;i++)using(var copy=PdfDocument.FromBytes(source,document.Password)) {
-                        var page=options.Ocr&&WordOcr.Needed(copy,options.Pages[i])?WordOcr.Read(copy,options.Pages[i],options.MiniAiRoot,options.Stage):WordLayout.Read(copy,options.Pages[i],options.Continuous&&options.Equations,options.MathSettings,options.Continuous,publisher);int image=++id;
+                        var page=options.Ocr&&WordOcr.Needed(copy,options.Pages[i])?WordOcr.Read(copy,options.Pages[i],options.MiniAiRoot,options.Stage,options.AiEquations,options.TexEquations):WordLayout.Read(copy,options.Pages[i],options.Continuous&&options.Equations,options.MathSettings,options.Continuous,publisher,options.AiEquations?options.MiniAiRoot:null,options.Stage,options.TexEquations);int image=++id;
                         if(options.Continuous) {
                             FlowPage(page,paper,options,zip,rels,body,ref id);
                             if(i+1==options.Pages.Length)body.Append(PageSection(paper,true,true));

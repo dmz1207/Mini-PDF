@@ -1,5 +1,23 @@
 # Offline OCR and translation / 离线 OCR 与翻译
 
+**Mini PDF 0.12.5 — Capture OCR:** with MiniAI-Portable.exe beside the reader,
+the toolbar, Tools menu and context menu expose **Capture OCR**. These new actions
+are hidden when no package is detected. **Alt+Shift+O** selects a screen region:
+automatic mode keeps ordinary text as text and returns formulas as editable
+LaTeX. Mixed captures retain both and offer each formula separately. Use Text
+only / Equation only to override detection. Copy LaTeX or MathType-compatible
+MathML, edit results before copying, and save explicitly when needed. Instant
+captures do not write result files or change the PDF. The existing MiniAI 1.0.1
+package provides the models; no additional model download is required. Equation
+recognition and automatic classification still require review for unusual input.
+
+**0.12.5 截取识别：**检测到同目录或已加载的 MiniAI 功能包，才显示工具栏、
+工具菜单和右键中的“截取识别”；没有包时隐藏这些新选项。**Alt+Shift+O**
+框选后自动判断：正文保留为文字，公式转为 LaTeX，混合区域同时保留并可逐个
+选择公式。可切换“仅文字／仅公式”，修改后复制 LaTeX 或 MathType 使用的
+MathML。日期、编号和常见数值优先保留文字。即时截取不自动保存，不修改 PDF。
+使用现有 MiniAI 1.0.1 即可，不增加模型；不常见的符号或排布仍需核对。
+
 Download the complete **MiniAI-Portable.exe** from [Mini-AI Releases](https://github.com/dmz1207/Mini-AI/releases/latest). Place it beside Mini PDF.exe or select it through **Tools → Load MiniAI package**. First use prepares its folder automatically. The last AI client exit cleans verified runtime/model files. Normal results stay in the sibling MiniAI Results folder; instant translations are not saved. Next use extracts again. A small EXE from a source archive does not contain models. Extracted MiniAI.exe/folder loading remains supported.
 
 Mini PDF **0.12.4** and Mini-AI **1.0.0** support streaming selection bubbles and translation-panel output. Opening the reader with a detected pack starts the service/prewarming in the background. Select PDF text and release the mouse to translate it. Pending bubbles remain visible. Completed results have an 8–20 second reading grace; hover, press Ctrl to pin, copy selected result text, expand Source to translate a smaller part, or press Esc to dismiss. Drag the top area to move the bubble; all edges and corners resize it. **Alt+S** selects a screen region for OCR + translation. The translation panel uses selected input text when a selection exists.

@@ -14,6 +14,7 @@ namespace MiniPdf {
         }
         static RectangleF Box(OcrLine line,Size size){return RectangleF.FromLTRB(line.Corners.Min(p=>p.X)*size.Width,line.Corners.Min(p=>p.Y)*size.Height,line.Corners.Max(p=>p.X)*size.Width,line.Corners.Max(p=>p.Y)*size.Height);}
         internal static bool Prose(OcrLine line) {
+            if(line.Kind=="uncertain")return false;
             if(line.Confidence<.78f||String.IsNullOrWhiteSpace(line.Text)||line.Text.Count(Char.IsLetter)<2)return false;
             if(Regex.IsMatch(line.Text,@"[=∑∏∫√∞≈≠≤≥±×÷^_{}\\]|(?:^|\s)[xyz]\s*[+−-]\s*\d"))return false;
             return Math.Abs(line.Corners[1].Y-line.Corners[0].Y)<Math.Max(.003f,(line.Corners[3].Y-line.Corners[0].Y)*.15f);
@@ -29,28 +30,31 @@ namespace MiniPdf {
             color=count==0?Color.White:Color.FromArgb(r/count,g/count,b/count);
             return count>=24&&lo>=235&&hi-lo<=20;
         }
-        internal static WordPage Read(PdfDocument document,int index,string root,Action<string> status) {
+        internal static WordPage Read(PdfDocument document,int index,string root,Action<string> status,bool formulas=false,bool texOnly=false) {
             var size=document.PageSize(index);float scale=Math.Min(300/72f,4096/Math.Max(size.Width,size.Height));
             using(var bitmap=document.Render(index,Math.Max(1,(int)Math.Ceiling(size.Width*scale)),Math.Max(1,(int)Math.Ceiling(size.Height*scale)))) {
                 byte[] input;using(var stream=new MemoryStream()){bitmap.Save(stream,ImageFormat.Png);input=stream.ToArray();}
                 if(status!=null)status(UiText.Get("正在识别扫描页…")+" "+(index+1));
-                var lines=MiniAiClient.Recognize(root,input,index);return Prepare(bitmap,size,lines);
+                var lines=MiniAiClient.Recognize(root,input,index,null,"quality",formulas);return Prepare(bitmap,size,lines,formulas,texOnly);
             }
         }
-        internal static WordPage Prepare(Bitmap original,SizeF size,List<OcrLine> lines) {
+        internal static WordPage Prepare(Bitmap original,SizeF size,List<OcrLine> lines,bool formulas=false,bool texOnly=false) {
             var result=new WordPage{Size=size};var glyphs=new List<OfficeGlyph>();
             using(var bitmap=new Bitmap(original)) {
                 foreach(var line in lines) {
-                    if(!Prose(line))continue;var box=Box(line,bitmap.Size);Rectangle area=Rectangle.Intersect(Rectangle.Ceiling(box),new Rectangle(Point.Empty,bitmap.Size));Color paper;
+                    string math=null;bool equation=formulas&&line.Kind=="formula"&&line.FormulaConfidence>=.55f&&!String.IsNullOrWhiteSpace(line.Tex)&&(texOnly||WordFormula.TryOmml(line.Tex,out math));
+                    if(!equation&&!Prose(line))continue;var box=Box(line,bitmap.Size);Rectangle area=Rectangle.Intersect(Rectangle.Ceiling(box),new Rectangle(Point.Empty,bitmap.Size));Color paper;
                     if(area.Width<2||area.Height<2||!Paper(bitmap,area,out paper))continue;
                     // Replace only confidently recognized, horizontal prose on plain light paper.
                     // Formula regions, low confidence lines and artwork remain in the source raster.
                     area.Inflate(1,1);using(var graphics=Graphics.FromImage(bitmap))using(var fill=new SolidBrush(paper))graphics.FillRectangle(fill,area);
                     float x=box.Left/bitmap.Width*size.Width,top=box.Top/bitmap.Height*size.Height,width=box.Width/bitmap.Width*size.Width,height=box.Height/bitmap.Height*size.Height;
                     float font=Math.Max(4,Math.Min(72,height*.95f));bool chinese=line.Text.Any(c=>c>=0x4e00&&c<=0x9fff);
+                    if(equation){if(!texOnly)math=WordFormula.FitMath(math,width,height,out font);var formula=new WordText{Text=line.Tex,Math=math,X=x,Top=top,Y=top+font*.807f,Width=width,Size=font,Height=height,Color=Color.Black};if(texOnly)WordFormula.AsCode(formula,line.Tex);result.Text.Add(formula);result.Equations++;continue;}
                     var text=new WordText{Text=line.Text,Font=chinese?"Microsoft YaHei":"Times New Roman",X=x,Top=top,Y=top+font*.807f,Width=width,Size=font,Height=height,Color=Color.Black};result.Text.Add(text);
                     int i=0;foreach(char c in line.Text){glyphs.Add(new OfficeGlyph{Text=c.ToString(),Font=text.Font,X=x+width*i/line.Text.Length,Right=x+width*(i+1)/line.Text.Length,Y=text.Y,Top=top,Bottom=top+height,Size=font});i++;}
                 }
+                if(texOnly)WordFormula.PlaceCode(result);
                 result.Profile=AcademicLayout.Read(glyphs,size);result.Columns=result.Profile.Columns;
                 using(var stream=new MemoryStream()){bitmap.Save(stream,ImageFormat.Png);result.Background=stream.ToArray();}
             }
