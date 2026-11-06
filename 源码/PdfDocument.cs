@@ -80,6 +80,8 @@ namespace MiniPdf
         readonly List<State> undo = new List<State>(), redo = new List<State>();
         int revision, savedRevision, clock;
         public string FilePath = "", Password = "";
+        internal FileStamp DiskStamp;
+        internal int FileVersion;
         public int Index { get; private set; }
         bool compatibilityPreview, canEdit, canPrint;
         internal bool CompatibilityPreview
@@ -142,6 +144,7 @@ namespace MiniPdf
             try
             {
                 doc.Password = password ?? "";
+                doc.DiskStamp = FileStamp.Read(path);
                 doc.Load(PdfSource.FromFile(path));
                 doc.FilePath = Path.GetFullPath(path);
                 return doc;
@@ -350,6 +353,7 @@ namespace MiniPdf
                 AtomicWrite(path, OriginalBytes, Password, Count);
                 FilePath = Path.GetFullPath(path);
                 savedRevision = revision;
+                DiskStamp = FileStamp.Read(FilePath); FileVersion++;
                 return;
             }
             var before = Capture();
@@ -373,6 +377,7 @@ namespace MiniPdf
             AtomicWrite(path, bytes, Password, Count);
             FilePath = Path.GetFullPath(path);
             savedRevision = revision;
+            DiskStamp = FileStamp.Read(FilePath); FileVersion++;
         }
         State Capture()
         {

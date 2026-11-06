@@ -1,5 +1,14 @@
 # Mini PDF
 
+## 0.12.6 — 自动刷新文档 / Automatic document refresh
+
+原文件在其他程序中修改或替换后，Mini PDF 会自动刷新，保留当前页码、缩放、布局与阅读位置；后台标签同步更新。连续写入、暂时锁定、删除后重建或中间文件无效时保留原先可读内容，文件就绪后重试。搜索和缩略图同步更新。
+
+有未保存修改或正在文档内编辑时，保留当前编辑。文件菜单的“重新加载文档”（F5）可手动刷新，放弃编辑或覆盖外部新版前会确认。另存为后自动监听新路径。使用 Windows 文件通知并配合低频检查，不增加依赖。
+
+Changes made by another program refresh automatically, preserving page, zoom, layout and reading position. Background tabs update independently. Active writers and invalid intermediate files keep the previous readable snapshot until retry succeeds. Unsaved changes and inline drafts remain protected. Use File → Reload document (F5) for manual reload; discarding edits or overwriting an external revision requires confirmation. Save As retargets monitoring. Windows file notifications plus periodic metadata checks add no dependency.
+
+
 TeX 文本模式：加载 AI 包后还可选择“公式：输出 TeX 文本”。程序使用连续正文，原生文字层中能可靠分离的行内公式以 `$...$` 代码放在同一句中，独立公式以 `$$...$$` 单独成段。普通正文仍是可编辑文字。截图/OCR 的公式位置和符号仍受识别质量限制，请核对；不是将任意混合截图的每个行内符号都准确分解的保证。
 
 TeX text mode adds literal LaTeX to ordinary flowing Word paragraphs: separable native inline equations stay between their surrounding words; display equations get their own paragraph. This differs from native Office math. Tight captures of inline equations are supported; arbitrary mixed screenshot sentences and uncertain glyphs still require review.
@@ -21,7 +30,7 @@ Package availability uses a short location-aware snapshot; repeated menu and mou
 
 Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, object, annotation, page, watermark, signature and printing tools. It uses Windows controls and PDFium, with no Electron, WebView or bundled browser runtime.
 
-The **v0.12.4** release is one approximately **3.33 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
+The **v0.12.6** release is one approximately **3.35 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
 [**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 

@@ -138,7 +138,7 @@ namespace MiniPdf {
                     form.Close();Application.DoEvents();
                 }
                 NativeUiEditing(directory);InteropAndFailures(directory);LayeredAndTiles(directory);TabsAndFit(directory);HeaderDragging(directory);TitleFrame(directory);Features(directory);LanguageUi(directory);Performance(directory);SelectionCoverage(directory);TextEditingCoverage(directory);SearchCoverage(directory);
-                OfficeFormsCoverage(directory);
+                OfficeFormsCoverage(directory);RefreshCoverage(directory);
                 log.AppendLine("TOTAL: "+assertions+" assertions, 0 failures");File.WriteAllText(Path.Combine(directory,"self-test.txt"),log.ToString(),new UTF8Encoding(true));return 0;
             }catch(Exception e){log.AppendLine(e.ToString());File.WriteAllText(Path.Combine(directory,"self-test.txt"),log.ToString(),new UTF8Encoding(true));return 1;}
         }

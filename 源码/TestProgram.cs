@@ -17,6 +17,7 @@ namespace MiniPdf.Tests {
                 N.SetProcessDPIAware();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                if(args.Length>1&&args[1]=="--refresh-only")return SelfTest.RunRefresh(directory);
                 if(args.Length>1&&args[1]=="--search-only")return SelfTest.RunSearch(directory);
                 if(args.Length>1&&args[1]=="--offline-only")return SelfTest.RunOffline(directory);
                 if(args.Length>1&&args[1]=="--offline-files")return SelfTest.RunOfflineFiles(directory);

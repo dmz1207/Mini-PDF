@@ -10,6 +10,8 @@ namespace MiniPdf {
     internal sealed partial class MainWindow {
         sealed class DocumentTab {
             internal PdfDocument Document;
+            internal DocumentFileWatch Watch;
+            internal int FileVersion;
             internal TabPage Page;
             internal int Number;
             internal PageLayout Layout=PageLayout.Single;
@@ -94,7 +96,7 @@ namespace MiniPdf {
         void UpdateTabLabels(){foreach(var tab in documents){string name=String.IsNullOrEmpty(tab.Document.FilePath)?UiText.Get("未命名 ")+tab.Number:Path.GetFileName(tab.Document.FilePath);tab.Page.Text=(tab.Document.Dirty?"* ":"")+name;tab.Page.ToolTipText=String.IsNullOrEmpty(tab.Document.FilePath)?name:tab.Document.FilePath;}}
         void UpdateTabStrip(){if(documentTabs==null)return;UpdateTabLabels();bool shown=!readingMode&&!fullScreen;var target=shown?documentMenu:toolbar;if(mainMenuButton.Owner!=target){mainMenuButton.HideDropDown();if(mainMenuButton.Owner!=null)mainMenuButton.Owner.Items.Remove(mainMenuButton);target.Items.Insert(0,mainMenuButton);}documentHeader.Visible=shown;documentTabs.Visible=shown&&documents.Count>0;documentTabs.ItemSize=new Size(Math.Max(140,Math.Min(260,(ClientSize.Width-documentMenu.Width-captionReserve-28)/Math.Max(1,Math.Min(4,documents.Count))-4)),Math.Max(24,Font.Height+3));documentHeader.Height=Math.Max(32,documentTabs.ItemSize.Height+5);RefreshWindowFrame();documentTabs.Invalidate();if(!shown)CancelTabDrag();}
         void RememberActiveTab(){if(activeTab==null||Document==null)return;activeTab.Layout=canvas.LayoutMode;activeTab.Continuous=canvas.Continuous;activeTab.Zoom=canvas.Zoom;activeTab.Fit=canvas.Fit;activeTab.Rotation=canvas.ViewRotation;activeTab.Scroll=new Point(-canvas.AutoScrollPosition.X,-canvas.AutoScrollPosition.Y);activeTab.Tool=readingMode?oldInteraction:canvas.Mode;activeTab.Ink=Ink;activeTab.Width=LineWidth;activeTab.Editor=readingMode||fullScreen?oldEditbar:editbar.Visible;activeTab.Search=query.Text;activeTab.SearchQuery=searchQuery;activeTab.Hit=lastHit;activeTab.PendingImage=pendingImage;}
-        void TrackDocument(PdfDocument doc){var tab=new DocumentTab{Document=doc,Number=++unnamedNumber,Page=new TabPage{Tag=unnamedNumber}};changingTabs=true;try{documents.Add(tab);documentTabs.TabPages.Add(tab.Page);}finally{changingTabs=false;}ActivateTab(tab);}
+        void TrackDocument(PdfDocument doc){var tab=new DocumentTab{Document=doc,Number=++unnamedNumber,Page=new TabPage{Tag=unnamedNumber}};changingTabs=true;try{documents.Add(tab);documentTabs.TabPages.Add(tab.Page);}finally{changingTabs=false;}SyncDocumentWatch(tab);ActivateTab(tab);}
         void ActivateTab(DocumentTab tab){
             if(activeTab==tab)return;if(!canvas.ConfirmInlineText()){changingTabs=true;try{documentTabs.SelectedIndex=documents.IndexOf(activeTab);}finally{changingTabs=false;}return;}if(slideShow)ToggleFullScreen();RememberActiveTab();activeTab=tab;Document=tab.Document;
             canvas.LayoutMode=tab.Layout;canvas.Continuous=tab.Continuous;canvas.Fit=tab.Fit;canvas.Zoom=tab.Zoom;canvas.ViewRotation=tab.Rotation;canvas.ResetDocumentView();
@@ -113,7 +115,7 @@ namespace MiniPdf {
             bool current=tab==activeTab;
             changingTabs=true;try{documents.RemoveAt(index);documentTabs.TabPages.Remove(tab.Page);}finally{changingTabs=false;}
             if(current){activeTab=null;Document=null;canvas.ResetDocumentView();if(documents.Count>0)ActivateTab(documents[Math.Min(index,documents.Count-1)]);else{lastHit=null;UpdateDocument(true);Report(UiText.Get("打开 PDF，开始阅读或编辑"));}}
-            tab.Document.Dispose();tab.Page.Dispose();UpdateTabStrip();return true;
+            if(tab.Watch!=null)tab.Watch.Dispose();tab.Document.Dispose();tab.Page.Dispose();UpdateTabStrip();UpdateRefreshNotice();if(documents.Count==0&&fileRefreshTimer!=null)fileRefreshTimer.Stop();return true;
         }
         bool ConfirmAllTabs(){if(!canvas.ConfirmInlineText())return false;foreach(var tab in documents.ToArray())if(tab.Document.Dirty){ActivateTab(tab);if(!ConfirmClose())return false;}return true;}
         internal void OpenDocuments(string[] paths){if(paths==null)return;openingFiles=true;try{foreach(string path in paths)OpenDocument(path);}finally{openingFiles=false;}}

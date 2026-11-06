@@ -1,0 +1,43 @@
+{
+  "version": "0.12.6",
+  "date": "2026-11-06",
+  "executable_bytes": 3514368,
+  "executable_sha256": "17ceeb45f5de770e82ed373f20da1149dd261785502f4f410b2ac91cef4e6d72",
+  "growth_bytes_from_0_12_5": 4096,
+  "checks": {
+    "native": 651,
+    "automatic_refresh": 46,
+    "independent_pdf": 33,
+    "independent_office_forms": 352,
+    "portable_launcher": 17
+  },
+  "platform": "Windows x64; system .NET Framework 4.x and pinned PDFium",
+  "implementation": "Directory file notifications, coalesced 350 ms stable-write checks, periodic metadata fallback; no new dependency",
+  "cases": [
+    "in-place write",
+    "atomic replace",
+    "open writer and partial file",
+    "invalid intermediate",
+    "delete/recreate",
+    "page count growth/shrink",
+    "page/zoom/scroll retention",
+    "background tabs",
+    "unsaved changes",
+    "cancel reload/overwrite",
+    "confirmed F5",
+    "own save and undo",
+    "same size and timestamp with notification",
+    "missed notification fallback",
+    "owned tools",
+    "inline drafts",
+    "search invalidation",
+    "Save As retarget",
+    "untitled first save",
+    "watch disposal"
+  ],
+  "limits": [
+    "Notifications are coalesced until the file is stable; a lock or invalid PDF delays reload.",
+    "Without notifications the periodic fallback detects metadata changes, not same-byte-length changes with all timestamps preserved.",
+    "Unchanged AI models and previous AI-specific accuracy checks were not rerun for this file-watching change."
+  ]
+}

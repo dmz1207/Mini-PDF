@@ -1,4 +1,8 @@
-﻿Mini PDF 0.12.4 - User Guide
+Mini PDF 0.12.6 User Guide
+
+Automatic document refresh
+External writes and atomic replacements automatically refresh the document, thumbnails and search, preserving the current page, zoom and reading position. Incomplete or locked files retain the previous snapshot until retry succeeds. Unsaved edits and inline drafts are protected. File → Reload document (F5) reloads manually with confirmation before discarding edits. Save As switches monitoring to the new path.
+
 Windows 10 / Windows 11 x64
 OFFLINE OCR INPUTS
 Open or drop PNG/JPEG/BMP/TIFF/GIF images, one PDF, or TXT/Markdown/CSV/TSV text.

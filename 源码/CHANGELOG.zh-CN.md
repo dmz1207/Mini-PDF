@@ -1,5 +1,13 @@
 # 更新日志
 
+## 0.12.6 — 2026-11-06
+
+原文件在其他程序中修改或替换后，Mini PDF 会自动刷新，保留当前页码、缩放、布局与阅读位置；后台标签同步更新。连续写入、暂时锁定、删除后重建或中间文件无效时保留原先可读内容，文件就绪后重试。搜索和缩略图同步更新。
+
+有未保存修改或正在文档内编辑时，保留当前编辑。文件菜单的“重新加载文档”（F5）可手动刷新，放弃编辑或覆盖外部新版前会确认。另存为后自动监听新路径。使用 Windows 文件通知并配合低频检查，不增加依赖。
+
+Changes made by another program refresh automatically, preserving page, zoom, layout and reading position. Background tabs update independently. Active writers and invalid intermediate files keep the previous readable snapshot until retry succeeds. Unsaved changes and inline drafts remain protected. Use File → Reload document (F5) for manual reload; discarding edits or overwriting an external revision requires confirmation. Save As retargets monitoring. Windows file notifications plus periodic metadata checks add no dependency.
+
 ## 0.12.3 — 2026-11-01
 
 适配 Mini-AI 0.2.0 流式翻译、后台预热、选中输入范围翻译；修复气泡等待和阅读时间、原文选择和复制；加入极速／高精度两档、图片翻译及可选 OCR 文字提取；退出清理运行文件、保留普通结果，即时翻译不自动保存。支持 CTranslate2 新完整包并兼容旧包加载，防止旧包覆盖较新的服务。

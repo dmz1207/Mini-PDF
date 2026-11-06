@@ -93,6 +93,18 @@ namespace MiniPdf
             view.ReadArray(0, bytes, 0, bytes.Length);
             return bytes;
         }
+        internal bool ContentEquals(PdfSource other)
+        {
+            if (other == null || Length != other.Length) return false;
+            var left = new byte[65536]; var right = new byte[65536];
+            for (long offset = 0; offset < Length; offset += left.Length)
+            {
+                int count = (int)Math.Min(left.Length, Length - offset);
+                view.ReadArray(offset, left, 0, count); other.view.ReadArray(offset, right, 0, count);
+                for (int i = 0; i < count; i++) if (left[i] != right[i]) return false;
+            }
+            return true;
+        }
         public void Dispose()
         {
             if (Interlocked.Decrement(ref references) == 0)

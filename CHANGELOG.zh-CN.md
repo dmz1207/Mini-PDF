@@ -1,5 +1,13 @@
 # 更新日志
 
+## 0.12.6 — 2026-11-06
+
+原文件在其他程序中修改或替换后，Mini PDF 会自动刷新，保留当前页码、缩放、布局与阅读位置；后台标签同步更新。连续写入、暂时锁定、删除后重建或中间文件无效时保留原先可读内容，文件就绪后重试。搜索和缩略图同步更新。
+
+有未保存修改或正在文档内编辑时，保留当前编辑。文件菜单的“重新加载文档”（F5）可手动刷新，放弃编辑或覆盖外部新版前会确认。另存为后自动监听新路径。使用 Windows 文件通知并配合低频检查，不增加依赖。
+
+Changes made by another program refresh automatically, preserving page, zoom, layout and reading position. Background tabs update independently. Active writers and invalid intermediate files keep the previous readable snapshot until retry succeeds. Unsaved changes and inline drafts remain protected. Use File → Reload document (F5) for manual reload; discarding edits or overwriting an external revision requires confirmation. Save As retargets monitoring. Windows file notifications plus periodic metadata checks add no dependency.
+
 ## 0.12.5 — 2026-11-04
 
 可选 PDF 截取识别：正文保留可编辑文字，公式返回 TeX / MathML。Word 支持公式图片、可编辑 Office 公式、流式 TeX 文本三种模式；行内原生公式保留在句中，独立代码另起一段。合并分式几何区域并保护正文，失败时保留原图；修正公式和代码字号。缩短重复功能包探测，复用 MiniAI 1.0.2 的离线识别与推理服务。

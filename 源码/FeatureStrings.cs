@@ -4,7 +4,16 @@ namespace MiniPdf {
     internal static partial class UiText {
         static void AddFeatureTranslations(Dictionary<string,string> strings){
             // One entry per line keeps the optional feature vocabulary separate.
-            const string pairs=@"截取识别 · 文字 / 公式|Capture text or equations
+            const string pairs=@"重新加载文档|Reload document
+文件已更新 · F5 刷新|File changed · F5 to reload
+原文件已改变；当前编辑会保留。点击重新加载。|The source file changed. Your edits are kept. Click to reload.
+重新加载会放弃当前文档未保存的修改。是否继续？|Reloading will discard unsaved changes in this document. Continue?
+文件仍在写入，将稍后自动刷新。|The file is still being written. It will refresh automatically shortly.
+暂时无法重新加载，已保留当前文档。|Unable to reload yet. The current document has been kept.
+已自动刷新 · |Refreshed · 
+原文件已在其他程序中改变。仍要用当前文档覆盖它吗？建议取消后另存为。|Another program changed the source file. Overwrite it with this document? Cancel and use Save As to keep both versions.
+原文件已改变|Source file changed
+截取识别 · 文字 / 公式|Capture text or equations
 截取识别（文字 / 公式）|Capture text or equations
 截取识别|Capture OCR
 保存…|Save…
