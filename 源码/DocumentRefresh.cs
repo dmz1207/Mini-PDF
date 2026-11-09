@@ -88,7 +88,7 @@ namespace MiniPdf {
             refreshingFiles=true;
             try {
                 foreach(var tab in documents.ToArray()){
-                    SyncDocumentWatch(tab);if(tab.Watch==null||!tab.Watch.Probe()||tab.Document.Dirty)continue;
+                    SyncDocumentWatch(tab);if(tab.Watch==null||!tab.Watch.Probe()||tab.Document.Dirty||(tab.Redactions!=null&&tab.Redactions.Regions.Count>0))continue;
                     TryReloadDocument(tab,false);
                 }
                 UpdateRefreshNotice();
@@ -102,7 +102,7 @@ namespace MiniPdf {
         }
         void ReloadDocument(){
             if(Document==null||String.IsNullOrEmpty(Document.FilePath)||refreshingFiles||!canvas.ConfirmInlineText())return;
-            if(Document.Dirty&&MessageBox.Show(this,UiText.Get("重新加载会放弃当前文档未保存的修改。是否继续？"),UiText.Get("重新加载文档"),MessageBoxButtons.OKCancel,MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2)!=DialogResult.OK)return;
+            if((Document.Dirty||HasRedactions)&&MessageBox.Show(this,UiText.Get("重新加载会放弃当前文档未保存的修改。是否继续？"),UiText.Get("重新加载文档"),MessageBoxButtons.OKCancel,MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2)!=DialogResult.OK)return;
             refreshingFiles=true;
             try{SyncDocumentWatch(activeTab);TryReloadDocument(activeTab,true);UpdateRefreshNotice();}finally{refreshingFiles=false;}
         }
@@ -126,7 +126,7 @@ namespace MiniPdf {
                 var after=FileStamp.Read(watch.Path);
                 if(!before.Equals(after)||signal!=watch.Signal)throw new IOException(UiText.Get("文件仍在写入，将稍后自动刷新。"));
                 // Metadata-only changes and delayed self-save events must not clear view or undo state.
-                if(!old.Dirty&&old.GetRenderSource().ContentEquals(loaded.GetRenderSource())){watch.Accept(after,signal);return true;}
+                if(!old.Dirty&&old.GetRenderSource().ContentEquals(loaded.GetRenderSource())){if(manual){tab.Redactions=null;UpdateRedactionControls();UpdateTabStrip();canvas.Invalidate();}watch.Accept(after,signal);return true;}
                 loaded.OpenPage(Math.Min(old.Index,loaded.Count-1));
                 bool current=tab==activeTab,preserve=loaded.Index==old.Index;
                 if(current)RememberActiveTab();
@@ -139,7 +139,7 @@ namespace MiniPdf {
                     loaded=tab.Document;tab.Document=old;tab.FileVersion=old.FileVersion;
                     if(current){Document=old;UpdateDocument(true,true);}throw;
                 }
-                watch.Accept(after,signal);old.Dispose();return true;
+                tab.Redactions=null;UpdateRedactionControls();UpdateTabStrip();watch.Accept(after,signal);old.Dispose();return true;
             }catch(Exception error){
                 watch.Failed(error);
                 if(manual)MessageBox.Show(this,UiText.Get("暂时无法重新加载，已保留当前文档。")+Environment.NewLine+error.Message,UiText.Get("重新加载文档"),MessageBoxButtons.OK,MessageBoxIcon.Information);

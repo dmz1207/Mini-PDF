@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -616,6 +616,12 @@ namespace MiniPdf
             for (int i = N.FPDFPage_CountObjects(Page) - 1; i >= 0; i--)
             {
                 IntPtr image = N.FPDFPage_GetObject(Page, i);
+                if (N.FPDFPageObj_GetType(image) == 2 && HasMark(image, RectangleTag) && Contains(ObjectBounds(image), point, 0))
+                {
+                    int fill, stroke; uint r,g,b,a;
+                    if (N.FPDFPath_GetDrawMode(image,out fill,out stroke)!=0 && fill!=0 &&
+                        N.FPDFPageObj_GetFillColor(image,out r,out g,out b,out a)!=0 && a==255) return PagePick(i,image);
+                }
                 if (N.FPDFPageObj_GetType(image) == 3 && HasMark(image, "MiniPDF_Signature") &&
                     Contains(ObjectBounds(image), point, 2))
                     return PagePick(i, image);
@@ -972,17 +978,7 @@ namespace MiniPdf
                 }
             }
         }
-        public void AddRectangle(N.Rect r, Color color, float width)
-        {
-            Edit(delegate {
-                IntPtr obj = N.FPDFPageObj_CreateNewRect(r.left, r.bottom, r.right - r.left, r.top - r.bottom);
-                Check(obj != IntPtr.Zero, UiText.Get("无法创建矩形。"));
-                N.FPDFPageObj_SetStrokeColor(obj, color.R, color.G, color.B, 255);
-                N.FPDFPageObj_SetStrokeWidth(obj, width);
-                N.FPDFPath_SetDrawMode(obj, 0, 1);
-                Check(N.FPDFPage_InsertObject(Page, obj) != 0, UiText.Get("无法插入矩形。"));
-            });
-        }
+        public void AddRectangle(N.Rect r, Color color, float width) { AddRectangle(r,color,width,null); }
         void ConfigureAnnot(IntPtr a, N.Rect r, Color c)
         {
             Check(a != IntPtr.Zero, UiText.Get("无法创建批注。"));

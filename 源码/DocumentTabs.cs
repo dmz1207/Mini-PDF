@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -21,6 +21,8 @@ namespace MiniPdf {
             internal Point Scroll;
             internal Tool Tool=Tool.Read;
             internal Color Ink=Color.FromArgb(24,117,152);
+            internal Color? RectangleFill;
+            internal RedactionPlan Redactions;
             internal string Search="",SearchQuery="",PendingImage;
             internal SearchHit Hit;
         }
@@ -93,14 +95,14 @@ namespace MiniPdf {
         }
         void DrawDocumentTab(object sender,DrawItemEventArgs e){if(e.Index<0||e.Index>=documents.Count)return;if(draggingTab&&documents[e.Index]==draggedTab){using(var brush=new SolidBrush(Color.FromArgb(234,243,250)))e.Graphics.FillRectangle(brush,e.Bounds);return;}PaintDocumentTab(e.Graphics,documents[e.Index],e.Bounds,e.Index==documentTabs.SelectedIndex,false);}
         void PaintDraggedTab(Graphics graphics){if(!draggingTab||draggedTab==null)return;int index=documents.IndexOf(draggedTab);if(index<0)return;var rect=DocumentTabRectangle(index);rect.X=Math.Max(0,Math.Min(tabDragPoint.X-tabGrabOffset,documentTabs.ClientSize.Width-rect.Width));PaintDocumentTab(graphics,draggedTab,rect,true,true);}
-        void UpdateTabLabels(){foreach(var tab in documents){string name=String.IsNullOrEmpty(tab.Document.FilePath)?UiText.Get("未命名 ")+tab.Number:Path.GetFileName(tab.Document.FilePath);tab.Page.Text=(tab.Document.Dirty?"* ":"")+name;tab.Page.ToolTipText=String.IsNullOrEmpty(tab.Document.FilePath)?name:tab.Document.FilePath;}}
-        void UpdateTabStrip(){if(documentTabs==null)return;UpdateTabLabels();bool shown=!readingMode&&!fullScreen;var target=shown?documentMenu:toolbar;if(mainMenuButton.Owner!=target){mainMenuButton.HideDropDown();if(mainMenuButton.Owner!=null)mainMenuButton.Owner.Items.Remove(mainMenuButton);target.Items.Insert(0,mainMenuButton);}documentHeader.Visible=shown;documentTabs.Visible=shown&&documents.Count>0;documentTabs.ItemSize=new Size(Math.Max(140,Math.Min(260,(ClientSize.Width-documentMenu.Width-captionReserve-28)/Math.Max(1,Math.Min(4,documents.Count))-4)),Math.Max(24,Font.Height+3));documentHeader.Height=Math.Max(32,documentTabs.ItemSize.Height+5);RefreshWindowFrame();documentTabs.Invalidate();if(!shown)CancelTabDrag();}
-        void RememberActiveTab(){if(activeTab==null||Document==null)return;activeTab.Layout=canvas.LayoutMode;activeTab.Continuous=canvas.Continuous;activeTab.Zoom=canvas.Zoom;activeTab.Fit=canvas.Fit;activeTab.Rotation=canvas.ViewRotation;activeTab.Scroll=new Point(-canvas.AutoScrollPosition.X,-canvas.AutoScrollPosition.Y);activeTab.Tool=readingMode?oldInteraction:canvas.Mode;activeTab.Ink=Ink;activeTab.Width=LineWidth;activeTab.Editor=readingMode||fullScreen?oldEditbar:editbar.Visible;activeTab.Search=query.Text;activeTab.SearchQuery=searchQuery;activeTab.Hit=lastHit;activeTab.PendingImage=pendingImage;}
+        void UpdateTabLabels(){foreach(var tab in documents){string name=String.IsNullOrEmpty(tab.Document.FilePath)?UiText.Get("未命名 ")+tab.Number:Path.GetFileName(tab.Document.FilePath);tab.Page.Text=(tab.Document.Dirty||(tab.Redactions!=null&&tab.Redactions.Regions.Count>0)?"* ":"")+name;tab.Page.ToolTipText=String.IsNullOrEmpty(tab.Document.FilePath)?name:tab.Document.FilePath;}}
+        void UpdateTabStrip(){if(documentTabs==null)return;UpdateTabLabels();UpdateRedactionControls();RefreshRectangleFill();bool shown=!readingMode&&!fullScreen;var target=shown?documentMenu:toolbar;if(mainMenuButton.Owner!=target){mainMenuButton.HideDropDown();if(mainMenuButton.Owner!=null)mainMenuButton.Owner.Items.Remove(mainMenuButton);target.Items.Insert(0,mainMenuButton);}documentHeader.Visible=shown;documentTabs.Visible=shown&&documents.Count>0;documentTabs.ItemSize=new Size(Math.Max(140,Math.Min(260,(ClientSize.Width-documentMenu.Width-captionReserve-28)/Math.Max(1,Math.Min(4,documents.Count))-4)),Math.Max(24,Font.Height+3));documentHeader.Height=Math.Max(32,documentTabs.ItemSize.Height+5);RefreshWindowFrame();documentTabs.Invalidate();if(!shown)CancelTabDrag();}
+        void RememberActiveTab(){if(activeTab==null||Document==null)return;activeTab.Layout=canvas.LayoutMode;activeTab.Continuous=canvas.Continuous;activeTab.Zoom=canvas.Zoom;activeTab.Fit=canvas.Fit;activeTab.Rotation=canvas.ViewRotation;activeTab.Scroll=new Point(-canvas.AutoScrollPosition.X,-canvas.AutoScrollPosition.Y);activeTab.Tool=readingMode?oldInteraction:canvas.Mode;activeTab.Ink=Ink;activeTab.RectangleFill=RectangleFill;activeTab.Width=LineWidth;activeTab.Editor=readingMode||fullScreen?oldEditbar:editbar.Visible;activeTab.Search=query.Text;activeTab.SearchQuery=searchQuery;activeTab.Hit=lastHit;activeTab.PendingImage=pendingImage;}
         void TrackDocument(PdfDocument doc){var tab=new DocumentTab{Document=doc,Number=++unnamedNumber,Page=new TabPage{Tag=unnamedNumber}};changingTabs=true;try{documents.Add(tab);documentTabs.TabPages.Add(tab.Page);}finally{changingTabs=false;}SyncDocumentWatch(tab);ActivateTab(tab);}
         void ActivateTab(DocumentTab tab){
             if(activeTab==tab)return;if(!canvas.ConfirmInlineText()){changingTabs=true;try{documentTabs.SelectedIndex=documents.IndexOf(activeTab);}finally{changingTabs=false;}return;}if(slideShow)ToggleFullScreen();RememberActiveTab();activeTab=tab;Document=tab.Document;
             canvas.LayoutMode=tab.Layout;canvas.Continuous=tab.Continuous;canvas.Fit=tab.Fit;canvas.Zoom=tab.Zoom;canvas.ViewRotation=tab.Rotation;canvas.ResetDocumentView();
-            Ink=tab.Ink;LineWidth=tab.Width;colorButton.ForeColor=Ink;lineWidthBox.SelectedItem=LineWidth.ToString("0.0",System.Globalization.CultureInfo.InvariantCulture);query.Text=tab.Search;searchQuery=tab.SearchQuery;lastHit=tab.Hit;pendingImage=tab.PendingImage;findResult.Text="";if(readingMode||fullScreen){oldInteraction=tab.Tool;oldEditbar=tab.Editor;}
+            Ink=tab.Ink;RectangleFill=tab.RectangleFill;RefreshRectangleFill();LineWidth=tab.Width;colorButton.ForeColor=Ink;lineWidthBox.SelectedItem=LineWidth.ToString("0.0",System.Globalization.CultureInfo.InvariantCulture);query.Text=tab.Search;searchQuery=tab.SearchQuery;lastHit=tab.Hit;pendingImage=tab.PendingImage;findResult.Text="";if(readingMode||fullScreen){oldInteraction=tab.Tool;oldEditbar=tab.Editor;}
             singleItem.Checked=tab.Layout==PageLayout.Single;doubleItem.Checked=tab.Layout==PageLayout.Double;bookItem.Checked=tab.Layout==PageLayout.Book;gridItem.Checked=tab.Layout==PageLayout.Grid;continuousItem.Checked=tab.Continuous;
             changingTabs=true;try{documentTabs.SelectedIndex=documents.IndexOf(tab);}finally{changingTabs=false;}
             SetTool(readingMode||slideShow?Tool.Read:tab.Tool);if(!readingMode&&!fullScreen){editbar.Visible=tab.Editor;editToggle.Checked=tab.Editor;}UpdateDocument(true);canvas.AutoScrollPosition=tab.Scroll;canvas.Focus();
@@ -111,13 +113,13 @@ namespace MiniPdf {
             CancelTabDrag();
             if(index<0||index>=documents.Count)return false;var tab=documents[index];
             if(tab==activeTab&&!canvas.ConfirmInlineText())return false;
-            if(tab.Document.Dirty){ActivateTab(tab);if(activeTab!=tab||!ConfirmClose())return false;}
+            if(tab.Document.Dirty||(tab.Redactions!=null&&tab.Redactions.Regions.Count>0)){ActivateTab(tab);if(activeTab!=tab||!ConfirmClose())return false;}
             bool current=tab==activeTab;
             changingTabs=true;try{documents.RemoveAt(index);documentTabs.TabPages.Remove(tab.Page);}finally{changingTabs=false;}
             if(current){activeTab=null;Document=null;canvas.ResetDocumentView();if(documents.Count>0)ActivateTab(documents[Math.Min(index,documents.Count-1)]);else{lastHit=null;UpdateDocument(true);Report(UiText.Get("打开 PDF，开始阅读或编辑"));}}
             if(tab.Watch!=null)tab.Watch.Dispose();tab.Document.Dispose();tab.Page.Dispose();UpdateTabStrip();UpdateRefreshNotice();if(documents.Count==0&&fileRefreshTimer!=null)fileRefreshTimer.Stop();return true;
         }
-        bool ConfirmAllTabs(){if(!canvas.ConfirmInlineText())return false;foreach(var tab in documents.ToArray())if(tab.Document.Dirty){ActivateTab(tab);if(!ConfirmClose())return false;}return true;}
+        bool ConfirmAllTabs(){if(!canvas.ConfirmInlineText())return false;foreach(var tab in documents.ToArray())if(tab.Document.Dirty||(tab.Redactions!=null&&tab.Redactions.Regions.Count>0)){ActivateTab(tab);if(!ConfirmClose())return false;}return true;}
         internal void OpenDocuments(string[] paths){if(paths==null)return;openingFiles=true;try{foreach(string path in paths)OpenDocument(path);}finally{openingFiles=false;}}
         internal void ReceiveOpenRequest(string[] paths){openRequests.Enqueue(paths);if(openTimer==null){openTimer=new System.Windows.Forms.Timer{Interval=120};openTimer.Tick+=delegate{if(IsDisposed||!Enabled||openingFiles||openRequests.Count==0)return;openTimer.Stop();if(WindowState==FormWindowState.Minimized)N.ShowWindow(Handle,9);Activate();N.SetForegroundWindow(Handle);OpenDocuments(openRequests.Dequeue());if(openRequests.Count>0)openTimer.Start();};}openTimer.Start();}
         void NewWindow(){string executable=Environment.GetEnvironmentVariable("MINIPDF_LAUNCHER");if(String.IsNullOrEmpty(executable)||!File.Exists(executable))executable=Application.ExecutablePath;Process.Start(new ProcessStartInfo(executable,"--new-window"){UseShellExecute=false,WorkingDirectory=Environment.CurrentDirectory});}

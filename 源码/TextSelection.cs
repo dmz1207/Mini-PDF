@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
@@ -235,7 +235,7 @@ namespace MiniPdf
             if (AutoScrollPosition.Y != before) { UpdateTextSelection(current); Invalidate(); }
         }
         void StopSelectionScroll() { if (selectionScroll != null) selectionScroll.Stop(); }
-        Rectangle SelectionRectangle(int index, N.Rect shape)
+        internal Rectangle SelectionRectangle(int index, N.Rect shape)
         {
             var page = ScreenRect(pageRects[index]);
             var text = Doc.SelectionPage(index);

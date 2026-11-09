@@ -4,7 +4,71 @@ namespace MiniPdf {
     internal static partial class UiText {
         static void AddFeatureTranslations(Dictionary<string,string> strings){
             // One entry per line keeps the optional feature vocabulary separate.
-            const string pairs=@"重新加载文档|Reload document
+            const string pairs=@"有尚未应用的永久涂黑标记。是否先生成脱敏副本？\n选择“否”将放弃这些标记。|There are unapplied redaction marks. Create a redacted copy first?\nChoose No to discard these marks.
+涂黑|Redact
+以此范围标记永久涂黑|Mark these bounds for permanent redaction
+请选择矩形或路径对象。|Select a rectangle or path object.
+无法读取图形样式。|Cannot read the shape style.
+请设置填充或边框，线宽为 0.1–100 磅。|Enable a fill or border with a width of 0.1–100 pt.
+无法设置图形边框。|Cannot set the shape border.
+无法设置图形填充。|Cannot set the shape fill.
+无法设置图形样式。|Cannot set the shape style.
+矩形范围无效。|Invalid rectangle bounds.
+无法标记矩形对象。|Cannot tag the rectangle object.
+矩形 / 路径样式|Rectangle / path style
+矩形 / 路径样式…|Rectangle / path style…
+填充|Fill
+边框|Border
+填充颜色…|Fill color…
+边框颜色…|Border color…
+请至少保留填充或边框。|Keep at least a fill or a border.
+填充：无|Fill: none
+填充：实色|Fill: solid
+矩形填充颜色；普通填充可删除，不是永久涂黑。|Rectangle fill. Ordinary fills can be removed; use permanent redaction for sensitive content.
+无填充|No fill
+黑色|Black
+白色|White
+其他颜色…|Custom color…
+黑块|Black box
+绘制可编辑的实心黑色矩形；脱敏请使用永久涂黑。|Draw an editable black rectangle. Use permanent redaction to remove sensitive content.
+此文档不能导出脱敏副本。|This document cannot be exported as a redacted copy.
+请选择 300 或 600 dpi。|Choose 300 or 600 dpi.
+请先标记需要永久涂黑的区域。|Mark the areas to redact first.
+涂黑区域无效，请重新标记。|Invalid redaction bounds. Mark the area again.
+页面超出此精度的处理范围，请选择 300 dpi。|The page exceeds the processing limit at this resolution. Choose 300 dpi.
+涂黑区域不在页面内，请重新标记。|The redaction area is outside the page. Mark it again.
+页面文字过多，请选择高清图像型副本。|Too much text on this page. Choose an image-only copy.
+页面图像过大，请选择 300 dpi。|The page image is too large. Choose 300 dpi.
+永久涂黑：标记区域|Permanent redaction: mark areas
+应用永久涂黑…|Apply permanent redactions…
+永久涂黑|Redact
+框选敏感区域，再应用永久涂黑并另存副本|Mark sensitive areas, apply redactions and save a separate copy
+生成脱敏副本，可选保留文字层或高清图像型|Create a redacted copy with optional searchable text
+撤销标记|Undo mark
+撤销上一个尚未应用的涂黑区域|Undo the last unapplied redaction area
+清除标记|Clear marks
+清除本标签全部待应用涂黑标记|Clear unapplied redaction marks in this tab
+页面内容已变化，请清除旧标记并重新框选。|The page content changed. Clear the old marks and mark the areas again.
+应用永久涂黑|Apply permanent redactions
+标记已失效|Marks need updating
+待应用的涂黑标记|Unapplied redaction marks
+待涂黑：{0} 处；副本共 {1} 页。|{0} marked areas; the copy will contain {1} pages.
+副本类型|Copy type
+高清图像型：清除全部文字层|Image only: remove all text layers
+保留区域外文字层：可搜索、复制|Keep text outside redactions: searchable and selectable
+输出精度|Resolution
+生成脱敏副本…|Create redacted copy…
+将重建全部页面并擦除所选区域，不携带原页面对象、附件、批注数据、签名或历史版本。原文件保留。|All pages are rebuilt and marked areas erased. Original page objects, attachments, annotation data, signatures and file history are not carried over. The original file is kept.
+图像型副本保留页面外观，全文不能直接选字或编辑。|Image-only copies preserve appearance; text cannot be selected or edited directly.
+按原文字坐标重建涂黑区域以外的文字层，用于搜索和复制；外观仍由高清图像保留。文字坐标异常时请选择图像型。|Rebuild text outside redactions from its original coordinates for search and copy. High-resolution images preserve appearance. Use image-only mode when source text coordinates are incorrect.
+保存脱敏副本|Save redacted copy
+_脱敏.pdf|_redacted.pdf
+请使用新文件名，不要覆盖已打开的原文档。|Choose a new filename; do not overwrite an open original document.
+脱敏副本未完成|Redacted copy not completed
+正在生成脱敏副本|Creating redacted copy
+正在涂黑… {0} / {1}|Redacting… {0} / {1}
+框选涂黑区域，再点击“应用永久涂黑”生成脱敏副本|Mark redaction areas, then choose Apply permanent redactions to create a separate copy
+重新加载文档|Reload document
 文件已更新 · F5 刷新|File changed · F5 to reload
 原文件已改变；当前编辑会保留。点击重新加载。|The source file changed. Your edits are kept. Click to reload.
 重新加载会放弃当前文档未保存的修改。是否继续？|Reloading will discard unsaved changes in this document. Continue?

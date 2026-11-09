@@ -1,5 +1,20 @@
 # 更新日志
 
+## 0.12.7 — 2026-11-09
+
+编辑工具栏可选择矩形的填充颜色（无填充、黑色、白色或自定义），也可直接画实心“黑块”。已有矩形/路径可双击或右键修改边框、填充和线宽。普通填充是可编辑的遮盖，不会删除下面的内容。
+
+脱敏请用主工具栏“涂黑”：框选一个或多个区域 → “应用永久涂黑”（Ctrl+Shift+R）→ 选择副本类型与 300/600 dpi → 另存副本。也可右键对象，用“以此范围标记永久涂黑”把已有黑块的范围转为标记。
+
+- **高清图像型（默认）**：重建全部页面并擦除所选区域，清除全部文字层，副本不能直接选字或编辑。
+- **保留区域外文字层**：页面外观同样重建为高清图像，仅从原字符坐标重建区域外文字，用于搜索和复制；不保留原矢量对象或原字体编辑能力。源文档文字坐标异常时用图像型。
+
+两个模式都使用新建 PDF，不携带原附件、批注数据、数字签名、元数据或增量保存历史。黑块写入图像像素，原文字和扫描图内容不在副本黑块下面。原文件保留。标记支持跨页累积、撤销和清除；关窗时会询问，待应用标记会暂停外部刷新，文档编辑后旧标记失效，避免坐标错用。导出使用独立进程，可取消，完成校验后才保存目标文件。
+
+Rectangle interiors and borders are independently editable, including custom fill colors and a solid black-box tool. Ordinary fills remain removable overlays. Use **Redact** to mark areas and **Apply permanent redactions** (Ctrl+Shift+R) to create a separate copy. Both output choices rebuild page appearance as lossless high-resolution images at 300 or 600 dpi: image-only removes all text, while searchable mode rebuilds only text outside the marked areas. Searchable output preserves search/copy, rather than original vector or font editing. Use image-only output for unreliable source text coordinates.
+
+The fresh PDF writer never imports original page streams, attachments, annotation data, digital signatures, metadata or incremental history. Marks are previewed until applied; pending marks survive tab switches, prevent automatic refresh, and are invalidated by content edits. Canceling export keeps the original/previous destination. No runtime dependency or model was added; a generated 1 KiB geometry font supports the invisible rebuilt text layer.
+
 ## 0.12.6 — 2026-11-06
 
 原文件在其他程序中修改或替换后，Mini PDF 会自动刷新，保留当前页码、缩放、布局与阅读位置；后台标签同步更新。连续写入、暂时锁定、删除后重建或中间文件无效时保留原先可读内容，文件就绪后重试。搜索和缩略图同步更新。

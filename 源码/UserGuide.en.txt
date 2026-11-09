@@ -1,4 +1,9 @@
-Mini PDF 0.12.6 User Guide
+Mini PDF 0.12.7 User Guide
+
+Rectangle fills and permanent redaction
+Choose Fill in the editing toolbar or Black box for a solid rectangle. Double-click an existing path to edit its border and fill. Ordinary fills are removable and do not permanently remove content.
+Use Redact, mark areas on one or more pages, then Apply permanent redactions (Ctrl+Shift+R) to save a separate copy. Right-click an object to mark its bounds. Choose 300/600 dpi and image-only or searchable output. Both rebuild appearance as high-resolution images; searchable output rebuilds text outside masks for search/copy. Original vector/font editing is not preserved. Original attachments, annotation data, digital signatures, metadata and file history are not copied. Use image-only mode for unreliable source coordinates.
+The original stays intact. Unapplied marks support undo/clear and close confirmation, pause automatic refresh, and become invalid after content edits. Export is cancellable and commits only a complete verified file.
 
 Automatic document refresh
 External writes and atomic replacements automatically refresh the document, thumbnails and search, preserving the current page, zoom and reading position. Incomplete or locked files retain the previous snapshot until retry succeeds. Unsaved edits and inline drafts are protected. File → Reload document (F5) reloads manually with confirmation before discarding edits. Save As switches monitoring to the new path.

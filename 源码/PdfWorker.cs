@@ -68,6 +68,8 @@ namespace MiniPdf {
                     string mapping=reader.ReadString();long length=reader.ReadInt64();string password=reader.ReadString(),operation=reader.ReadString();
                     if(operation=="search") {
                         using(var source=PdfSource.OpenShared(mapping,length))using(var document=PdfDocument.FromShared(source.Retain(),password))SearchText.Work(document,reader,writer);
+                    } else if(operation=="redact") {
+                        using(var source=PdfSource.OpenShared(mapping,length))using(var document=PdfDocument.FromShared(source.Retain(),password))RedactionExport.Work(document,reader,writer);
                     } else if(operation=="ocr") {
                         using(var source=PdfSource.OpenShared(mapping,length))using(var document=PdfDocument.FromShared(source.Retain(),password))MiniAiWorker.Ocr(document,reader,writer);
                     } else if(operation=="ocr-files")MiniAiWorker.OcrFiles(reader,writer);

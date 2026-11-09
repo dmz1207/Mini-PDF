@@ -16,6 +16,7 @@ namespace MiniPdf
         Highlight,
         Ink,
         Rectangle,
+        Redact,
         Note,
         Underline,
         Strike,
@@ -729,6 +730,7 @@ namespace MiniPdf
                         g.DrawRectangle(p, r.Right - 4, r.Bottom - 4, 8, 8);
                 }
             }
+            owner.DrawRedactions(g);
             if (owner.PendingSignature != null && PageRectangle.Contains(current))
             {
                 var r = down ? SignatureDrag() : SignatureBounds(current);
@@ -747,12 +749,13 @@ namespace MiniPdf
                 }
             }
             if (down &&
-                (Mode == Tool.Highlight || Mode == Tool.Rectangle ||
+                (Mode == Tool.Highlight || Mode == Tool.Rectangle || Mode == Tool.Redact ||
                  Mode == Tool.Image && owner.PendingSignature == null || Mode == Tool.Underline || Mode == Tool.Strike))
             {
                 var r = DragBox(origin, current);
-                using (var b = new SolidBrush(Color.FromArgb(50, owner.Ink))) g.FillRectangle(b, r);
-                using (var p = new Pen(owner.Ink, 1)) g.DrawRectangle(p, r);
+                Color? fill=Mode==Tool.Redact?Color.Black:Mode==Tool.Rectangle?owner.RectangleFill:owner.Ink;
+                if(fill.HasValue)using (var b = new SolidBrush(Color.FromArgb(Mode==Tool.Redact?150:70,fill.Value))) g.FillRectangle(b, r);
+                using (var p = new Pen(Mode==Tool.Redact?Color.FromArgb(220,65,45):owner.Ink, 1)) g.DrawRectangle(p, r);
             }
             if (down && Mode == Tool.Ink && screenStroke.Count > 1)
             {
@@ -959,13 +962,16 @@ namespace MiniPdf
                 return;
             }
             var box = DragBox(origin, current);
+            if(Mode==Tool.Redact)box=Rectangle.Intersect(box,PageRectangle);
             if (box.Width < 4 || box.Height < 4)
                 return;
             var rect = PdfBox(box);
             if (Mode == Tool.Image)
                 owner.InsertImage(rect);
             else if (Mode == Tool.Rectangle)
-                owner.Run(delegate { Doc.AddRectangle(rect, owner.Ink, owner.LineWidth); });
+                owner.Run(delegate { Doc.AddRectangle(rect, owner.Ink, owner.LineWidth, owner.RectangleFill); });
+            else if (Mode == Tool.Redact)
+                owner.AddRedaction(rect);
             else if (Mode == Tool.Highlight || Mode == Tool.Underline || Mode == Tool.Strike)
             {
                 int kind = Mode == Tool.Highlight ? 9 : Mode == Tool.Underline ? 10 : 12;

@@ -5,6 +5,7 @@ on:
     paths:
       - '源码/**/*.cs'
       - '源码/**/*.ps1'
+      - '源码/MiniPDFText.ttf'
       - '源码/corpus_*.py'
       - '源码/verify_*.py'
       - '源码/compare_corpus.py'
@@ -15,6 +16,7 @@ on:
     paths:
       - '源码/**/*.cs'
       - '源码/**/*.ps1'
+      - '源码/MiniPDFText.ttf'
       - '源码/corpus_*.py'
       - '源码/verify_*.py'
       - '源码/compare_corpus.py'
@@ -54,6 +56,14 @@ jobs:
         shell: pwsh
         run: |
           & '.\源码\build.ps1' -OutputDirectory '.\work\release' -Test -TestSuite Refresh
+      - name: Verify fills and permanent redaction
+        shell: pwsh
+        run: |
+          python '.\源码\verify_redaction.py' fixtures '.\work\tests'
+          & '.\源码\build.ps1' -OutputDirectory '.\work\release' -Test -TestSuite Redaction
+          if (-not $?) { throw 'Redaction checks failed' }
+          python '.\源码\verify_redaction.py' verify '.\work\tests'
+          if ($LASTEXITCODE -ne 0) { throw 'Independent redaction checks failed' }
       - name: Verify Office conversion and AcroForm tools
         shell: pwsh
         run: |
@@ -69,6 +79,8 @@ jobs:
           if-no-files-found: warn
           path: |
             work/tests/refresh-tests.txt
+            work/tests/redaction-tests.txt
+            work/tests/redaction-independent.json
             work/text-edit-tests/text-edit-test.txt
             work/text-edit-tests/text-edit-independent.json
             work/text-edit-tests/system-cjk-skipped.txt

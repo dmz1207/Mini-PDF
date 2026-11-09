@@ -1,0 +1,30 @@
+{
+  "version": "0.12.7",
+  "date": "2026-11-09",
+  "native_assertions": 45,
+  "included_in_native_total": 1002,
+  "independent_checks": 183,
+  "failures": 0,
+  "details": [
+    "Filled rectangles: color, stroke, width, selection, undo, reopen and vector-print coverage",
+    "Native private text, invisible OCR text, scanned image text and nested form content",
+    "Partial inline redaction retaining words on both sides",
+    "CJK text, intrinsic page rotation, rotated view and nonzero CropBox",
+    "Private metadata, annotation data, attachments, JavaScript, outlines and incremental history absent from fresh copy",
+    "Opaque masks are baked into RGB pixels, not removable overlays",
+    "Searchable output omits text behind redactions and existing opaque Mini PDF rectangles",
+    "Independent PDF readers agree on image mode and public searchable text",
+    "600 dpi A4 retains requested resolution beyond 24 megapixels",
+    "Source bytes preserved, original overwrite rejected, canceled export leaves no output or temporary file",
+    "Actual isolated worker streaming, atomic destination replacement and progress cancellation",
+    "Markers: cross-page, per-tab, undo, close cancellation and document-edit invalidation",
+    "Pending marks pause external refresh; clearing resumes refresh",
+    "Native dialogs inspected at local display scale; complete EXE startup, Unicode paths and runtime cleanup"
+  ],
+  "limits": [
+    "Both output modes rebuild page appearance as images; they do not retain original vector objects or font editing. Searchable mode rebuilds only a copy/search text layer outside redactions.",
+    "Searchable reconstruction depends on reliable original character coordinates. Use image-only output for malformed or misleading source text geometry.",
+    "The original file is retained. Only the exported sanitized copy is redacted.",
+    "No universal PDF-compatibility certification or OCR accuracy score is implied by these fixtures. Physical printing and unchanged AI models were not newly exercised."
+  ]
+}
