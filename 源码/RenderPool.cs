@@ -10,6 +10,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MiniPdf
@@ -84,7 +85,7 @@ namespace MiniPdf
             void Connect(bool system)
             {
                 NamedPipeServerStream pipe;
-                IAsyncResult connected;
+                Task connected;
                 lock (connection)
                 {
                     if (Process != null && !Process.HasExited && Pipe != null && Pipe.IsConnected && systemBackend == system)
@@ -106,17 +107,18 @@ namespace MiniPdf
                     Process = System.Diagnostics.Process.Start(start);
                     try { budget = new ProcessBudget(Process); }
                     catch { Stop(); throw; }
-                    connected = pipe.BeginWaitForConnection(null, null);
+                    connected = Task.Factory.FromAsync(pipe.BeginWaitForConnection, pipe.EndWaitForConnection, null);
+                    connected.ContinueWith(delegate(Task ended){var ignored=ended.Exception;}, CancellationToken.None,
+                        TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                 }
                 try
                 {
-                    if (!connected.AsyncWaitHandle.WaitOne(10000))
+                    if (!connected.Wait(10000))
                         throw new IOException("PDF raster worker did not start.");
-                    pipe.EndWaitForConnection(connected);
                 }
-                finally
+                catch (AggregateException)
                 {
-                    connected.AsyncWaitHandle.Close();
+                    connected.GetAwaiter().GetResult(); throw;
                 }
                 lock (connection)
                 {

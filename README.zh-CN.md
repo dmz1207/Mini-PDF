@@ -1,5 +1,9 @@
 # Mini PDF
 
+## 0.12.8 — 连续缩放 / Continuous zoom
+
+缩放期间保留已渲染的页面，新尺寸的清晰页面完成后替换，减少闪白。支持整页与分块预览；编辑或刷新文档时清除旧预览。最新程序请从 [Releases](https://github.com/dmz1207/Mini-PDF/releases/latest) 下载。
+
 ## 0.12.7 — 填充矩形与永久涂黑 / Rectangle fills and permanent redaction
 
 编辑工具栏可选择矩形的填充颜色（无填充、黑色、白色或自定义），也可直接画实心“黑块”。已有矩形/路径可双击或右键修改边框、填充和线宽。普通填充是可编辑的遮盖，不会删除下面的内容。
@@ -46,9 +50,9 @@ Package availability uses a short location-aware snapshot; repeated menu and mou
 
 v0.12.4，单 EXE 约 **3.33 MiB**，面向 Windows 10 / 11 x64。使用系统 Windows Forms、PDFium、Windows 打印及密码学接口，没有 Electron、WebView 或浏览器运行时。默认英文，简体中文排第二，可在菜单中即时切换。
 
-[下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](源码/.) · [测试记录](源码/测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
+[下载 Mini PDF.exe](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [源代码](.) · [测试记录](测试记录.md) · [反馈问题](https://github.com/dmz1207/Mini-PDF/issues)
 
-本次通过 **847 项阅读器回归断言、21 项照片／文件／截图检查及 10 项最终便携版集成检查**。[GitHub 检查通过](https://github.com/dmz1207/Mini-PDF/actions/runs/41366981239)，涵盖 4,211 个公开 PDF 路径、文字编辑、Office 转换和表单。范围与限制见[测试记录](源码/测试记录.md)，外挂使用见[离线 AI](源码/OfflineAI.md)。
+本次通过 **847 项阅读器回归断言、21 项照片／文件／截图检查及 10 项最终便携版集成检查**。[GitHub 检查通过](https://github.com/dmz1207/Mini-PDF/actions/runs/41366981239)，涵盖 4,211 个公开 PDF 路径、文字编辑、Office 转换和表单。范围与限制见[测试记录](测试记录.md)，外挂使用见[离线 AI](OfflineAI.md)。
 
 ## v0.12.4 更新
 
@@ -62,7 +66,7 @@ v0.12.4，单 EXE 约 **3.33 MiB**，面向 Windows 10 / 11 x64。使用系统 W
 
 支持极速／高精度两档、译图与文字提取，切换原图、选择复制及保存。最后一个 AI 客户端退出时清理运行文件，普通结果单独保留，划词／即时截图不自动保存。
 
-适配 Mini-AI 0.2.0：划词气泡和翻译面板支持流式输出、后台预热、选中输入范围翻译。等待时气泡不关闭，完成后保留阅读时间；可展开原文继续选取、复制、Ctrl 固定。支持新 CTranslate2 完整包，并保留旧包加载兼容。模型与硬件要求见 [OfflineAI.md](源码/OfflineAI.md)。
+适配 Mini-AI 0.2.0：划词气泡和翻译面板支持流式输出、后台预热、选中输入范围翻译。等待时气泡不关闭，完成后保留阅读时间；可展开原文继续选取、复制、Ctrl 固定。支持新 CTranslate2 完整包，并保留旧包加载兼容。模型与硬件要求见 [OfflineAI.md](OfflineAI.md)。
 
 ## v0.12.2 更新
 
@@ -89,7 +93,7 @@ Word 导出可勾选“扫描页先 OCR（MiniAI）”，普通高置信度正�
 - 连续正文恢复可读出版字体、普通结构标签及嵌套正文，复杂公式、编号和图表标注保留外观；外侧细长竖排说明横向保留，减少大块空白。
 - 复杂公式和图形保留高清图像。连续正文可选本地简单公式 OMML 转换，C# 几何规则阈值可调，结构不明确时保留原貌。
 - 没有 OCR、AI 模型、PdfPig/PdfiumViewer 或新增运行时。预览复用隔离渲染进程，导出失败保护已有文件。
-- 两种模式的可编辑程度及限制见 [Word 导出](源码/WordExport.md)。
+- 两种模式的可编辑程度及限制见 [Word 导出](WordExport.md)。
 
 ## v0.10.1 编辑细化
 
@@ -109,7 +113,7 @@ Word 导出可勾选“扫描页先 OCR（MiniAI）”，普通高置信度正�
 - 右侧使用 PDFium 显示文字区域或整页预览，确认才应用；整次编辑可撤销，原样确认不新增历史。
 - 无法确认原字体支持新增字符时，明确提示选择“自动”或系统字体。主动换字体可能改变字宽，应核对预览。
 - 隐藏 OCR 识别层可按支持范围修改，扫描图像保持原样。竖排、复杂文字整形、文字剪裁及 ActualText 替代文本暂不保真改写；嵌套 Form、轮廓文字仍不支持逐字编辑。
-- 复用现有 PDFium 和 Windows 界面，不增加运行时、字体包或 OCR 模型。范围及复现方法见 [文字编辑说明](源码/TextEditing.md)。
+- 复用现有 PDFium 和 Windows 界面，不增加运行时、字体包或 OCR 模型。范围及复现方法见 [文字编辑说明](TextEditing.md)。
 
 ## v0.9.0 更新
 
@@ -121,7 +125,7 @@ Word 导出可勾选“扫描页先 OCR（MiniAI）”，普通高置信度正�
 - 保留合并、插入、复制、提取和页面管理中的图层默认、视图及打印状态；同名但独立的图层不会混淆，页面文字和矢量保持原有形式。
 - 在私有导入副本中剔除异常 Contents 数组里缺失或非流引用，保留有效正文和原文件。
 - 异常 JPX 原生渲染崩溃时尝试 Windows 内置 PDF 渲染器；该样本颜色仍有偏差，因此明确显示只读兼容预览提示并限制编辑和打印。后台渲染进程有时间及内存上限。
-- 已测试 4,211 个公开 PDF 路径，按内容去重后为 4,206 份，来自固定版本的 PDFium、PDF.js、veraPDF。通过、密码、损坏文件、超时及尚存问题见 [兼容性报告](源码/Compatibility.md)。测试库不放入软件。
+- 已测试 4,211 个公开 PDF 路径，按内容去重后为 4,206 份，来自固定版本的 PDFium、PDF.js、veraPDF。通过、密码、损坏文件、超时及尚存问题见 [兼容性报告](Compatibility.md)。测试库不放入软件。
 
 ## 之前的 v0.8.0 优化
 
@@ -227,7 +231,7 @@ Ctrl+H 阅读模式保留系统标题栏和窗口按钮；F11 真全屏，Ctrl+L
 
 “应用到文档”把整次操作加入撤销记录，之后用 **Ctrl+S 保存**。数据以标准 Unicode XFDF 导入导出；重置尊重默认值及只读字段。已测试的合并、插入、复制和提取保留标准表单字段父子关系、值与外观，复制字段使用独立名称。
 
-目前覆盖常见 **AcroForm** 创建和填写；不支持动态 XFA、JavaScript 计算/动作、提交工作流及修改已有签名/动作按钮字段。数字签名文档和加密 PDF 在此窗口只读，不会为编辑而去掉加密；证书签署仍使用单独功能。详见 [转换与表单说明](源码/OfficeAndForms.md)。
+目前覆盖常见 **AcroForm** 创建和填写；不支持动态 XFA、JavaScript 计算/动作、提交工作流及修改已有签名/动作按钮字段。数字签名文档和加密 PDF 在此窗口只读，不会为编辑而去掉加密；证书签署仍使用单独功能。详见 [转换与表单说明](OfficeAndForms.md)。
 
 ## 打印
 
@@ -292,7 +296,7 @@ powershell -ExecutionPolicy Bypass -File .\源码\build.ps1
 
 首次构建下载固定 PDFium 158.0.8111.0 x64 并检查 SHA-256。下载、编译和测试均位于项目 work 目录，输出根目录 Mini PDF.exe。
 
-完整测试先按 [兼容性报告](源码/Compatibility.md) 下载固定版本公开样本。开发依赖见 requirements-dev.txt，另需 OpenSSL；均不随应用分发：
+完整测试先按 [兼容性报告](Compatibility.md) 下载固定版本公开样本。开发依赖见 requirements-dev.txt，另需 OpenSSL；均不随应用分发：
 
 ~~~powershell
 python .\源码\verify_pdf.py fixtures .\work\tests
@@ -321,4 +325,4 @@ powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 
 阅读界面及标签交互参考 [SumatraPDF](https://github.com/sumatrapdfreader/sumatrapdf)，功能参考 [PDF Looker Pro](https://github.com/dongfangxy/pdf-looker-pro) 和 Adobe 的打印/页面操作。应用代码独立实现，没有链接 SumatraPDF、MuPDF、Electron 或 Adobe SDK；MuPDF 仅用于开发中的独立结果验证。
 
-公开兼容性测试的范围与剩余内核异常，见 [兼容性报告](源码/Compatibility.md)。已验证的图层默认、视图及打印状态会保留，但任意命名的备用配置并非全部保留。向已加密目标导入带图层的页面会取消并回滚，以保留目标加密；加密源合并到新建未加密文件可用。仍有 3 份原生合并比较差异待处理。
+公开兼容性测试的范围与剩余内核异常，见 [兼容性报告](Compatibility.md)。已验证的图层默认、视图及打印状态会保留，但任意命名的备用配置并非全部保留。向已加密目标导入带图层的页面会取消并回滚，以保留目标加密；加密源合并到新建未加密文件可用。仍有 3 份原生合并比较差异待处理。

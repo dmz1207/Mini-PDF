@@ -1,0 +1,44 @@
+name: Build and publish Mini PDF
+on:
+  push:
+    branches: [main]
+    paths: ['release.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: mini-pdf-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Build and check continuous zoom rendering
+        shell: pwsh
+        run: |
+          & './源码/build.ps1' -OutputDirectory './work/release' -Test -TestSuite Zoom
+          if (-not $?) { throw 'Zoom regression failed' }
+      - name: Check exact raster output and worker recovery
+        shell: pwsh
+        run: |
+          Copy-Item './work/tests/zoom-fixture.pdf' './work/tests/baseline.pdf'
+          $test=Start-Process -FilePath './work/application/MiniPdf.Tests.exe' -ArgumentList @(('"'+(Join-Path $PWD 'work/tests')+'"'),'--performance-only') -WorkingDirectory $PWD -WindowStyle Hidden -PassThru
+          if (-not $test.WaitForExit(120000)) { $test.Kill(); throw 'Raster regression exceeded deadline' }
+          Get-Content './work/tests/performance-test.txt'
+          if ($test.ExitCode -ne 0) { throw 'Raster regression failed' }
+      - name: Publish the tested standard edition
+        shell: pwsh
+        run: |
+          $head=gh api "repos/$($env:GITHUB_REPOSITORY)/git/ref/heads/main" --jq '.object.sha'
+          if ($LASTEXITCODE -ne 0 -or $head.Trim() -ne $env:GITHUB_SHA) { throw 'Publish only the current tested commit' }
+          $tag=(Get-Content release.json -Raw | ConvertFrom-Json).version
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') { throw 'Invalid release version' }
+          Copy-Item './work/release/Mini PDF.exe' './work/release/Mini-PDF.exe'
+          Compress-Archive -LiteralPath './work/release/Mini-PDF.exe' -DestinationPath './work/release/Mini-PDF.zip'
+          gh release create $tag './work/release/Mini-PDF.exe' './work/release/Mini-PDF.zip' './work/tests/zoom-tests.txt' './work/tests/performance-test.txt' './源码/zoom-verification.json' --repo $env:GITHUB_REPOSITORY --title "Mini PDF $tag" --notes-file './源码/RELEASE.md' --target $env:GITHUB_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }

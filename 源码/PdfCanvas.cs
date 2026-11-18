@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -36,6 +36,9 @@ namespace MiniPdf
         {
             internal RenderFrame Frame;
             internal LinkedListNode<string> Node;
+            internal int Page, Rotation;
+            internal Size PageSize;
+            internal Rectangle Region;
         }
         readonly Dictionary<string, CachedFrame> images = new Dictionary<string, CachedFrame>();
         readonly LinkedList<string> imageOrder = new LinkedList<string>();
@@ -164,9 +167,10 @@ namespace MiniPdf
             return index + ":" + page.Width + ":" + page.Height + ":" + ViewRotation + ":" + region.X + ":" + region.Y +
                    ":" + region.Width + ":" + region.Height;
         }
-        void StoreFrame(string key, RenderFrame frame)
+        void StoreFrame(string key, RenderFrame frame, int index, Size size, Rectangle region)
         {
-            var item = new CachedFrame { Frame = frame, Node = imageOrder.AddLast(key) };
+            var item = new CachedFrame { Frame = frame, Node = imageOrder.AddLast(key), Page = index,
+                                         Rotation = ViewRotation, PageSize = size, Region = region };
             images.Add(key, item);
             cacheBytes += (long)frame.Image.Width * frame.Image.Height * 4;
             while (images.Count > 1 && (images.Count > 96 || cacheBytes > 64L * 1024 * 1024))
@@ -202,7 +206,7 @@ namespace MiniPdf
                     if (Doc.RenderInto(index, page.Width, page.Height, ViewRotation, region, first.Pointer,
                                        region.Width * 4, 3, 8))
                     {
-                        StoreFrame(key, first);
+                        StoreFrame(key, first, index, page.Size, region);
                         return first.Image;
                     }
                 }
@@ -240,7 +244,7 @@ namespace MiniPdf
                                                return;
                                            }
                                            if (RenderPool.UsesWindows(Doc.GetRenderSource(), index)) Doc.RestrictCompatibilityPreview();
-                                           StoreFrame(key, frame);
+                                           StoreFrame(key, frame, index, page.Size, region);
                                            Invalidate();
                                        });
                 if (!accepted)
@@ -269,6 +273,8 @@ namespace MiniPdf
                 var image = CachedImage(index, page, new Rectangle(0, 0, page.Width, page.Height), false);
                 if (image != null)
                     graphics.DrawImageUnscaled(image, page.Location);
+                else
+                    DrawCachedPreview(graphics, index, page, clip);
                 return;
             }
             // Native-resolution tiles bound work and memory to the visible area.
@@ -285,8 +291,59 @@ namespace MiniPdf
                     var image = CachedImage(index, page, region, false);
                     if (image != null)
                         graphics.DrawImageUnscaled(image, page.X + x, page.Y + y);
+                    else
+                        DrawCachedPreview(graphics, index, page,
+                            Rectangle.Intersect(visible, new Rectangle(page.X + x, page.Y + y, region.Width, region.Height)));
                 }
         }
+        // Keep already rendered content visible while a new zoom level arrives.
+        // Both whole-page rasters and high-zoom tiles share the existing LRU
+        // budget; document edits/reloads clear them through the render epoch.
+        void DrawCachedPreview(Graphics graphics, int index, Rectangle page, Rectangle clip)
+        {
+            if (Doc != cachedDocument || Doc == null || Doc.RenderEpoch != cachedEpoch) return;
+            CachedFrame whole = null, tiled = null;
+            double wholeDistance = Double.MaxValue, tileDistance = Double.MaxValue;
+            foreach (var entry in images.Values)
+            {
+                if (entry.Page != index || entry.Rotation != ViewRotation || entry.PageSize == page.Size) continue;
+                double distance = Math.Abs(Math.Log((double)entry.PageSize.Width / page.Width));
+                bool full = entry.Region.Location == Point.Empty && entry.Region.Size == entry.PageSize;
+                if (full && distance < wholeDistance) { whole = entry; wholeDistance = distance; }
+                else if (!full && distance < tileDistance) { tiled = entry; tileDistance = distance; }
+            }
+            if (whole == null && tiled == null) return;
+            var state = graphics.Save();
+            try
+            {
+                graphics.SetClip(Rectangle.Intersect(page, Rectangle.Intersect(ClientRectangle, clip)), CombineMode.Intersect);
+                graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                using (var attributes = new ImageAttributes())
+                {
+                    attributes.SetWrapMode(WrapMode.TileFlipXY);
+                    if (whole != null) DrawPreviewFrame(graphics, whole, page, clip, attributes);
+                    if (tiled != null && tileDistance < wholeDistance)
+                        foreach (var entry in images.Values)
+                            if (entry.Page == index && entry.Rotation == ViewRotation && entry.PageSize == tiled.PageSize)
+                                DrawPreviewFrame(graphics, entry, page, clip, attributes);
+                }
+            }
+            finally { graphics.Restore(state); }
+        }
+        void DrawPreviewFrame(Graphics graphics, CachedFrame entry, Rectangle page, Rectangle clip, ImageAttributes attributes)
+        {
+            double sx = (double)page.Width / entry.PageSize.Width, sy = (double)page.Height / entry.PageSize.Height;
+            var r = entry.Region;
+            var target = Rectangle.FromLTRB(page.X + (int)Math.Round(r.Left * sx), page.Y + (int)Math.Round(r.Top * sy),
+                                            page.X + (int)Math.Round(r.Right * sx), page.Y + (int)Math.Round(r.Bottom * sy));
+            if (!target.IntersectsWith(Rectangle.Intersect(ClientRectangle, clip))) return;
+            var image = entry.Frame.Image;
+            graphics.DrawImage(image, target, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, attributes);
+            imageOrder.Remove(entry.Node); imageOrder.AddLast(entry.Node);
+            PreviewFramesForTest++;
+        }
+        internal int PreviewFramesForTest { get; private set; }
         internal int PendingRendersForTest
         {
             get {

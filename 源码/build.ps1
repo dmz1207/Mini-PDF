@@ -1,4 +1,4 @@
-param([switch]$Test,[ValidateSet('All','Offline','OfflineFiles','Capture','Search','Portable','Refresh','Redaction')][string]$TestSuite='All',[string]$OutputDirectory)
+param([switch]$Test,[ValidateSet('All','Offline','OfflineFiles','Capture','Search','Portable','Refresh','Redaction','Zoom')][string]$TestSuite='All',[string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path -Parent $PSScriptRoot
 $buildWork = Join-Path $projectDir 'work'
@@ -82,12 +82,13 @@ if ($Test) {
     # The regression runner references the same production assembly, but is never packaged.
     $testRunner = Join-Path $stagingDir 'MiniPdf.Tests.exe'
     $testArguments = $common + @('/target:winexe',('/out:' + $testRunner),('/reference:' + $corePath))
-    & $compiler @testArguments (Join-Path $PSScriptRoot 'SelfTest.cs') (Join-Path $PSScriptRoot 'RefreshTests.cs') (Join-Path $PSScriptRoot 'RedactionTests.cs') (Join-Path $PSScriptRoot 'SearchTests.cs') (Join-Path $PSScriptRoot 'OfflineTests.cs') (Join-Path $PSScriptRoot 'OfflineFileTests.cs') (Join-Path $PSScriptRoot 'CaptureTests.cs') (Join-Path $PSScriptRoot 'ViewTests.cs') (Join-Path $PSScriptRoot 'LanguageTests.cs') (Join-Path $PSScriptRoot 'FrameTests.cs') (Join-Path $PSScriptRoot 'FeatureTests.cs') (Join-Path $PSScriptRoot 'SignatureTests.cs') (Join-Path $PSScriptRoot 'MergeBoardTests.cs') (Join-Path $PSScriptRoot 'ManyMergeTests.cs') (Join-Path $PSScriptRoot 'PerformanceTests.cs') (Join-Path $PSScriptRoot 'SelectionTests.cs') (Join-Path $PSScriptRoot 'CompatibilityTests.cs') (Join-Path $PSScriptRoot 'SelectionEditingTests.cs') (Join-Path $PSScriptRoot 'TextEditingTests.cs') (Join-Path $PSScriptRoot 'OfficeFormTests.cs') (Join-Path $PSScriptRoot 'TestProgram.cs')
+    & $compiler @testArguments (Join-Path $PSScriptRoot 'SelfTest.cs') (Join-Path $PSScriptRoot 'RefreshTests.cs') (Join-Path $PSScriptRoot 'RedactionTests.cs') (Join-Path $PSScriptRoot 'SearchTests.cs') (Join-Path $PSScriptRoot 'OfflineTests.cs') (Join-Path $PSScriptRoot 'OfflineFileTests.cs') (Join-Path $PSScriptRoot 'CaptureTests.cs') (Join-Path $PSScriptRoot 'ViewTests.cs') (Join-Path $PSScriptRoot 'ZoomTests.cs') (Join-Path $PSScriptRoot 'LanguageTests.cs') (Join-Path $PSScriptRoot 'FrameTests.cs') (Join-Path $PSScriptRoot 'FeatureTests.cs') (Join-Path $PSScriptRoot 'SignatureTests.cs') (Join-Path $PSScriptRoot 'MergeBoardTests.cs') (Join-Path $PSScriptRoot 'ManyMergeTests.cs') (Join-Path $PSScriptRoot 'PerformanceTests.cs') (Join-Path $PSScriptRoot 'SelectionTests.cs') (Join-Path $PSScriptRoot 'CompatibilityTests.cs') (Join-Path $PSScriptRoot 'SelectionEditingTests.cs') (Join-Path $PSScriptRoot 'TextEditingTests.cs') (Join-Path $PSScriptRoot 'OfficeFormTests.cs') (Join-Path $PSScriptRoot 'TestProgram.cs')
     if ($LASTEXITCODE -ne 0) { throw '回归测试工具编译失败。' }
     $testFolder = Join-Path $buildWork 'tests'
     New-Item -ItemType Directory -Force -Path $testFolder | Out-Null
     $testArguments = @(('"' + $testFolder + '"'))
     $testLog = 'self-test.txt'
+    if ($TestSuite -eq 'Zoom') { $testArguments += '--zoom-only'; $testLog = 'zoom-tests.txt' }
     if ($TestSuite -eq 'Offline') { $testArguments += '--offline-only'; $testLog = 'offline-tests.txt' }
     if ($TestSuite -eq 'OfflineFiles') { $testArguments += '--offline-files'; $testLog = 'offline-files.txt' }
     if ($TestSuite -eq 'Capture') { $testArguments += '--capture-ocr'; $testLog = 'capture-tests.txt' }

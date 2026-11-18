@@ -1,5 +1,9 @@
 # Mini PDF
 
+## 0.12.8 — 连续缩放 / Continuous zoom
+
+缩放期间保留已渲染的页面，新尺寸的清晰页面完成后替换，减少闪白。支持整页与分块预览；编辑或刷新文档时清除旧预览。最新程序请从 [Releases](https://github.com/dmz1207/Mini-PDF/releases/latest) 下载。
+
 ## 0.12.7 — 填充矩形与永久涂黑 / Rectangle fills and permanent redaction
 
 编辑工具栏可选择矩形的填充颜色（无填充、黑色、白色或自定义），也可直接画实心“黑块”。已有矩形/路径可双击或右键修改边框、填充和线宽。普通填充是可编辑的遮盖，不会删除下面的内容。
@@ -48,9 +52,9 @@ Mini PDF combines a compact, Sumatra-inspired reading interface with PDF text, o
 
 The **v0.12.7** release is one approximately **3.4 MiB executable** for **Windows 10 / Windows 11 x64**. English is the default interface and documentation; Simplified Chinese is the second option.
 
-[**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](源码/.) · [Test record](源码/测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
+[**Download Mini PDF.exe**](https://github.com/dmz1207/Mini-PDF/raw/refs/heads/main/Mini%20PDF.exe) · [Source code](.) · [Test record](测试记录.md) · [Report an issue](https://github.com/dmz1207/Mini-PDF/issues)
 
-Verification: **847 reader regression assertions**, **21 photo/file/screenshot checks** and **10 final portable-reader integration checks** passed locally. [GitHub checks passed](https://github.com/dmz1207/Mini-PDF/actions/runs/41366981239), including 4,211 public PDF paths, text editing, Office conversion and forms. See [scope and limits](源码/测试记录.md). [Offline AI setup](源码/OfflineAI.md).
+Verification: **847 reader regression assertions**, **21 photo/file/screenshot checks** and **10 final portable-reader integration checks** passed locally. [GitHub checks passed](https://github.com/dmz1207/Mini-PDF/actions/runs/41366981239), including 4,211 public PDF paths, text editing, Office conversion and forms. See [scope and limits](测试记录.md). [Offline AI setup](OfflineAI.md).
 
 ## New in v0.12.4
 
@@ -62,7 +66,7 @@ The entries below describe earlier releases.
 
 ## New in v0.12.3
 
-Mini-AI 0.2.0 integration adds streaming translation in bubbles and the translation panel, physical-core inference through CTranslate2, background prewarming, and precise selected-input translation. Bubbles stay open while waiting, retain completed results for reading, and support selectable source text, copying and Ctrl pinning. Complete new-format portable EXEs and legacy packages remain loadable. Fast/High quality switching is shared with text and image translation. Image OCR supports selectable extraction, translated-image overlays, original switching, copy and save. The last AI client exit cleans verified runtime files while keeping regular results. See [OfflineAI.md](源码/OfflineAI.md) for details.
+Mini-AI 0.2.0 integration adds streaming translation in bubbles and the translation panel, physical-core inference through CTranslate2, background prewarming, and precise selected-input translation. Bubbles stay open while waiting, retain completed results for reading, and support selectable source text, copying and Ctrl pinning. Complete new-format portable EXEs and legacy packages remain loadable. Fast/High quality switching is shared with text and image translation. Image OCR supports selectable extraction, translated-image overlays, original switching, copy and save. The last AI client exit cleans verified runtime files while keeping regular results. See [OfflineAI.md](OfflineAI.md) for details.
 
 ## New in v0.12.2
 
@@ -82,7 +86,7 @@ Mini-AI 0.2.0 integration adds streaming translation in bubbles and the translat
 - Word export can optionally OCR pages without visible body text: confident ordinary prose becomes editable in either export mode; formulas, artwork and uncertain regions retain their raster appearance. Scan layouts are approximate and require review.
 - Separate inference processes, AVX2/generic CPU fallback, shared model lifetime, prompt KV reuse and a bounded memory-only translation cache. No Python or ML runtime is bundled in the reader.
 
-Current verification and limits: [test record](源码/测试记录.md). Historical v0.11.0 verification remains below as prior evidence, not a claim that its full private corpus was rerun.
+Current verification and limits: [test record](测试记录.md). Historical v0.11.0 verification remains below as prior evidence, not a claim that its full private corpus was rerun.
 
 ## New in v0.11.0
 
@@ -92,7 +96,7 @@ Current verification and limits: [test record](源码/测试记录.md). Historic
 - Recover readable publisher fonts, structural tags and nested body text in Continuous text; retain complete complex-equation regions, numbering and figure labels. Narrow vertical margin notices remain readable without page-height blanks.
 - Keep complex equations and artwork as high-resolution images. Continuous text can optionally infer limited simple equations into native OMML using adjustable offline C# geometry rules.
 - Preserve uncertain structures; the base reader bundles no learned model, PdfPig, PdfiumViewer or additional runtime. Optional OCR is provided by the separate MiniAI pack.
-- Use the isolated raster worker for source previews, and preserve existing files on export failure. See [Word export modes and limits](源码/WordExport.md).
+- Use the isolated raster worker for source previews, and preserve existing files on export failure. See [Word export modes and limits](WordExport.md).
 
 ## Refined in v0.10.1
 
@@ -112,7 +116,7 @@ Current verification and limits: [test record](源码/测试记录.md). Historic
 - Inspect a debounced PDFium preview of the text area or whole page before applying. One undo restores the complete change; accepting unchanged content creates no undo entry.
 - If a new character cannot be confirmed in the original font, choose Auto or an installed system font explicitly. Font programs and rendering metrics can then change; inspect the preview.
 - Preserve hidden OCR text without changing the scan image. Reject unsupported vertical/complex-script text, text used for clipping and ActualText replacement metadata rather than silently damaging it. Nested Form and outlined text remain outside this editor.
-- Reuse the existing PDFium and native Windows UI; no new runtime, font pack or OCR model is bundled. See [Text editing](源码/TextEditing.md) for scope and reproducible checks.
+- Reuse the existing PDFium and native Windows UI; no new runtime, font pack or OCR model is bundled. See [Text editing](TextEditing.md) for scope and reproducible checks.
 
 ## Refined in v0.9.0
 
@@ -124,7 +128,7 @@ Current verification and limits: [test record](源码/测试记录.md). Historic
 - Preserve default/view/print optional-content group states across merge, insert, duplicate, extract and page organization; keep unrelated groups with identical names distinct. Imported pages remain vectors and text.
 - Repair missing/non-stream references in malformed Contents arrays on private import copies, retaining valid content and the original file.
 - Retry the tested crashing JPX page with Windows’ built-in PDF renderer. Its colors are not equivalent, so compatibility preview is clearly marked read-only and cannot be printed; each owned raster worker has time and memory bounds.
-- Test 4,211 public PDF paths from pinned PDFium, PDF.js and veraPDF corpora (4,206 distinct contents). Record actual passes, passwords, malformed files, time limits and remaining engine/import differences in [Compatibility](源码/Compatibility.md); the test corpus is not bundled.
+- Test 4,211 public PDF paths from pinned PDFium, PDF.js and veraPDF corpora (4,206 distinct contents). Record actual passes, passwords, malformed files, time limits and remaining engine/import differences in [Compatibility](Compatibility.md); the test corpus is not bundled.
 
 ## Earlier v0.8.0 improvements
 
@@ -134,7 +138,7 @@ Current verification and limits: [test record](源码/测试记录.md). Historic
 - Batch merged pages by source so shared images/fonts are imported once, then restore the requested page order in one permutation. Repeated pages use separate batches to preserve independent content and annotation editing.
 - Reuse immutable bytes for undo snapshots and a bounded serialization buffer. Forward later opens directly to the running window before unpacking another engine.
 - Add Ctrl+6–9 inside the page workspace: all-file page interleave, all-file N-page blocks, natural filename sort and reversal within each file. Unequal lengths, original rotations and undo are preserved.
-- Separate input, scheduling, thumbnail caching and open-request handling into readable source modules; remove obsolete native bindings. See the measured results and native-engine status in [Performance](源码/Performance.md).
+- Separate input, scheduling, thumbnail caching and open-request handling into readable source modules; remove obsolete native bindings. See the measured results and native-engine status in [Performance](Performance.md).
 
 ### Existing merge refinements
 
@@ -210,7 +214,7 @@ Select text in Select mode, then choose a color from Highlight or the right-clic
 
 Open Pages or press Ctrl+Shift+P to manage the active document. Expand a file group to see its individual pages. Ctrl-click selects multiple pages; Shift-click selects a range. Hold the left mouse button to drag selected pages to another position. Rotate, duplicate, remove, undo and redo are available. Apply commits the whole operation to the active document; its normal undo restores the previous state. Destinations attached to retained original pages are preserved during reorder/delete; links to deleted pages may no longer resolve.
 
-Combine Files accepts dropped or selected PDF, PNG, JPEG and BMP files. Drag collapsed groups to change file order, or expand groups and drag pages across them. Images are placed on A4 pages. Combining creates a new unsaved document and preserves the original files. Word/Excel import is not provided. Source outlines are not unified. Standard AcroForm field trees and appearances are restored; arbitrary form actions and document automation are not reconstructed. Default/view/print optional-content group states are preserved in the tested merge workflows, including distinct groups with identical names; arbitrary named alternative configurations are not all retained. Importing layered or form pages into an encrypted target is rejected without changing that target; combining an encrypted source into a new unencrypted output is supported. Three native merge comparisons remain unresolved; see [Compatibility](源码/Compatibility.md). Each workspace supports up to 10,000 pages and twenty workspace undo steps.
+Combine Files accepts dropped or selected PDF, PNG, JPEG and BMP files. Drag collapsed groups to change file order, or expand groups and drag pages across them. Images are placed on A4 pages. Combining creates a new unsaved document and preserves the original files. Word/Excel import is not provided. Source outlines are not unified. Standard AcroForm field trees and appearances are restored; arbitrary form actions and document automation are not reconstructed. Default/view/print optional-content group states are preserved in the tested merge workflows, including distinct groups with identical names; arbitrary named alternative configurations are not all retained. Importing layered or form pages into an encrypted target is rejected without changing that target; combining an encrypted source into a new unencrypted output is supported. Three native merge comparisons remain unresolved; see [Compatibility](Compatibility.md). Each workspace supports up to 10,000 pages and twenty workspace undo steps.
 
 The + / - square expands or collapses a file without adding a separate cover. The file title above its first page is the handle for moving the whole file; the image below selects and moves that page. Other thumbnails retain their source filename and original page number. Hover for the full filename. Wider thumbnail gaps and darker gray dividers separate files; the blue capped line marks the actual insertion point, with a destination hint. Hover over a collapsed destination to expand it; edge dragging scrolls. Releasing outside the board or pressing Esc cancels the move.
 
@@ -246,7 +250,7 @@ Press **Ctrl+Shift+F** or choose **Menu > File > Form tools…**. Select a field
 
 Apply to document commits the form changes as one undoable operation; **Ctrl+S then saves the PDF**. Import/export uses standard Unicode XFDF data. Reset values respects defaults and read-only fields. Standard field parents, values and appearances are retained during tested merge/insert/duplicate/extract operations; copied fields get independent names.
 
-This covers common **AcroForm** authoring and filling. Dynamic XFA, JavaScript calculations/actions, submissions and editing existing signature/action-button fields are unsupported. Digitally signed documents and encrypted PDFs remain view-only in this workspace; it does not remove encryption to enable editing. Certificate signing remains a separate tool. See [Conversion and forms](源码/OfficeAndForms.md) for details and verification.
+This covers common **AcroForm** authoring and filling. Dynamic XFA, JavaScript calculations/actions, submissions and editing existing signature/action-button fields are unsupported. Digitally signed documents and encrypted PDFs remain view-only in this workspace; it does not remove encryption to enable editing. Certificate signing remains a separate tool. See [Conversion and forms](OfficeAndForms.md) for details and verification.
 
 ## Printing
 
@@ -311,7 +315,7 @@ The portable folder must be writable. Save documents outside the runtime directo
 
 ## Current limits
 
-This remains a preview. Text editing supports local same-style horizontal blocks, rather than document-wide Word-style flow. Explicit replacement fonts may change metrics. Outlined or nested Form text, vertical/complex-script text and ActualText metadata cannot be faithfully rewritten by this editor. Dynamic XFA, form JavaScript/actions/submissions, built-in OCR, permanent redaction, measurement, document-wide reflow, annotation replies or Adobe cloud workflows are included. Existing links can be followed but new link creation is not provided. Very large PDFs can exceed the history/cache targets, especially with multiple tabs. Public adversarial tests still expose engine-level image, page-tree and layer-import limitations; see [Compatibility](源码/Compatibility.md) for the exact scope and remaining cases.
+This remains a preview. Text editing supports local same-style horizontal blocks, rather than document-wide Word-style flow. Explicit replacement fonts may change metrics. Outlined or nested Form text, vertical/complex-script text and ActualText metadata cannot be faithfully rewritten by this editor. Dynamic XFA, form JavaScript/actions/submissions, built-in OCR, permanent redaction, measurement, document-wide reflow, annotation replies or Adobe cloud workflows are included. Existing links can be followed but new link creation is not provided. Very large PDFs can exceed the history/cache targets, especially with multiple tabs. Public adversarial tests still expose engine-level image, page-tree and layer-import limitations; see [Compatibility](Compatibility.md) for the exact scope and remaining cases.
 
 ## Build and verification
 
@@ -323,7 +327,7 @@ powershell -ExecutionPolicy Bypass -File .\源码\build.ps1
 
 The script uses the Windows .NET Framework C# compiler, downloads pinned PDFium **158.0.8111.0 x64** without V8/XFA and verifies SHA-256. Downloads, builds and tests stay in the project's work directory. Output is Mini PDF.exe in the root.
 
-Basic program tests run with build.ps1 -Test. Full public-fixture coverage first needs the pinned download/run described in [Compatibility](源码/Compatibility.md). Install development packages with python -m pip install -r .\源码\requirements-dev.txt, plus OpenSSL for independent CMS verification:
+Basic program tests run with build.ps1 -Test. Full public-fixture coverage first needs the pinned download/run described in [Compatibility](Compatibility.md). Install development packages with python -m pip install -r .\源码\requirements-dev.txt, plus OpenSSL for independent CMS verification:
 
 ~~~powershell
 python .\源码\verify_pdf.py fixtures .\work\tests
@@ -344,7 +348,7 @@ python .\源码\verify_office_forms.py verify .\work\tests
 powershell -ExecutionPolicy Bypass -File .\源码\test-launcher.ps1
 ~~~
 
-Run the pinned public corpus with test-corpus.ps1 as described in [Compatibility](源码/Compatibility.md). Its archives, fixtures and probe executables stay in work and are excluded from the app.
+Run the pinned public corpus with test-corpus.ps1 as described in [Compatibility](Compatibility.md). Its archives, fixtures and probe executables stay in work and are excluded from the app.
 
 Missing external fixtures are explicitly skipped by the program runner. These packages and generated test certificates are not needed by the application. Tests inspect native controls and real mouse/key messages, persisted PDFs, page order/destinations, OCR image preservation, print geometry/vector records and form appearances, CMS signatures/tamper detection, and isolated EXE startup/cleanup. Printing tests use preview controllers and do not send physical print jobs. The detailed test record reports the verified build, counts and hash. Passing tests do not guarantee every PDF or printer configuration is free of defects.
 
